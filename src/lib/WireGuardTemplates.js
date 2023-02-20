@@ -100,51 +100,6 @@ class WGInterfaceClientConfig {
         return true;
     }
 
-    /**
-     * @param {String} line 
-     */
-    readLine(line) {
-        var [key, value] = line.split('=', 2);
-        key = key.trim();
-        value = value.trim();
-
-        if (key == 'PublicKey') {
-            this.publicKey = value;
-        } else if (key == 'PresharedKey') {
-            this.preSharedKey = value;
-        } else if (key == "AllowedIPs") {
-            for (var addrAndSub of value.split(',')) {
-                addrAndSub = addrAndSub.trim();
-                this.allowedIPs = (this.allowedIPs == null || !(this.allowedIPs instanceof Array)) ? [] : this.allowedIPs;
-                let addr = new WGAddress();
-                addr.read(addrAndSub);
-                this.allowedIPs.push(addr);
-            }
-        } else if (key == "#!!Client") {
-            this.clientName = value;
-        } else {
-            console.warn(`Unrecognized WireGuard config: '${key} = ${value}'`)
-        }
-    }
-
-    /**
-     * @param {String[]} configSection String array of lines from configuration
-     */
-    read(idx, configSection) {
-        for (var li = idx + 1; li < configSection.length; li++) {
-            let line = configSection[li];
-            if (line.startsWith('[')) {
-                break;
-            } else if ((line.startsWith("#!!") && line.includes("=")) || (line.includes("="))) {
-                console.log("use " + line);
-                this.readLine(line);
-            } else {
-                console.log("skip " + line);
-                continue;
-            }
-        }
-    }
-
     buildTo(conf) {
         if (!this.validate()) {
             throw new Error(`Failed to validate client '${this.interfaceName}' configuration!`)
@@ -217,55 +172,6 @@ class WGInterfaceServerConfig {
     }
 
     /**
-     * @param {String} line 
-     */
-    readLine(line) {
-        var [key, value] = line.split('=', 2);
-        key = key.trim();
-        value = value.trim();
-
-        if (['PreUp', 'PostUp', 'PreDown', 'PostDown'].includes(key)) {
-            this[key] = (this[key] == null || !(this[key] instanceof Array)) ? [] : this[key];
-            this[key].push(value);
-        } else if (key == 'ListenPort') {
-            this.port = parseInt(value);
-        } else if (key == 'PrivateKey') {
-            this.privateKey = value;
-        } else if (key == "Address") {
-            for (var addrAndSub of value.split(',')) {
-                addrAndSub = addrAndSub.trim();
-                this.addresses = (this.addresses == null || !(this.addresses instanceof Array)) ? [] : this.addresses;
-                let addr = new WGAddress();
-                addr.read(addrAndSub);
-                this.addresses.push(addr);
-            }
-        } else if (key == "#!!Interface") {
-            this.interfaceName = value;
-        } else {
-            console.warn(`Unrecognized WireGuard config: '${key} = ${value}'`)
-        }
-    }
-
-    /**
-     * @param {int} idx Start reading config section from line index
-     * @param {String[]} configSection String array of lines from configuration
-     */
-    read(idx, configSection) {
-        for (var li = idx + 1; li < configSection.length; li++) {
-            let line = configSection[li];
-            if (line.startsWith('[')) {
-                break;
-            } else if ((line.startsWith("#!!") && line.includes("=")) || (line.includes("="))) {
-                console.log("use " + line);
-                this.readLine(line);
-            } else {
-                console.log("skip " + line);
-                continue;
-            }
-        }
-    }
-
-    /**
      * @param {WGConfigBUilder} conf Build to a parent's configuration builder
      */
     buildTo(conf) {
@@ -325,34 +231,6 @@ class WGInterfaceConfig {
     constructor() {
         this.interface = null;
         this.clients = [];
-    }
-
-    readInterface(idx, config) {
-        var intfc = new WGInterfaceServerConfig();
-        intfc.read(idx, config);
-        return intfc;
-    }
-
-    readClient(idx, config) {
-        var clnt = new WGInterfaceClientConfig();
-        clnt.read(idx, config);
-        return clnt;
-    }
-
-    /**
-     * Used for importing existing Wireguard configurations
-     * @param {String[]} config Full configuration, one line per String array element 
-     */
-    read(config) {
-        for (var i = 0; i < config.length; i++) {
-            let line = config[i];
-            if (line.trim().toUpperCase() == "[INTERFACE]") {
-                this.interface = this.readInterface(i, config);
-            }
-            if (line.trim().toUpperCase() == "[PEER]") {
-                this.clients.push(this.readClient(i, config));
-            }
-        }
     }
 
     build() {
