@@ -135,9 +135,9 @@ new Vue({
         if (!this.clientsPersist[client.id]) {
           this.clientsPersist[client.id] = {};
           this.clientsPersist[client.id].transferRxHistory = Array(50).fill(0);
-          this.clientsPersist[client.id].transferRxPrevious = client.transferRx;
+          this.clientsPersist[client.id].transferRxPrevious = client.stats.transferRx;
           this.clientsPersist[client.id].transferTxHistory = Array(50).fill(0);
-          this.clientsPersist[client.id].transferTxPrevious = client.transferTx;
+          this.clientsPersist[client.id].transferTxPrevious = client.stats.transferTx;
         }
 
         // Debug
@@ -145,10 +145,10 @@ new Vue({
         // client.transferTx = this.clientsPersist[client.id].transferTxPrevious + Math.random() * 1000;
 
         if (updateCharts) {
-          this.clientsPersist[client.id].transferRxCurrent = client.transferRx - this.clientsPersist[client.id].transferRxPrevious;
-          this.clientsPersist[client.id].transferRxPrevious = client.transferRx;
-          this.clientsPersist[client.id].transferTxCurrent = client.transferTx - this.clientsPersist[client.id].transferTxPrevious;
-          this.clientsPersist[client.id].transferTxPrevious = client.transferTx;
+          this.clientsPersist[client.id].transferRxCurrent = client.stats.transferRx - this.clientsPersist[client.id].transferRxPrevious;
+          this.clientsPersist[client.id].transferRxPrevious = client.stats.transferRx;
+          this.clientsPersist[client.id].transferTxCurrent = client.stats.transferTx - this.clientsPersist[client.id].transferTxPrevious;
+          this.clientsPersist[client.id].transferTxPrevious = client.stats.transferTx;
 
           this.clientsPersist[client.id].transferRxHistory.push(this.clientsPersist[client.id].transferRxCurrent);
           this.clientsPersist[client.id].transferRxHistory.shift();

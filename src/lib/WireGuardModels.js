@@ -1,3 +1,11 @@
+const Serializer = require("./Serializer");
+
+const {
+    generatePrivateKey,
+    generatePublicKey,
+    generatePreSharedKey
+} = require('./WireGuardUtils');
+
 class WGConfigBuilder {
     constructor(initial = '') {
         this.progress = [initial];
@@ -62,11 +70,15 @@ class WGAddress {
     }
 }
 
-class WGInterfaceClientConfig {
+class WGPeer {
 
     constructor() {
-        // global
+        // metadata
+        // client
         this.clientName = null;
+
+        // non-meta
+        // global
         this.publicKey = null;
         this.preSharedKey = null;
         this.allowedIPs = [];
@@ -75,37 +87,8 @@ class WGInterfaceClientConfig {
         this.endpoint = null;
         // server
     }
-    
-    addAllowedIP(addr, sub) {
-        let addressObj = new WGAddress();
-        addressObj.address = addr;
-        addressObj.subnet = sub;
-        this.allowedIPs.push(addressObj);
-        return addressObj;
-    }
-
-    validate() {
-        if (this.publicKey === null) {
-            console.warn("Invalid public key!");
-            return false;
-        }
-        if (this.preSharedKey === null) {
-            console.warn("Invalid PreShared Key!")
-            return false;
-        }
-        if (this.allowedIPs === null || !(this.allowedIPs instanceof Array) || this.allowedIPs.length <= 0) {
-            console.warn("Invalid Allowed IPs!");
-            return false;
-        }
-        return true;
-    }
 
     buildTo(conf) {
-        if (!this.validate()) {
-            throw new Error(`Failed to validate client '${this.interfaceName}' configuration!`)
-        }
-
-        
         conf.beginSection("Peer");
         conf.vari('PublicKey', this.publicKey);
         conf.vari('PresharedKey', this.preSharedKey);
@@ -115,6 +98,7 @@ class WGInterfaceClientConfig {
             addrs.push(`${addressObject.address}/${addressObject.subnet}`);
         });
         conf.vari('AllowedIPs', addrs.join(','));
+
         // for clients
         if (this.persistentKeepAlive !== null) {
             conf.vari("PersistentKeepalive", this.persistentKeepAlive);
@@ -131,7 +115,7 @@ class WGInterfaceClientConfig {
 
 }
 
-class WGInterfaceServerConfig {
+class WGInterface {
     constructor() {
         /**
          * Configurable values:
@@ -151,34 +135,10 @@ class WGInterfaceServerConfig {
         this.PostDown = [];
     }
 
-    addAddress(addr, sub) {
-        let addressObj = new WGAddress();
-        addressObj.address = addr;
-        addressObj.subnet = sub;
-        this.addresses.push(addressObj);
-        return addressObj;
-    }
-
-    validate() {
-        if (this.privateKey === null) {
-            console.warn("PrivateKey is invalid!");
-            return false;
-        }
-        if (this.addresses === null || !(this.addresses instanceof Array) || this.addresses.length <= 0) {
-            console.warn("Addresses are invalid!");
-            return false;
-        }
-        return true;
-    }
-
     /**
      * @param {WGConfigBUilder} conf Build to a parent's configuration builder
      */
     buildTo(conf) {
-        if (!this.validate()) {
-            throw new Error(`Failed to validate interface '${this.interfaceName}' configuration!`)
-        }
-
         conf.beginSection("Interface");
         conf.vari('PrivateKey', this.privateKey);
         
@@ -226,26 +186,159 @@ class WGInterfaceServerConfig {
     }
 }
 
-class WGInterfaceConfig {
-
+class WGServer {
     constructor() {
-        this.interface = null;
+        this.interfaceName = null;
+        this.endpointAddress = null;
+        this.listenAddresses = [];
+        this.listenPort = null;
+        this.privateKey = null;
+        this.allowedIPs = [];
+
+        this.PreUp = [];
+        this.PostUp = [];
+        this.PreDown = [];
+        this.PostDown = [];
+    }
+
+    async getPublicKey() {
+        return await generatePublicKey(this.privateKey);
+    }
+
+    addListenAddress(address, subnet) {
+        var addrObject = new WGAddress();
+        addrObject.address = address;
+        addrObject.subnet = subnet;
+        this.listenAddresses.push(
+            addrObject
+        );
+        return addrObject;
+    }
+
+    addAllowedIP(address, subnet) {
+        var addrObject = new WGAddress();
+        addrObject.address = address;
+        addrObject.subnet = subnet;
+        this.allowedIPs.push(
+            addrObject
+        );
+        return addrObject;
+    }
+
+    async asInterface() {
+        var config = new WGInterface();
+        config.interfaceName = this.interfaceName;
+        config.privateKey = this.privateKey;
+        config.port = this.listenPort;
+        config.addresses = [...this.listenAddresses];
+        config.PreUp = [...this.PreUp];
+        config.PostUp = [...this.PostUp];
+        config.PreDown = [...this.PreDown];
+        config.PostDown = [...this.PostDown];
+        return config;
+    }
+
+    async asPeer(preSharedKey) {
+        var config = new WGPeer();
+        config.clientName = this.interfaceName;
+        config.publicKey = await this.getPublicKey();
+        config.preSharedKey = this.preSharedKey;
+        config.allowedIPs = [...this.allowedIPs];
+        config.endpoint = this.endpointAddress;
+        // todo: persistent keepalive, and other configurable stuff
+        return config;
+    }
+}
+
+class WGClient {
+    constructor() {
+        this.id = null;
+        this.name = null;
+        this.privateKey = null;
+        this.preSharedKey = null;
+        this.allowedIPs = [];
+        this.addresses = [];
+        // metadata
+        this.settings = {
+            enabled: true,
+            createdAt: new Date()
+        };
+        this.stats = {
+            latestHandShakeAt: null,
+            transferRx: null,
+            transferTx: null
+        }
+    }
+
+    addAddress(address, subnet) {
+        var addrObject = new WGAddress();
+        addrObject.address = address;
+        addrObject.subnet = subnet;
+        this.addresses.push(
+            addrObject
+        );
+        return addrObject;
+    }
+
+    addAllowedIP(address, subnet) {
+        var addrObject = new WGAddress();
+        addrObject.address = address;
+        addrObject.subnet = subnet;
+        this.allowedIPs.push(
+            addrObject
+        );
+        return addrObject;
+    }
+
+    async getPublicKey() {
+        return await generatePublicKey(this.privateKey);
+    }
+
+    async asInterface() {
+        var config = new WGInterface();
+        config.interfaceName = this.name;
+        config.privateKey = this.privateKey;
+        config.addresses = [...this.addresses];
+        // todo: dns, other configurable stuff
+        return config;
+    }
+
+    async asPeer() {
+        var config = new WGPeer();
+        //todo: discard private key after generating and giving to user for security?
+        config.publicKey = await this.getPublicKey();
+        config.clientName = this.name;
+        config.preSharedKey = this.preSharedKey;
+        config.allowedIPs = [...this.allowedIPs];
+        // todo: configurables
+        return config;
+    }
+}
+
+class WGInterfaceConfig {
+    constructor() {
+        this.server = null;
         this.clients = [];
     }
 
-    build() {
+    async build() {
         let builder = new WGConfigBuilder();
-        this.interface.buildTo(builder);
-        this.clients.forEach((client) => {
-            client.buildTo(builder);
-        });
+        (await this.server.asInterface()).buildTo(builder);
+        for (let client of this.clients) {
+            (await client.asPeer()).buildTo(builder);
+        }
         return builder.build();
     }
 }
 
+const Converter = new Serializer([WGInterfaceConfig, WGAddress, WGServer, WGClient]);
+
 module.exports = {
     WGInterfaceConfig,
     WGAddress,
-    WGInterfaceServerConfig,
-    WGInterfaceClientConfig
+    WGInterface,
+    WGPeer,
+    WGServer,
+    WGClient,
+    Converter
 }

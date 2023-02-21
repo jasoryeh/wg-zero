@@ -1,14 +1,14 @@
 'use strict';
 
-require('./services/Server');
+const Server = require('./lib/Server');
+const WireGuard = require('./lib/WireGuard');
 
-const WireGuard = require('./services/WireGuard');
-
-WireGuard.getConfig()
-  .catch(err => {
-  // eslint-disable-next-line no-console
-    console.error(err);
-
-    // eslint-disable-next-line no-process-exit
-    process.exit(1);
-  });
+(async function() {
+  const wg = new WireGuard();
+  await wg.getConfig();
+  await wg.writeConfig();
+  await wg.writeWireguardConfig();
+  await wg.restartWireguard();
+  await wg.reloadWireguard();
+  const sv = new Server(wg);
+})();

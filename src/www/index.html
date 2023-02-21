@@ -131,7 +131,7 @@
                   <img v-if="client.avatar" :src="client.avatar" class="w-10 rounded-full absolute top-0 left-0" />
 
                   <div
-                    v-if="client.latestHandshakeAt && ((new Date() - new Date(client.latestHandshakeAt) < 1000 * 60 * 10))">
+                    v-if="client.stats.latestHandshakeAt && ((new Date() - new Date(client.stats.latestHandshakeAt) < 1000 * 60 * 10))">
                     <div class="animate-ping w-4 h-4 p-1 bg-red-100 rounded-full absolute -bottom-1 -right-1"></div>
                     <div class="w-2 h-2 bg-red-800 rounded-full absolute bottom-0 right-0"></div>
                   </div>
@@ -140,7 +140,7 @@
                 <div class="flex-grow">
 
                   <!-- Name -->
-                  <div class="text-gray-700 group" :title="'Created on ' + dateTime(new Date(client.createdAt))">
+                  <div class="text-gray-700 group" :title="'Created on ' + dateTime(new Date(client.settings.createdAt))">
 
                     <!-- Show -->
                     <input v-show="clientEditNameId === client.id" v-model="clientEditName"
@@ -177,7 +177,7 @@
                         :ref="'client-' + client.id + '-address'"
                         class="rounded border-2 border-gray-100 focus:border-gray-200 outline-none w-20 text-black" />
                       <span v-show="clientEditAddressId !== client.id"
-                        class="inline-block border-t-2 border-b-2 border-transparent">{{client.address}}</span>
+                        class="inline-block border-t-2 border-b-2 border-transparent" v-for="address in client.addresses">{{`${address._address}/${address._subnet}`}}</span>
 
                       <!-- Edit -->
                       <span v-show="clientEditAddressId !== client.id"
@@ -193,7 +193,7 @@
                     </span>
 
                     <!-- Transfer TX -->
-                    <span v-if="client.transferTx" :title="'Total Download: ' + bytes(client.transferTx)"
+                    <span v-if="client.stats.transferTx" :title="'Total Download: ' + bytes(client.stats.transferTx)"
                       @mouseover="client.hoverTx = clientsPersist[client.id].hoverTx = true;"
                       @mouseleave="client.hoverTx = clientsPersist[client.id].hoverTx = false;"
                       style="cursor: default;">
@@ -208,7 +208,7 @@
                     </span>
 
                     <!-- Transfer RX -->
-                    <span v-if="client.transferRx" :title="'Total Upload: ' + bytes(client.transferRx)"
+                    <span v-if="client.stats.transferRx" :title="'Total Upload: ' + bytes(client.stats.transferRx)"
                       @mouseover="client.hoverRx = clientsPersist[client.id].hoverRx = true;"
                       @mouseleave="client.hoverRx = clientsPersist[client.id].hoverRx = false;"
                       style="cursor: default;">
@@ -223,9 +223,9 @@
                     </span>
 
                     <!-- Last seen -->
-                    <span v-if="client.latestHandshakeAt"
-                      :title="'Last seen on ' + dateTime(new Date(client.latestHandshakeAt))">
-                      · {{new Date(client.latestHandshakeAt) | timeago}}
+                    <span v-if="client.stats.latestHandshakeAt"
+                      :title="'Last seen on ' + dateTime(new Date(client.stats.latestHandshakeAt))">
+                      · {{new Date(client.stats.latestHandshakeAt) | timeago}}
                     </span>
                   </div>
                 </div>

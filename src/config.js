@@ -5,8 +5,10 @@ const { release } = require('./package.json');
 module.exports.RELEASE = release;
 module.exports.PORT = process.env.PORT || 51821;
 module.exports.PASSWORD = process.env.PASSWORD;
+
 module.exports.WG_INTERFACE = process.env.WG_INTERFACE || "wg0";
 module.exports.WG_PATH = process.env.WG_PATH || '/etc/wireguard/';
+module.exports.WG_OVERWRITE_ON_FAIL = process.env.WG_OVERWRITE_ON_FAIL || true;
 module.exports.WG_HOST = process.env.WG_HOST;
 module.exports.WG_PORT = process.env.WG_PORT || 51820;
 module.exports.WG_MTU = process.env.WG_MTU || null;

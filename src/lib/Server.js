@@ -8,7 +8,6 @@ const debug = require('debug')('Server');
 
 const Util = require('./Util');
 const ServerError = require('./ServerError');
-const WireGuard = require('../services/WireGuard');
 
 const {
   PORT,
@@ -18,7 +17,7 @@ const {
 
 module.exports = class Server {
 
-  constructor() {
+  constructor(WireGuard) {
     // Express
     this.app = express()
       .disable('etag')
@@ -87,6 +86,7 @@ module.exports = class Server {
         debug(`Deleted Session: ${sessionId}`);
       }))
       .get('/api/wireguard/client', Util.promisify(async req => {
+        WireGuard.updateClients();
         return WireGuard.getClients();
       }))
       .get('/api/wireguard/client/:clientId/qrcode.svg', Util.promisify(async (req, res) => {
@@ -110,7 +110,11 @@ module.exports = class Server {
       }))
       .post('/api/wireguard/client', Util.promisify(async req => {
         const { name } = req.body;
-        return WireGuard.createClient({ name });
+        var createResult = await WireGuard.createClient({ name });
+        await WireGuard.writeConfig();
+        await WireGuard.writeWireguardConfig();
+        await WireGuard.reloadWireguard();
+        return createResult;
       }))
       .delete('/api/wireguard/client/:clientId', Util.promisify(async req => {
         const { clientId } = req.params;
