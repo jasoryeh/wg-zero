@@ -124,7 +124,7 @@ class WG2 {
     this.assertConfigLoaded();
     await fs.writeFile(
       path.join(WG_PATH, `${WG_INTERFACE}.conf`), 
-      await this.config.build(), 
+      await this.config.buildServerConf(), 
       {
         mode: 0o600,
       }
@@ -280,20 +280,11 @@ class WG2 {
   }
 
   async getClient({ clientId }) {
-    for (let client of this.config.clients) {
-      if (client.id == clientId) {
-        return client;
-      }
-    }
-    throw new Error(`Could not find client by ID ${clientId}`);
+    return this.config.getClient({ clientId });
   }
 
   async getClientConfiguration({ clientId }) {
-    let client = await this.getClient({ clientId });
-    let config = new WireguardModels.WGInterfaceConfig();
-    config.server = client;
-    config.clients.push(this.config.server);
-    return await config.build();
+    return await this.config.buildClientConf({ clientId });
   }
 
   async getClientQRCodeSVG({ clientId }) {

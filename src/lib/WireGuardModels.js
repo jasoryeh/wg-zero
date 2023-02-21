@@ -242,7 +242,7 @@ class WGServer {
         var config = new WGPeer();
         config.clientName = this.interfaceName;
         config.publicKey = await this.getPublicKey();
-        config.preSharedKey = this.preSharedKey;
+        config.preSharedKey = preSharedKey;
         config.allowedIPs = [...this.allowedIPs];
         config.endpoint = this.endpointAddress;
         // todo: persistent keepalive, and other configurable stuff
@@ -321,12 +321,29 @@ class WGInterfaceConfig {
         this.clients = [];
     }
 
-    async build() {
+    getClient({ clientId }) {
+        for (let client of this.clients) {
+          if (client.id == clientId) {
+            return client;
+          }
+        }
+        throw new Error(`Could not find client by ID ${clientId}`);
+    }
+
+    async buildServerConf() {
         let builder = new WGConfigBuilder();
         (await this.server.asInterface()).buildTo(builder);
         for (let client of this.clients) {
             (await client.asPeer()).buildTo(builder);
         }
+        return builder.build();
+    }
+
+    async buildClientConf({ clientId }) {
+        let builder = new WGConfigBuilder();
+        let client = this.getClient({ clientId });
+        (await client.asInterface()).buildTo(builder);
+        (await this.server.asPeer(client.preSharedKey)).buildTo(builder);
         return builder.build();
     }
 }
