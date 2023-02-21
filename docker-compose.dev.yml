@@ -6,10 +6,12 @@ services:
     volumes:
       - ./src/:/app/
     ports:
+      - "51822:51822/udp"
       - "51821:51821/tcp"
     environment: 
       # - PASSWORD=p
-      - WG_HOST=192.168.1.39
+      - WG_HOST=127.0.0.1
+      - WG_PORT=51822
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
