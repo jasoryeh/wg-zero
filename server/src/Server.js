@@ -16,6 +16,12 @@ const {
   WG_WEBUI,
 } = require('../config');
 
+const {
+  generatePrivateKey,
+  generatePublicKey,
+  generatePreSharedKey
+} = require('./WireGuardUtils');
+
 module.exports = class Server {
   constructor(WireGuard) {
     this.app = express();
@@ -90,27 +96,42 @@ module.exports = class Server {
       let stats = await this.wireguard.getStats();
       res.status(200).send(stats);
     } catch (err) {
-      res.status(500).send({
-        "error": JSON.stringify(err)
-      });
+      // server offline
+      res.status(200).send([]);
     }
   })
   .get('/api/wireguard/server', async (req, res) => {
     let intf = JSON.parse(JSON.stringify(this.wireguard.config.interface));
+    // from sensitive
+    intf.PublicKey = intf['PrivateKey'] ? await generatePublicKey(intf['PrivateKey'], {log: false}) : null;
     // hide sensitive?
     intf['PrivateKey'] = undefined;
     intf['PreUp'] = undefined;
     intf['PostUp'] = undefined;
     intf['PreDown'] = undefined;
     intf['PostDown'] = undefined;
+    // append data
+    intf._stats = {};
+    intf._stats.up = await this.wireguard.interfaceActive();
+    intf.Interface = this.wireguard.getInterface();
     res.status(200).send(intf);
   })
   .get('/api/wireguard/save', async (req, res) => {
     await this.wireguard.export();
     await this.wireguard.reboot();
+    res.status(200).send({});
   })
   .get('/api/wireguard/reload', async (req, res) => {
-    this.wireguard.import();
+    await this.wireguard.import();
+    res.status(200).send({});
+  })
+  .get('/api/wireguard/down', async (req, res) => {
+    await this.wireguard.down();
+    res.status(200).send({});
+  })
+  .get('/api/wireguard/up', async (req, res) => {
+    await this.wireguard.up();
+    res.status(200).send({});
   })
   .put('/api/wireguard/client/:clientRef/name', async (req, res) => {
     const { clientRef } = req.params;

@@ -34,19 +34,131 @@ import { Buffer } from 'buffer/';
       <!-- Update notification -->
       <Update v-if="latestRelease" :currentRelease="currentRelease" :latestRelease="latestRelease.version" :changelog="latestRelease.changelog" />
 
+      <!-- Server -->
+      <div class="shadow-md rounded-lg bg-white overflow-hidden mb-8">
+        <!-- Server card header -->
+        <div class="flex flex-row flex-auto items-center p-3 px-5 border border-b-2 border-gray-100">
+          <div class="flex-grow">
+            <p class="text-2xl font-medium">Server</p>
+            <p class="text-sm text-gray-500">Server details and controls.</p>
+          </div>
+          <div class="flex-shrink-0">
+            <button @click="serverUp()" v-if="!server._stats.up" 
+              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
+              <Icon icon="heroicons:play" class="w-4 mr-2" />
+              <span class="text-sm">Start</span>
+            </button>
+            <button @click="serverDown()" v-else
+              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
+              <Icon icon="heroicons:stop" class="w-4 mr-2" />
+              <span class="text-sm">Stop</span>
+            </button>
+            <button @click="reloadServer()"
+              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
+              <Icon icon="material-symbols:refresh-rounded" class="w-4 mr-2" />
+              <span class="text-sm">Reload</span>
+            </button>
+            <button @click="clientCreate = true; clientCreateName = '';"
+              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
+              <Icon icon="material-symbols:add" class="w-4 mr-2" />
+              <span class="text-sm">New</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Server info -->
+        <div>
+          <!-- Server -->
+          <div v-if="server"
+            class="relative overflow-hidden border-b border-gray-100 border-solid">
+
+            <!-- Information -->
+            <div class="relative p-5 z-10 flex flex-row">
+              <!-- Icon -->
+              <div class="h-10 w-10 mr-5 rounded-full bg-gray-50 relative">
+                <Icon icon="heroicons:server-stack" class="w-6 h-6 m-2 text-gray-300" />
+                <div v-if="server._stats.up">
+                  <!-- Ping radar animation -->
+                  <div class="animate-ping w-4 h-4 p-1 bg-green-100 rounded-full absolute -bottom-1 -right-1"></div>
+                  <!-- Active dot -->
+                  <div class="w-2 h-2 bg-green-500 rounded-full absolute bottom-0 right-0"></div>
+                </div>
+                <div v-else>
+                  <!-- Active dot -->
+                  <div class="w-2 h-2 bg-red-500 rounded-full absolute bottom-0 right-0"></div>
+                </div>
+              </div>
+
+              <!-- Left side -->
+              <div class="flex-grow">
+                <!-- Name -->
+                <div class="text-gray-700 group" :title="`Interface ${server.Interface}`">
+                  <span class="inline-block border-t-2 border-b-2 border-transparent">Server</span>
+                </div>
+
+                <!-- Info -->
+                <div class="text-gray-400 text-xs">
+
+                  <!-- Address -->
+                  <span class="group">
+                    <span 
+                      class="inline-block border-t-2 border-b-2 border-transparent"
+                      v-for="address in server.Address">
+                      <Icon icon="heroicons-solid:globe-alt" class="align-middle h-3 inline" />
+                      {{`${address}`}}&nbsp;
+                    </span>
+                  </span>
+
+                  <!-- Interface -->
+                  <span :title="`Interface: ${server.Interface}`" style="cursor: default;">
+                    ·
+                    <Icon icon="heroicons-solid:arrow-right-circle" class="align-middle h-3 inline" />
+                    {{server.Interface}}
+                  </span>
+
+                  <!-- Port -->
+                  <span :title="`Port: ${server.ListenPort}`" style="cursor: default;">
+                    ·
+                    <Icon icon="heroicons-solid:map-pin" class="align-middle h-3 inline" />
+                    {{server.ListenPort}}
+                  </span>
+
+                  <br />
+                  
+                  <!-- Port -->
+                  <span :title="`Port: ${server.ListenPort}`" style="cursor: default;">
+                    <Icon icon="heroicons-solid:key" class="align-middle h-3 inline" />
+                    {{server.PublicKey}}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Right side -->
+              <div class="text-right">
+                <div class="text-gray-400">
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Loading server still -->
+          <div v-if="server === null" class="text-gray-200 p-5">
+            <Loading class="" />
+          </div>
+        </div>
+      </div>
+
       <!-- Clients -->
       <div class="shadow-md rounded-lg bg-white overflow-hidden">
         <!-- Clients card header -->
         <div class="flex flex-row flex-auto items-center p-3 px-5 border border-b-2 border-gray-100">
           <div class="flex-grow">
             <p class="text-2xl font-medium">Clients</p>
+            <p class="text-sm text-gray-500">Changes made here do not persist until saved.</p>
           </div>
           <div class="flex-shrink-0">
-            <button @click="reloadServer()"
-              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
-              <Icon icon="material-symbols:refresh-rounded" class="w-4 mr-2" />
-              <span class="text-sm">Reload</span>
-            </button>
             <button @click="commitServer()"
               class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
               <Icon icon="material-symbols:save" class="w-4 mr-2" />
@@ -67,7 +179,7 @@ import { Buffer } from 'buffer/';
             class="relative overflow-hidden border-b border-gray-100 border-solid">
 
             <!-- Chart -->
-            <div class="absolute z-0 bottom-0 left-0 right-0" style="width: 100%; height: 20%;">
+            <div v-if="server._stats.up" class="absolute z-0 bottom-0 left-0 right-0" style="width: 100%; height: 20%;">
               <!-- Bar -->
               <div v-for="(_, index) in client.transferTxHistory" :style="{
                     display: 'inline-flex',
@@ -117,12 +229,17 @@ import { Buffer } from 'buffer/';
                 <Icon icon="heroicons-solid:user" class="w-6 h-6 m-2 text-gray-300" />
                 <!--<img v-if="client._meta.Name && client._meta.Name.includes('@')" :src="`https://www.gravatar.com/avatar/${CryptoJS.MD5(client._meta.Name)}?d=404`" class="w-10 rounded-full absolute top-0 left-0" />-->
 
-                <div
-                  v-if="client.stats.lastHandshake && ((new Date() - new Date(client.stats.lastHandshake) < 1000 * 60 * 10))">
-                  <!-- Ping radar animation -->
-                  <div class="animate-ping w-4 h-4 p-1 bg-red-100 rounded-full absolute -bottom-1 -right-1"></div>
-                  <!-- Active dot -->
-                  <div class="w-2 h-2 bg-red-800 rounded-full absolute bottom-0 right-0"></div>
+                <div>
+                  <div v-if="server._stats.up && client.stats.lastHandshake && ((new Date() - new Date(client.stats.lastHandshake) < 1000 * 60 * 10))">
+                    <!-- Ping radar animation -->
+                    <div class="animate-ping w-4 h-4 p-1 bg-green-100 rounded-full absolute -bottom-1 -right-1"></div>
+                    <!-- Active dot -->
+                    <div class="w-2 h-2 bg-green-500 rounded-full absolute bottom-0 right-0"></div>
+                  </div>
+                  <div v-else>
+                    <!-- Active dot -->
+                    <div class="w-2 h-2 bg-red-500 rounded-full absolute bottom-0 right-0"></div>
+                  </div>
                 </div>
               </div>
 
@@ -174,7 +291,7 @@ import { Buffer } from 'buffer/';
                   </span>
 
                   <!-- Transfer TX -->
-                  <span v-if="client.stats.tx" :title="'Total Download: ' + bytes(client.stats.tx)"
+                  <span v-if="server._stats.up && client.stats.tx" :title="'Total Download: ' + bytes(client.stats.tx)"
                     @mouseover="client.hoverTx = clientsPersist[client.PublicKey].hoverTx = true;"
                     @mouseleave="client.hoverTx = clientsPersist[client.PublicKey].hoverTx = false;" style="cursor: default;">
                     ·
@@ -183,7 +300,7 @@ import { Buffer } from 'buffer/';
                   </span>
 
                   <!-- Transfer RX -->
-                  <span v-if="client.stats.rx" :title="'Total Upload: ' + bytes(client.stats.rx)"
+                  <span v-if="server._stats.up && client.stats.rx" :title="'Total Upload: ' + bytes(client.stats.rx)"
                     @mouseover="client.hoverRx = clientsPersist[client.PublicKey].hoverRx = true;"
                     @mouseleave="client.hoverRx = clientsPersist[client.PublicKey].hoverRx = false;" style="cursor: default;">
                     ·
@@ -192,7 +309,7 @@ import { Buffer } from 'buffer/';
                   </span>
 
                   <!-- Last seen -->
-                  <span v-if="client.stats.lastHandshake"
+                  <span v-if="server._stats.up && client.stats.lastHandshake"
                     :title="'Last seen on ' + dateTime(new Date(client.stats.lastHandshake))">
                     · {{timeFormat(new Date(client.stats.lastHandshake))}}
                   </span>
@@ -379,55 +496,58 @@ export default {
       }
 
       // handle data history
+      // stats are only available when the interface is up
       for (let client of clients) {
         let cid = client.PublicKey;
-        let cstats = stats[cid];
-        //console.log(cid, cstats);
+        if (this.server._stats.up) {
+          let cstats = stats[cid];
+          //console.log(cid, cstats);
 
-        /// initialize client data persistence if we dont have any historical data yet
-        if (!this.clientsPersist[cid]) {
-          this.clientsPersist[cid] = {};
-          // history
-          this.clientsPersist[cid].transferRxHistory = Array(50).fill(0);
-          this.clientsPersist[cid].transferTxHistory = Array(50).fill(0);
-          // last measurement (to find how much changed)
-          this.clientsPersist[cid].transferRxPrevious = cstats.rx;
-          this.clientsPersist[cid].transferTxPrevious = cstats.tx;
+          /// initialize client data persistence if we dont have any historical data yet
+          if (!this.clientsPersist[cid]) {
+            this.clientsPersist[cid] = {};
+            // history
+            this.clientsPersist[cid].transferRxHistory = Array(50).fill(0);
+            this.clientsPersist[cid].transferTxHistory = Array(50).fill(0);
+            // last measurement (to find how much changed)
+            this.clientsPersist[cid].transferRxPrevious = cstats.rx;
+            this.clientsPersist[cid].transferTxPrevious = cstats.tx;
+          }
+
+          // Debug
+          // client.transferRx = this.clientsPersist[cid].transferRxPrevious + Math.random() * 1000;
+          // client.transferTx = this.clientsPersist[cid].transferTxPrevious + Math.random() * 1000;
+
+          // should we be updating the data in the history?
+          if (updateCharts) {
+            // how much is being transferred currently
+            this.clientsPersist[cid].transferRxCurrent = cstats.rx - this.clientsPersist[cid].transferRxPrevious;
+            this.clientsPersist[cid].transferTxCurrent = cstats.tx - this.clientsPersist[cid].transferTxPrevious;
+            // update last transfer amount
+            this.clientsPersist[cid].transferRxPrevious = cstats.rx;
+            this.clientsPersist[cid].transferTxPrevious = cstats.tx;
+            // store how much transferred over time
+            this.clientsPersist[cid].transferRxHistory.push(this.clientsPersist[cid].transferRxCurrent);
+            this.clientsPersist[cid].transferTxHistory.push(this.clientsPersist[cid].transferTxCurrent);
+            // shift the data so that the graph shifts
+            this.clientsPersist[cid].transferRxHistory.shift();
+            this.clientsPersist[cid].transferTxHistory.shift();
+          }
+
+          // update transfer and receive on client object
+          client.transferTxCurrent = this.clientsPersist[cid].transferTxCurrent;
+          client.transferRxCurrent = this.clientsPersist[cid].transferRxCurrent;
+          // update history on client object
+          client.transferTxHistory = this.clientsPersist[cid].transferTxHistory;
+          client.transferRxHistory = this.clientsPersist[cid].transferRxHistory;
+          // max transfer on client object
+          client.transferMax = Math.max(...client.transferTxHistory, ...client.transferRxHistory);
+          // hover on client object
+          client.hoverTx = this.clientsPersist[cid].hoverTx;
+          client.hoverRx = this.clientsPersist[cid].hoverRx;
+
+          client.stats = cstats;
         }
-
-        // Debug
-        // client.transferRx = this.clientsPersist[cid].transferRxPrevious + Math.random() * 1000;
-        // client.transferTx = this.clientsPersist[cid].transferTxPrevious + Math.random() * 1000;
-
-        // should we be updating the data in the history?
-        if (updateCharts) {
-          // how much is being transferred currently
-          this.clientsPersist[cid].transferRxCurrent = cstats.rx - this.clientsPersist[cid].transferRxPrevious;
-          this.clientsPersist[cid].transferTxCurrent = cstats.tx - this.clientsPersist[cid].transferTxPrevious;
-          // update last transfer amount
-          this.clientsPersist[cid].transferRxPrevious = cstats.rx;
-          this.clientsPersist[cid].transferTxPrevious = cstats.tx;
-          // store how much transferred over time
-          this.clientsPersist[cid].transferRxHistory.push(this.clientsPersist[cid].transferRxCurrent);
-          this.clientsPersist[cid].transferTxHistory.push(this.clientsPersist[cid].transferTxCurrent);
-          // shift the data so that the graph shifts
-          this.clientsPersist[cid].transferRxHistory.shift();
-          this.clientsPersist[cid].transferTxHistory.shift();
-        }
-
-        // update transfer and receive on client object
-        client.transferTxCurrent = this.clientsPersist[cid].transferTxCurrent;
-        client.transferRxCurrent = this.clientsPersist[cid].transferRxCurrent;
-        // update history on client object
-        client.transferTxHistory = this.clientsPersist[cid].transferTxHistory;
-        client.transferRxHistory = this.clientsPersist[cid].transferRxHistory;
-        // max transfer on client object
-        client.transferMax = Math.max(...client.transferTxHistory, ...client.transferRxHistory);
-        // hover on client object
-        client.hoverTx = this.clientsPersist[cid].hoverTx;
-        client.hoverRx = this.clientsPersist[cid].hoverRx;
-
-        client.stats = cstats;
 
         // until replaced
         client._meta = client._meta ?? {};
@@ -479,6 +599,12 @@ export default {
     },
     async commitServer() {
       await this.api.save();
+    },
+    async serverUp() {
+      await this.api.up();
+    },
+    async serverDown() {
+      await this.api.down();
     },
   },
   filters: {

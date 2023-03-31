@@ -195,6 +195,10 @@ class WireGuard {
     this.config = null;
   }
 
+  getInterface() {
+    return WG_INTERFACE;
+  }
+
   async backup() {
     console.log("Making a backup...");
     await Util.exec(`mkdir -p ${WG_PATH}/${BACKUP_DIR}`);
@@ -219,7 +223,12 @@ class WireGuard {
 
   async reboot() {
     console.log("Rebooting/reloading WireGuard...");
-    await this.down();
+    try {
+      await this.down();
+    } catch(ex) {
+      console.warn("A problem occurred while pulling the interface down: ");
+      console.warn(ex);
+    }
     await this.up();
     console.log("Rebooted.");
   }
@@ -306,6 +315,11 @@ class WireGuard {
 
   async getStats() {
     return await readDump()
+  }
+
+  async interfaceActive() {
+    let wgshow = await Util.exec('wg show', {log: false});
+    return wgshow.split('\n').includes(`interface: ${WG_INTERFACE}`);
   }
 }
 

@@ -114,6 +114,20 @@ class API {
     });
   }
 
+  async up() {
+    return this.call({
+      method: 'get',
+      path: '/wireguard/up',
+    });
+  }
+
+  async down() {
+    return this.call({
+      method: 'get',
+      path: '/wireguard/down',
+    });
+  }
+
   async updateName(clientRef, name) {
     return this.call({
       method: 'put',
