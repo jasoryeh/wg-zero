@@ -59,6 +59,58 @@ async function readDump() {
   return data;
 }
 
+function writeRawConfig(cfg) {
+  var lines = [];
+  lines.push(`[Interface]`);
+  for (let key in cfg.interface) {
+    if (key == 'type') continue;
+    let value = cfg.interface[key];
+    if (key == '_meta') {
+      for (let metaKey in value) {
+        let metaValue = value[metaKey];
+        let finalValue = (metaValue instanceof Array) ? metalValue.join(",") : metaValue;
+        lines.push(`#!${metaKey} = ${finalValue}`);
+      }
+    } else {
+      if ((value instanceof Array) && (key.startsWith('Pre') || key.startsWith("Post"))) {
+        for (let cmd of value) {
+          lines.push(`${key} = ${cmd}`);
+        }
+      } else {
+        let finalValue = (value instanceof Array) ? value.join(",") : value;
+        lines.push(`${key} = ${finalValue}`);
+      }
+    }
+  }
+  lines.push('');
+
+  for (let peer of cfg.peers) {
+    lines.push(`[Peer]`);
+    for (let key in peer) {
+      if (key == 'type') continue;
+      let value = peer[key];
+      if (key == '_meta') {
+        for (let metaKey in value) {
+          let metaValue = value[metaKey];
+          let finalValue = (metaValue instanceof Array) ? metalValue.join(",") : metaValue;
+          lines.push(`#!${metaKey} = ${finalValue}`);
+        }
+      } else {
+        if ((value instanceof Array) && (key.startsWith('Pre') || key.startsWith("Post"))) {
+          for (let cmd of value) {
+            lines.push(`${key} = ${cmd}`);
+          }
+        } else {
+          let finalValue = (value instanceof Array) ? value.join(",") : value;
+          lines.push(`${key} = ${finalValue}`);
+        }
+      }
+    }
+    lines.push('');
+  }
+  return lines;
+}
+
 /**
  * Read the raw config.
  */
@@ -86,7 +138,7 @@ function readRawConfig() {
 
   for (let i = 0; i < cfg_unparsed.length; i++) {
     var line = cfg_unparsed[i].trim();
-    if (line.startsWith("#") || line.length == 0) continue;
+    if ((line.startsWith("#") && !line.startsWith("#!")) || line.length == 0) continue;
 
     if (line.startsWith('[') && line.endsWith(']')) {
       _newSection();
@@ -94,13 +146,19 @@ function readRawConfig() {
       currentSection.type = line;
     } else {
       var [key, value] = line.split(" = ", 2).map((item) => item.trim());
-      if (currentSection[key]) {
-        if (!(currentSection[key] instanceof Array)) {
-          currentSection[key] = [ currentSection[key] ];
+      let dataTo = currentSection;
+      if (key.startsWith("#!")) {
+        key = key.replace("#!", "");
+        currentSection._meta = currentSection._meta || {};
+        dataTo = currentSection._meta;
+      }
+      if (dataTo[key]) {
+        if (!(dataTo[key] instanceof Array)) {
+          dataTo[key] = [ dataTo[key] ];
         }
-        currentSection[key].push(value);
+        dataTo[key].push(value);
       } else {
-        currentSection[key] = value;
+        dataTo[key] = value;
       }
     }
   }
@@ -147,6 +205,9 @@ class WireGuard {
     }
 
     this.config = parsed;
+  }
+  
+  export() {
   }
 
   getClients() {
