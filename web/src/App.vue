@@ -43,7 +43,7 @@ import { Buffer } from 'buffer/';
             <p class="text-sm text-gray-500">Server details and controls.</p>
           </div>
           <div class="flex-shrink-0">
-            <button @click="serverUp()" v-if="!server._stats.up" 
+            <button @click="serverUp()" v-if="!isServerUp()" 
               class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
               <Icon icon="heroicons:play" class="w-4 mr-2" />
               <span class="text-sm">Start</span>
@@ -77,7 +77,7 @@ import { Buffer } from 'buffer/';
               <!-- Icon -->
               <div class="h-10 w-10 mr-5 rounded-full bg-gray-50 relative">
                 <Icon icon="heroicons:server-stack" class="w-6 h-6 m-2 text-gray-300" />
-                <div v-if="server._stats.up">
+                <div v-if="isServerUp()">
                   <!-- Ping radar animation -->
                   <div class="animate-ping w-4 h-4 p-1 bg-green-100 rounded-full absolute -bottom-1 -right-1"></div>
                   <!-- Active dot -->
@@ -179,14 +179,13 @@ import { Buffer } from 'buffer/';
             class="relative overflow-hidden border-b border-gray-100 border-solid">
 
             <!-- Chart -->
-            <div v-if="server._stats.up" class="absolute z-0 bottom-0 left-0 right-0" style="width: 100%; height: 20%;">
+            <div v-if="isServerUp()" class="absolute z-0 bottom-0 left-0 right-0" style="width: 100%; height: 20%;">
               <!-- Bar -->
               <div v-for="(_, index) in client.transferTxHistory" :style="{
                     display: 'inline-flex',
                     alignItems: 'flex-end',
                     width: '2%', // 1/100th of client.transferTxHistory.length
                     height: '100%',
-                    padding: '0 3px',
                     boxSizing: 'border-box',
                     fontSize: 0,
                   }">
@@ -230,7 +229,7 @@ import { Buffer } from 'buffer/';
                 <!--<img v-if="client._meta.Name && client._meta.Name.includes('@')" :src="`https://www.gravatar.com/avatar/${CryptoJS.MD5(client._meta.Name)}?d=404`" class="w-10 rounded-full absolute top-0 left-0" />-->
 
                 <div>
-                  <div v-if="server._stats.up && client.stats.lastHandshake && ((new Date() - new Date(client.stats.lastHandshake) < 1000 * 60 * 10))">
+                  <div v-if="isServerUp() && client.stats.lastHandshake && ((new Date() - new Date(client.stats.lastHandshake) < 1000 * 60 * 10))">
                     <!-- Ping radar animation -->
                     <div class="animate-ping w-4 h-4 p-1 bg-green-100 rounded-full absolute -bottom-1 -right-1"></div>
                     <!-- Active dot -->
@@ -291,7 +290,7 @@ import { Buffer } from 'buffer/';
                   </span>
 
                   <!-- Transfer TX -->
-                  <span v-if="server._stats.up && client.stats.tx" :title="'Total Download: ' + bytes(client.stats.tx)"
+                  <span v-if="isServerUp() && client.stats.tx" :title="'Total Download: ' + bytes(client.stats.tx)"
                     @mouseover="client.hoverTx = clientsPersist[client.PublicKey].hoverTx = true;"
                     @mouseleave="client.hoverTx = clientsPersist[client.PublicKey].hoverTx = false;" style="cursor: default;">
                     ·
@@ -300,7 +299,7 @@ import { Buffer } from 'buffer/';
                   </span>
 
                   <!-- Transfer RX -->
-                  <span v-if="server._stats.up && client.stats.rx" :title="'Total Upload: ' + bytes(client.stats.rx)"
+                  <span v-if="isServerUp() && client.stats.rx" :title="'Total Upload: ' + bytes(client.stats.rx)"
                     @mouseover="client.hoverRx = clientsPersist[client.PublicKey].hoverRx = true;"
                     @mouseleave="client.hoverRx = clientsPersist[client.PublicKey].hoverRx = false;" style="cursor: default;">
                     ·
@@ -309,7 +308,7 @@ import { Buffer } from 'buffer/';
                   </span>
 
                   <!-- Last seen -->
-                  <span v-if="server._stats.up && client.stats.lastHandshake"
+                  <span v-if="isServerUp() && client.stats.lastHandshake"
                     :title="'Last seen on ' + dateTime(new Date(client.stats.lastHandshake))">
                     · {{timeFormat(new Date(client.stats.lastHandshake))}}
                   </span>
@@ -459,6 +458,9 @@ export default {
         minute: 'numeric',
       }).format(value);
     },
+    isServerUp() {
+      return this.server && this.server._stats.up;
+    },
     async checkForUpdates() {
       const currentRelease = (await this.api.getRelease()).release;
       const latestRelease = await fetch('https://weejewel.github.io/wg-easy/changelog.json')
@@ -499,7 +501,7 @@ export default {
       // stats are only available when the interface is up
       for (let client of clients) {
         let cid = client.PublicKey;
-        if (this.server._stats.up) {
+        if (this.isServerUp()) {
           let cstats = stats[cid];
           //console.log(cid, cstats);
 
