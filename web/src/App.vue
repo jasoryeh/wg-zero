@@ -6,13 +6,15 @@ import CreateClient from './components/CreateClient.vue'
 import DeleteClient from './components/DeleteClient.vue'
 import Update from './components/Update.vue'
 import Login from './components/Login.vue'
+
+import API from './js/api.js';
 </script>
 
 <template>
   <div v-cloak class="container mx-auto max-w-3xl">
     <div v-if="authenticated === true">
       <!-- Logout button -->
-      <span v-if="this.meta.auth"
+      <span v-if="meta && meta.auth"
         class="text-sm text-gray-400 mb-10 mr-2 mt-3 cursor-pointer hover:underline float-right" @click="logout">
         Logout
         <svg class="h-3 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -38,14 +40,14 @@ import Login from './components/Login.vue'
             <p class="text-2xl font-medium">Clients</p>
           </div>
           <div class="flex-shrink-0">
-            <button @click="this.reloadServer()"
+            <button @click="reloadServer()"
               class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
               <svg class="w-4 mr-2" inline xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M17.65 6.35a7.95 7.95 0 0 0-6.48-2.31c-3.67.37-6.69 3.35-7.1 7.02C3.52 15.91 7.27 20 12 20a7.98 7.98 0 0 0 7.21-4.56c.32-.67-.16-1.44-.9-1.44c-.37 0-.72.2-.88.53a5.994 5.994 0 0 1-6.8 3.31c-2.22-.49-4.01-2.3-4.48-4.52A6.002 6.002 0 0 1 12 6c1.66 0 3.14.69 4.22 1.78l-1.51 1.51c-.63.63-.19 1.71.7 1.71H19c.55 0 1-.45 1-1V6.41c0-.89-1.08-1.34-1.71-.71l-.64.65z"/>
               </svg>
               <span class="text-sm">Reload</span>
             </button>
-            <button @click="this.commitServer()"
+            <button @click="commitServer()"
               class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
               <svg class="w-4 mr-2" inline xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M21 7v12q0 .825-.588 1.413T19 21H5q-.825 0-1.413-.588T3 19V5q0-.825.588-1.413T5 3h12l4 4Zm-9 11q1.25 0 2.125-.875T15 15q0-1.25-.875-2.125T12 12q-1.25 0-2.125.875T9 15q0 1.25.875 2.125T12 18Zm-6-8h9V6H6v4Z"/>
@@ -195,7 +197,7 @@ import Login from './components/Login.vue'
                         d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z"
                         clip-rule="evenodd" />
                     </svg>
-                    {{this.bytes(client.transferTxCurrent)}}/s
+                    {{bytes(client.transferTxCurrent)}}/s
                   </span>
 
                   <!-- Transfer RX -->
@@ -209,13 +211,13 @@ import Login from './components/Login.vue'
                         d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
                         clip-rule="evenodd" />
                     </svg>
-                    {{this.bytes(client.transferRxCurrent)}}/s
+                    {{bytes(client.transferRxCurrent)}}/s
                   </span>
 
                   <!-- Last seen -->
                   <span v-if="client.stats.lastHandshake"
                     :title="'Last seen on ' + dateTime(new Date(client.stats.lastHandshake))">
-                    · {{this.timeago(new Date(client.stats.lastHandshake))}}
+                    · {{timeago(new Date(client.stats.lastHandshake))}}
                   </span>
                 </div>
               </div>
@@ -235,7 +237,7 @@ import Login from './components/Login.vue'
 
                   <!-- Show QR-->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"
-                    title="Show QR Code" @click="qrcode = `${this.getEndpoint()}/api/wireguard/client/${client.Reference}/qrcode.svg`">
+                    title="Show QR Code" @click="qrcode = `${getEndpoint()}/api/wireguard/client/${client.Reference}/qrcode.svg`">
                     <svg class="w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                       stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -244,7 +246,7 @@ import Login from './components/Login.vue'
                   </button>
 
                   <!-- Download Config -->
-                  <a :href="`${this.getEndpoint()}/api/wireguard/client/${client.Reference}/configuration`" download
+                  <a :href="`${getEndpoint()}/api/wireguard/client/${client.Reference}/configuration`" download
                     class="align-middle inline-block bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"
                     title="Download Configuration">
                     <svg class="w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -298,14 +300,14 @@ import Login from './components/Login.vue'
       <QRCode v-if="qrcode" :qrcode="qrcode" @close="qrcode = null" />
 
       <!-- Create Dialog -->
-      <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="(name) => { this.newClient(name); clientCreate = null}" />
+      <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="(name) => { newClient(name); clientCreate = null}" />
 
       <!-- Delete Dialog -->
       <DeleteClient v-if="clientDelete" :name="clientDelete.name" @cancel="clientDelete = null" @confirm="clientDelete = null" />
     </div>
 
     <!-- Authentication -->
-    <Login v-if="authenticated === false" @try="(password) => { this.password = password; this.login() }" />
+    <Login v-if="authenticated === false" @try="(pass) => { password = pass; this.login() }" />
 
     <Loading v-if="authenticated === null" />
 
