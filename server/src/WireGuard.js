@@ -69,8 +69,13 @@ function writeRawConfig(cfg) {
     if (key == '_meta') {
       for (let metaKey in value) {
         let metaValue = value[metaKey];
-        let finalValue = (metaValue instanceof Array) ? metalValue.join(",") : metaValue;
-        lines.push(`#!${metaKey} = ${finalValue}`);
+        if (metaValue instanceof Array) {
+          for (let cmd of value) {
+            lines.push(`#!${metaKey} = ${cmd}`);
+          }
+        } else {
+          lines.push(`#!${metaKey} = ${metaValue}`);
+        }
       }
     } else {
       if (value instanceof Array) {
@@ -90,12 +95,15 @@ function writeRawConfig(cfg) {
       if (key == 'type') continue;
       let value = peer[key];
       if (key == '_meta') {
-        if (value instanceof Array) {
-          for (let cmd of value) {
-            lines.push(`${key} = ${cmd}`);
+        for (let metaKey in value) {
+          let metaValue = value[metaKey];
+          if (metaValue instanceof Array) {
+            for (let cmd of value) {
+              lines.push(`#!${metaKey} = ${cmd}`);
+            }
+          } else {
+            lines.push(`#!${metaKey} = ${metaValue}`);
           }
-        } else {
-          lines.push(`${key} = ${value}`);
         }
       } else {
         if (value instanceof Array) {
