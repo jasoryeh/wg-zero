@@ -29,8 +29,12 @@ module.exports = class Server {
     }));
     this.app.use((req, res, next) => {
       res.setHeader("Access-Control-Allow-Origin", "*");
-      res.setHeader('Access-Control-Allow-Methods', '*');
+      res.setHeader('Access-Control-Allow-Methods', "*");
       res.setHeader("Access-Control-Allow-Headers", "*");
+      if (req.method.toUpperCase() == "OPTIONS") {
+        res.sendStatus(200).end();
+        return;
+      }
       next();
     });
 
