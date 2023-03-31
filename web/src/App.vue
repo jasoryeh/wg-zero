@@ -107,18 +107,23 @@ import { Icon } from '@iconify/vue';
               </div>
             </div>
 
+            <!-- Information -->
             <div class="relative p-5 z-10 flex flex-row">
+              <!-- Icon -->
               <div class="h-10 w-10 mr-5 rounded-full bg-gray-50 relative">
                 <Icon icon="heroicons-solid:user" class="w-6 h-6 m-2 text-gray-300" />
                 <img v-if="client.avatar" :src="client.avatar" class="w-10 rounded-full absolute top-0 left-0" />
 
                 <div
                   v-if="client.stats.lastHandshake && ((new Date() - new Date(client.stats.lastHandshake) < 1000 * 60 * 10))">
+                  <!-- Ping radar animation -->
                   <div class="animate-ping w-4 h-4 p-1 bg-red-100 rounded-full absolute -bottom-1 -right-1"></div>
+                  <!-- Active dot -->
                   <div class="w-2 h-2 bg-red-800 rounded-full absolute bottom-0 right-0"></div>
                 </div>
               </div>
 
+              <!-- Left side -->
               <div class="flex-grow">
 
                 <!-- Name -->
@@ -152,14 +157,14 @@ import { Icon } from '@iconify/vue';
                       v-on:keyup.enter="updateClientAddress(client, clientEditAddress); clientEditAddress = null; clientEditAddressId = null;"
                       v-on:keyup.escape="clientEditAddress = null; clientEditAddressId = null;"
                       :ref="'client-' + client.Reference + '-address'"
-                      class="rounded border-2 border-gray-100 focus:border-gray-200 outline-none w-20 text-black" />
+                      class="rounded border-2 border-gray-100 focus:border-gray-200 outline-none w-fit text-black" />
                     <span v-show="clientEditAddressId !== client.Reference"
                       class="inline-block border-t-2 border-b-2 border-transparent"
-                      v-for="address in client.addresses">{{`${address._address}/${address._subnet}`}}&nbsp;</span>
+                      v-for="address in client.addresses">{{`${address}`}}&nbsp;</span>
 
                     <!-- Edit -->
                     <span v-show="clientEditAddressId !== client.Reference"
-                      @click="clientEditAddress = client.address; clientEditAddressId = client.Reference; setTimeout(() => $refs['client-' + client.Reference + '-address'][0].select(), 1);"
+                      @click="clientEditAddress = client.addresses.join(','); clientEditAddressId = client.Reference; setTimeout(() => $refs['client-' + client.Reference + '-address'][0].select(), 1);"
                       class="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
                       <Icon icon="heroicons:pencil-square" class="h-4 w-4 ml-1 inline align-middle opacity-25 hover:opacity-100" />
                     </span>
@@ -191,34 +196,35 @@ import { Icon } from '@iconify/vue';
                 </div>
               </div>
 
+              <!-- Right side -->
               <div class="text-right">
                 <div class="text-gray-400">
 
                   <!-- Enable/Disable -->
                   <div @click="disableClient(client)" v-if="client.enabled === true" title="Disable Client"
-                    class="inline-block align-middle rounded-full w-10 h-6 mr-1 bg-red-800 cursor-pointer hover:bg-red-700 transition-all">
+                    class="inline-block align-middle rounded-full w-10 h-6 mr-1 bg-red-800 cursor-pointer hover:bg-red-700 transition-all mx-1">
                     <div class="rounded-full w-4 h-4 m-1 ml-5 bg-white"></div>
                   </div>
                   <div @click="enableClient(client)" v-if="client.enabled === false" title="Enable Client"
-                    class="inline-block align-middle rounded-full w-10 h-6 mr-1 bg-gray-200 cursor-pointer hover:bg-gray-300 transition-all">
+                    class="inline-block align-middle rounded-full w-10 h-6 mr-1 bg-gray-200 cursor-pointer hover:bg-gray-300 transition-all mx-1">
                     <div class="rounded-full w-4 h-4 m-1 bg-white"></div>
                   </div>
 
                   <!-- Show QR-->
-                  <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"
+                  <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
                     title="Show QR Code" @click="qrcode = `${getEndpoint()}/api/wireguard/client/${client.Reference}/qrcode.svg`">
                     <Icon icon="heroicons-outline:qrcode" class="w-5 h-5" />
                   </button>
 
                   <!-- Download Config -->
                   <a :href="`${getEndpoint()}/api/wireguard/client/${client.Reference}/configuration`" download
-                    class="align-middle inline-block bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"
+                    class="align-middle inline-block bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
                     title="Download Configuration">
                     <Icon icon="heroicons:arrow-down-tray" class="w-5 h-5" />
                   </a>
 
                   <!-- Delete -->
-                  <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"
+                  <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
                     title="Delete Client" @click="clientDelete = client">
                     <Icon icon="heroicons:trash" class="w-5 h-5" />
                   </button>
@@ -424,14 +430,7 @@ export default {
         client._meta = client._meta ?? {};
         client.Reference = buffer.Buffer.from(cid).toString('hex');
         client.name = client._meta.Name || cid;
-        client.addresses = [];
-        for (let address of client.AllowedIPs) {
-          let [_address, _subnet] = address.split("/");
-          client.addresses.push({
-            _address,
-            _subnet,
-          })
-        }
+        client.addresses = client.AllowedIPs;
       }
 
       // make it available at the end.
