@@ -93,4 +93,11 @@ class API {
     });
   }
 
+  async getServer() {
+    return this.call({
+      method: 'get',
+      path: '/wireguard/server',
+    });
+  }
+
 }

@@ -89,5 +89,15 @@ module.exports = class Server {
       });
     }
   })
+  .get('/api/wireguard/server', async (req, res) => {
+    let intf = {...this.wireguard.config.interface};
+    // hide sensitive?
+    intf['PrivateKey'] = undefined;
+    intf['PreUp'] = undefined;
+    intf['PostUp'] = undefined;
+    intf['PreDown'] = undefined;
+    intf['PostDown'] = undefined;
+    res.status(200).send(intf);
+  });
  }
 };

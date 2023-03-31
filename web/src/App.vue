@@ -11,6 +11,7 @@ import Login from './components/Login.vue'
 <template>
   <div v-cloak class="container mx-auto max-w-3xl">
     <div v-if="authenticated === true">
+      <!-- Logout button -->
       <span v-if="this.meta.auth"
         class="text-sm text-gray-400 mb-10 mr-2 mt-3 cursor-pointer hover:underline float-right" @click="logout">
         Logout
@@ -20,16 +21,17 @@ import Login from './components/Login.vue'
             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
         </svg>
       </span>
+      <!-- Title and Icon -->
       <h1 class="text-4xl font-medium mt-10 mb-2">
         <img src="/img/logo.png" width="32" class="inline align-middle" />
         <span class="align-middle">WireGuard</span>
       </h1>
-
       <h2 class="text-sm text-gray-400 mb-10"></h2>
 
       <!-- Update notification -->
       <Update v-if="latestRelease" :currentRelease="currentRelease" :latestRelease="latestRelease.version" :changelog="latestRelease.changelog" />
 
+      <!-- Clients -->
       <div class="shadow-md rounded-lg bg-white overflow-hidden">
         <div class="flex flex-row flex-auto items-center p-3 px-5 border border-b-2 border-gray-100">
           <div class="flex-grow">
@@ -326,6 +328,7 @@ export default {
       password: null,
       clients: null,
       clientsPersist: {},
+      server: null,
 
       /* unchanged */
       clientDelete: null,
@@ -391,6 +394,7 @@ export default {
       // request, and format data
       let clients = await this.api.getClients();
       let _stats = await this.api.getStats();
+      this.server = await this.api.getServer();
       let stats = {};
       for (let clientStat of _stats) {
         stats[clientStat.public] = clientStat;
