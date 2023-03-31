@@ -205,10 +205,18 @@ class WireGuard {
     console.log("Reverted.");
   }
 
+  async down() {
+    return Util.exec(`wg-quick down ${WG_INTERFACE}`);
+  }
+
+  async up() {
+    return Util.exec(`wg-quick up ${WG_INTERFACE}`);
+  }
+
   async reboot() {
     console.log("Rebooting/reloading WireGuard...");
-    await Util.exec(`wg-quick down wg0`);
-    await Util.exec(`wg-quick up wg0`);
+    await this.down();
+    await this.up();
     console.log("Rebooted.");
   }
 
@@ -245,10 +253,10 @@ class WireGuard {
     console.log("Import complete.");
   }
   
-  export() {
+  async export() {
     console.log("Exporting...");
     // back up
-    this.backup();
+    await this.backup();
 
     // deep copy
     let parsed = JSON.parse(JSON.stringify(this.config));
@@ -268,7 +276,13 @@ class WireGuard {
       // PersistentKeepalive - number
     }
 
-    writeRawConfig(parsed);
+    try {
+      writeRawConfig(parsed);
+    } catch(err) {
+      console.warn("Failed to commit new config to Wireguard, reverting...");
+      await this.revert();
+      console.warn("Reverted.");
+    }
     console.log("Export complete.");
   }
 
