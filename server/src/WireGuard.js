@@ -60,6 +60,10 @@ async function readDump() {
   return data;
 }
 
+function getWireguardConfigPath() {
+  return path.join(WG_PATH, `${WG_INTERFACE}.conf`);
+}
+
 function writeRawConfig(cfg) {
   var lines = [];
   lines.push(`[Interface]`);
@@ -118,8 +122,7 @@ function writeRawConfig(cfg) {
     lines.push('');
   }
 
-  let config_path = path.join(WG_PATH, `${WG_INTERFACE}.conf`);
-  fs.writeFileSync(config_path, lines.join('\n'), {
+  fs.writeFileSync(getWireguardConfigPath(), lines.join('\n'), {
     encoding: "utf8"
   });
   return lines;
@@ -130,7 +133,7 @@ function writeRawConfig(cfg) {
  */
 function readRawConfig() {
   let config_path = path.join(WG_PATH, `${WG_INTERFACE}.conf`);
-  let cfg_unparsed = (fs.readFileSync(config_path, 'utf8')).split('\n');
+  let cfg_unparsed = (fs.readFileSync(getWireguardConfigPath(), 'utf8')).split('\n');
   let parsed = {
     interface: {},
     peers: []
@@ -146,7 +149,9 @@ function readRawConfig() {
       } else {
         console.warn(`Unknown section type ${currentSection.type}, will be discarded: \n${JSON.stringify(currentSection, null, 4)}\n`);
       }
-      currentSection = {};
+      currentSection = {
+        _meta: {}
+      };
     }
   }
 
@@ -163,7 +168,6 @@ function readRawConfig() {
       let dataTo = currentSection;
       if (key.startsWith("#!")) {
         key = key.replace("#!", "");
-        currentSection._meta = currentSection._meta || {};
         dataTo = currentSection._meta;
       }
       if (dataTo[key]) {
@@ -220,8 +224,9 @@ class WireGuard {
     console.log("Rebooted.");
   }
 
-  load() {
-    this.import();
+  validate() {
+    // currently validates interfaces only
+
   }
 
   import() {
