@@ -10,6 +10,7 @@ import Login from './components/Login.vue'
 import API from './js/api.js';
 
 import { Icon } from '@iconify/vue';
+import CryptoJS from 'crypto-js';
 </script>
 
 <template>
@@ -112,7 +113,7 @@ import { Icon } from '@iconify/vue';
               <!-- Icon -->
               <div class="h-10 w-10 mr-5 rounded-full bg-gray-50 relative">
                 <Icon icon="heroicons-solid:user" class="w-6 h-6 m-2 text-gray-300" />
-                <img v-if="client.avatar" :src="client.avatar" class="w-10 rounded-full absolute top-0 left-0" />
+                <!--<img v-if="client._meta.Name && client._meta.Name.includes('@')" :src="`https://www.gravatar.com/avatar/${CryptoJS.MD5(client._meta.Name)}?d=404`" class="w-10 rounded-full absolute top-0 left-0" />-->
 
                 <div
                   v-if="client.stats.lastHandshake && ((new Date() - new Date(client.stats.lastHandshake) < 1000 * 60 * 10))">
