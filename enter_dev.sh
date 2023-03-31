@@ -10,7 +10,8 @@ docker run --rm -it \
     -p 51821:51821/tcp \
     -p 5173:5173 \
     -v $PWD:/app \
-    -v $PWD:/etc/wireguard \
+    -v $PWD/mount/wireguard:/etc/wireguard \
+    -e WG_PORT=51822 \
     --cap-add=NET_ADMIN \
     --cap-add=SYS_MODULE \
     --sysctl=net.ipv4.ip_forward=1 \

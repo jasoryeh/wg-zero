@@ -2,6 +2,7 @@
 /wg0.conf
 /wg0.json
 node_modules
+mount
 
 ## From Vite
 # Logs
