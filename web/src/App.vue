@@ -1,5 +1,6 @@
 <script setup>
 import Credits from './components/Credits.vue'
+import QRCode from './components/QRCode.vue'
 </script>
 
 <template>
@@ -284,18 +285,7 @@ import Credits from './components/Credits.vue'
       </div>
 
       <!-- QR Code-->
-      <div v-if="qrcode">
-        <div class="bg-black bg-opacity-50 fixed top-0 right-0 left-0 bottom-0 flex items-center justify-center z-20">
-          <div class="bg-white rounded-md shadow-lg relative p-8">
-            <button @click="qrcode = null" class="absolute right-4 top-4 text-gray-600 hover:text-gray-800">
-              <svg class="w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <img :src="qrcode" />
-          </div>
-        </div>
-      </div>
+      <QRCode v-if="qrcode" :qrcode="qrcode" @close="qrcode = null" />
 
       <!-- Create Dialog -->
       <div v-if="clientCreate" class="fixed z-10 inset-0 overflow-y-auto">
@@ -317,15 +307,15 @@ import Credits from './components/Credits.vue'
           <!-- This element is to trick the browser into centering the modal contents. -->
           <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
           <!--
-        Modal panel, show/hide based on modal state.
+            Modal panel, show/hide based on modal state.
 
-        Entering: "ease-out duration-300"
-          From: "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-          To: "opacity-100 translate-y-0 sm:scale-100"
-        Leaving: "ease-in duration-200"
-          From: "opacity-100 translate-y-0 sm:scale-100"
-          To: "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-      -->
+            Entering: "ease-out duration-300"
+              From: "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              To: "opacity-100 translate-y-0 sm:scale-100"
+            Leaving: "ease-in duration-200"
+              From: "opacity-100 translate-y-0 sm:scale-100"
+              To: "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+          -->
           <div
             class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
             role="dialog" aria-modal="true" aria-labelledby="modal-headline">
@@ -374,15 +364,15 @@ import Credits from './components/Credits.vue'
       <div v-if="clientDelete" class="fixed z-10 inset-0 overflow-y-auto">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
           <!--
-        Background overlay, show/hide based on modal state.
+            Background overlay, show/hide based on modal state.
 
-        Entering: "ease-out duration-300"
-          From: "opacity-0"
-          To: "opacity-100"
-        Leaving: "ease-in duration-200"
-          From: "opacity-100"
-          To: "opacity-0"
-      -->
+            Entering: "ease-out duration-300"
+              From: "opacity-0"
+              To: "opacity-100"
+            Leaving: "ease-in duration-200"
+              From: "opacity-100"
+              To: "opacity-0"
+          -->
           <div class="fixed inset-0 transition-opacity" aria-hidden="true">
             <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
           </div>
@@ -390,15 +380,15 @@ import Credits from './components/Credits.vue'
           <!-- This element is to trick the browser into centering the modal contents. -->
           <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
           <!--
-        Modal panel, show/hide based on modal state.
+            Modal panel, show/hide based on modal state.
 
-        Entering: "ease-out duration-300"
-          From: "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-          To: "opacity-100 translate-y-0 sm:scale-100"
-        Leaving: "ease-in duration-200"
-          From: "opacity-100 translate-y-0 sm:scale-100"
-          To: "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-      -->
+            Entering: "ease-out duration-300"
+              From: "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              To: "opacity-100 translate-y-0 sm:scale-100"
+            Leaving: "ease-in duration-200"
+              From: "opacity-100 translate-y-0 sm:scale-100"
+              To: "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+          -->
           <div
             class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
             role="dialog" aria-modal="true" aria-labelledby="modal-headline">
