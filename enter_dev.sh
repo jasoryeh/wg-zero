@@ -15,4 +15,5 @@ docker run --rm -it \
     --cap-add=SYS_MODULE \
     --sysctl=net.ipv4.ip_forward=1 \
     --sysctl=net.ipv4.conf.all.src_valid_mark=1 \
+    --sysctl net.ipv6.conf.all.disable_ipv6=0 \
     wg-easy-test $*
