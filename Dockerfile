@@ -4,7 +4,7 @@ FROM node:19-alpine AS build_node_modules
 COPY ./ /app
 WORKDIR /app
 RUN cd /app/server && npm i --production
-RUN cd /app/web && npm i --production
+RUN cd /app/web && npm i --production && vite build
 
 # Copy build result to a new image.
 # This saves a lot of disk space.

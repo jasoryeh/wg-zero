@@ -13,6 +13,7 @@ const {
   PORT,
   RELEASE,
   PASSWORD,
+  WG_WEBUI,
 } = require('../config');
 
 module.exports = class Server {
@@ -37,6 +38,11 @@ module.exports = class Server {
       }
       next();
     });
+
+    if (WG_WEBUI) {
+      console.log("Web GUI enabled.");
+      this.app.use('/', express.static(path.join(__dirname, '..', '..', 'web', 'dist')));
+    }
 
     this.routes();
 
