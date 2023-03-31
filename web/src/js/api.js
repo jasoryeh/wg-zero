@@ -6,7 +6,7 @@
 
 function getEndpoint() {
   let endpoint = new URLSearchParams(window.location.search).get("endpoint");
-  return endpoint ?? ".";
+  return endpoint ?? new URL(location.href).origin;
 }
 
 function attachPassword(url, password) {
