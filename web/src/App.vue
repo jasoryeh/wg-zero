@@ -127,7 +127,7 @@ import { Icon } from '@iconify/vue';
               <div class="flex-grow">
 
                 <!-- Name -->
-                <div class="text-gray-700 group" :title="'Created on <not implemented>' + 'dateTime(new Date(client.settings.createdAt))'">
+                <div class="text-gray-700 group" :title="`Public Key: ${client.PublicKey}`">
 
                   <!-- Show -->
                   <input v-show="clientEditNameId === client.Reference" v-model="clientEditName"
