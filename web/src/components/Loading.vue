@@ -2,7 +2,7 @@
 </script>
 
 <template>
-    <div class="text-gray-300 pt-24 pb-12">
+    <div class="text-gray-300">
       <svg class="w-5 animate-spin mx-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor"

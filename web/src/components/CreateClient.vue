@@ -1,4 +1,5 @@
 <script setup>
+import { Icon } from '@iconify/vue';
 </script>
 
 <template>
@@ -36,11 +37,7 @@
                     <div class="sm:flex sm:items-start">
                         <div
                             class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-800 sm:mx-0 sm:h-10 sm:w-10">
-                            <svg class="h-6 w-6 text-white" inline xmlns="http://www.w3.org/2000/svg" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
+                            <Icon icon="material-symbols:add" class="h-6 w-6 text-white" />
                         </div>
                         <div class="flex-grow mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                             <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-headline">
@@ -64,7 +61,7 @@
                     </div>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button v-if="clientCreateName.length && privateKey.length" type="button" @click="this.submitted()"
+                    <button v-if="clientCreateName.length && privateKey.length" type="button" @click="submitted()"
                         class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-800 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
                         Create
                     </button>
@@ -72,7 +69,7 @@
                         class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-gray-200 text-base font-medium text-white sm:ml-3 sm:w-auto sm:text-sm cursor-not-allowed">
                         Create
                     </button>
-                    <button type="button" @click="this.cancel()"
+                    <button type="button" @click="cancel()"
                         class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                         Cancel
                     </button>

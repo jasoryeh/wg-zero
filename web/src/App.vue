@@ -8,6 +8,8 @@ import Update from './components/Update.vue'
 import Login from './components/Login.vue'
 
 import API from './js/api.js';
+
+import { Icon } from '@iconify/vue';
 </script>
 
 <template>
@@ -17,11 +19,7 @@ import API from './js/api.js';
       <span v-if="meta && meta.auth"
         class="text-sm text-gray-400 mb-10 mr-2 mt-3 cursor-pointer hover:underline float-right" @click="logout">
         Logout
-        <svg class="h-3 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-          stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-        </svg>
+        <Icon icon="heroicons:arrow-right-on-rectangle-20-solid" class="h-3 inline" />
       </span>
       <!-- Title and Icon -->
       <h1 class="text-4xl font-medium mt-10 mb-2">
@@ -35,6 +33,7 @@ import API from './js/api.js';
 
       <!-- Clients -->
       <div class="shadow-md rounded-lg bg-white overflow-hidden">
+        <!-- Clients card header -->
         <div class="flex flex-row flex-auto items-center p-3 px-5 border border-b-2 border-gray-100">
           <div class="flex-grow">
             <p class="text-2xl font-medium">Clients</p>
@@ -42,29 +41,23 @@ import API from './js/api.js';
           <div class="flex-shrink-0">
             <button @click="reloadServer()"
               class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
-              <svg class="w-4 mr-2" inline xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M17.65 6.35a7.95 7.95 0 0 0-6.48-2.31c-3.67.37-6.69 3.35-7.1 7.02C3.52 15.91 7.27 20 12 20a7.98 7.98 0 0 0 7.21-4.56c.32-.67-.16-1.44-.9-1.44c-.37 0-.72.2-.88.53a5.994 5.994 0 0 1-6.8 3.31c-2.22-.49-4.01-2.3-4.48-4.52A6.002 6.002 0 0 1 12 6c1.66 0 3.14.69 4.22 1.78l-1.51 1.51c-.63.63-.19 1.71.7 1.71H19c.55 0 1-.45 1-1V6.41c0-.89-1.08-1.34-1.71-.71l-.64.65z"/>
-              </svg>
+              <Icon icon="material-symbols:refresh-rounded" class="w-4 mr-2" />
               <span class="text-sm">Reload</span>
             </button>
             <button @click="commitServer()"
               class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
-              <svg class="w-4 mr-2" inline xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M21 7v12q0 .825-.588 1.413T19 21H5q-.825 0-1.413-.588T3 19V5q0-.825.588-1.413T5 3h12l4 4Zm-9 11q1.25 0 2.125-.875T15 15q0-1.25-.875-2.125T12 12q-1.25 0-2.125.875T9 15q0 1.25.875 2.125T12 18Zm-6-8h9V6H6v4Z"/>
-              </svg>
+              <Icon icon="material-symbols:save" class="w-4 mr-2" />
               <span class="text-sm">Save</span>
             </button>
             <button @click="clientCreate = true; clientCreateName = '';"
               class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
-              <svg class="w-4 mr-2" inline xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
+              <Icon icon="material-symbols:add" class="w-4 mr-2" />
               <span class="text-sm">New</span>
             </button>
           </div>
         </div>
 
+        <!-- Clients list -->
         <div>
           <!-- Client -->
           <div v-if="clients && clients.length > 0" v-for="client in clients" :key="client.PublicKey"
@@ -116,11 +109,7 @@ import API from './js/api.js';
 
             <div class="relative p-5 z-10 flex flex-row">
               <div class="h-10 w-10 mr-5 rounded-full bg-gray-50 relative">
-                <svg class="w-6 m-2 text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                  fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                    clip-rule="evenodd" />
-                </svg>
+                <Icon icon="heroicons-solid:user" class="w-6 h-6 m-2 text-gray-300" />
                 <img v-if="client.avatar" :src="client.avatar" class="w-10 rounded-full absolute top-0 left-0" />
 
                 <div
@@ -148,12 +137,7 @@ import API from './js/api.js';
                   <span v-show="clientEditNameId !== client.Reference"
                     @click="clientEditName = client.name; clientEditNameId = client.Reference;"
                     class="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                      class="h-4 w-4 inline align-middle opacity-25 hover:opacity-100" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
+                    <Icon icon="heroicons:pencil-square" class="h-4 w-4 ml-1 inline align-middle opacity-25 hover:opacity-100" />
                   </span>
                 </div>
 
@@ -177,12 +161,7 @@ import API from './js/api.js';
                     <span v-show="clientEditAddressId !== client.Reference"
                       @click="clientEditAddress = client.address; clientEditAddressId = client.Reference; setTimeout(() => $refs['client-' + client.Reference + '-address'][0].select(), 1);"
                       class="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
-                      <svg xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4 inline align-middle opacity-25 hover:opacity-100" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
+                      <Icon icon="heroicons:pencil-square" class="h-4 w-4 ml-1 inline align-middle opacity-25 hover:opacity-100" />
                     </span>
                   </span>
 
@@ -191,12 +170,7 @@ import API from './js/api.js';
                     @mouseover="client.hoverTx = clientsPersist[client.PublicKey].hoverTx = true;"
                     @mouseleave="client.hoverTx = clientsPersist[client.PublicKey].hoverTx = false;" style="cursor: default;">
                     ·
-                    <svg class="align-middle h-3 inline" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                      fill="currentColor">
-                      <path fill-rule="evenodd"
-                        d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z"
-                        clip-rule="evenodd" />
-                    </svg>
+                    <Icon icon="heroicons-solid:arrow-down" class="align-middle h-3 inline" />
                     {{bytes(client.transferTxCurrent)}}/s
                   </span>
 
@@ -205,12 +179,7 @@ import API from './js/api.js';
                     @mouseover="client.hoverRx = clientsPersist[client.PublicKey].hoverRx = true;"
                     @mouseleave="client.hoverRx = clientsPersist[client.PublicKey].hoverRx = false;" style="cursor: default;">
                     ·
-                    <svg class="align-middle h-3 inline" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-                      fill="currentColor">
-                      <path fill-rule="evenodd"
-                        d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z"
-                        clip-rule="evenodd" />
-                    </svg>
+                    <Icon icon="heroicons-solid:arrow-up" class="align-middle h-3 inline" />
                     {{bytes(client.transferRxCurrent)}}/s
                   </span>
 
@@ -238,32 +207,20 @@ import API from './js/api.js';
                   <!-- Show QR-->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"
                     title="Show QR Code" @click="qrcode = `${getEndpoint()}/api/wireguard/client/${client.Reference}/qrcode.svg`">
-                    <svg class="w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                    </svg>
+                    <Icon icon="heroicons-outline:qrcode" class="w-5 h-5" />
                   </button>
 
                   <!-- Download Config -->
                   <a :href="`${getEndpoint()}/api/wireguard/client/${client.Reference}/configuration`" download
                     class="align-middle inline-block bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"
                     title="Download Configuration">
-                    <svg class="w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
+                    <Icon icon="heroicons:arrow-down-tray" class="w-5 h-5" />
                   </a>
 
                   <!-- Delete -->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition"
                     title="Delete Client" @click="clientDelete = client">
-                    <svg class="w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd"
-                        d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                        clip-rule="evenodd" />
-                    </svg>
+                    <Icon icon="heroicons:trash" class="w-5 h-5" />
                   </button>
                 </div>
               </div>
@@ -271,27 +228,21 @@ import API from './js/api.js';
             </div>
 
           </div>
+
+          <!-- No Clients -->
           <div v-if="clients && clients.length === 0">
             <p class="text-center m-10 text-gray-400 text-sm">There are no clients yet.<br /><br />
               <button @click="clientCreate = true; clientCreateName = '';"
                 class="bg-red-800 text-white hover:bg-red-700 border-2 border-none py-2 px-4 rounded inline-flex items-center transition">
-                <svg class="w-4 mr-2" inline xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
+                <Icon icon="material-symbols:add" class="w-4 mr-2" />
                 <span class="text-sm">New Client</span>
               </button>
             </p>
           </div>
+
+          <!-- Loading clients still -->
           <div v-if="clients === null" class="text-gray-200 p-5">
-            <svg class="w-5 animate-spin mx-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-              fill="currentColor">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-              </path>
-            </svg>
+            <Loading class="" />
           </div>
         </div>
       </div>
@@ -307,9 +258,9 @@ import API from './js/api.js';
     </div>
 
     <!-- Authentication -->
-    <Login v-if="authenticated === false" @try="(pass) => { password = pass; this.login() }" />
+    <Login v-if="authenticated === false" @try="(pass) => { password = pass; login() }" />
 
-    <Loading v-if="authenticated === null" />
+    <Loading v-if="authenticated === null" class="pt-24 pb-12" />
 
   </div>
   <Credits />
