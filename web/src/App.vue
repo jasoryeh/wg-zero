@@ -12,6 +12,7 @@ import API from './js/api.js';
 import { Icon } from '@iconify/vue';
 import CryptoJS from 'crypto-js';
 import { format as timeagoFormat } from 'timeago.js';
+import { Buffer } from 'buffer/';
 </script>
 
 <template>
@@ -430,7 +431,7 @@ export default {
 
         // until replaced
         client._meta = client._meta ?? {};
-        client.Reference = buffer.Buffer.from(cid).toString('hex');
+        client.Reference = Buffer.from(cid).toString('hex');
         client.name = client._meta.Name || cid;
         client.addresses = client.AllowedIPs;
       }
