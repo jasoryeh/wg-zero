@@ -47,7 +47,7 @@ module.exports = class Server {
     this.routes();
 
     this.app.listen(PORT, () => {
-      debug(`Listening on http://0.0.0.0:${PORT}`);
+      console.log(`wg-easy is listening on ${PORT}`);
     });
  }
 
