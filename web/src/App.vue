@@ -11,6 +11,7 @@ import API from './js/api.js';
 
 import { Icon } from '@iconify/vue';
 import CryptoJS from 'crypto-js';
+import { format as timeagoFormat } from 'timeago.js';
 </script>
 
 <template>
@@ -192,7 +193,7 @@ import CryptoJS from 'crypto-js';
                   <!-- Last seen -->
                   <span v-if="client.stats.lastHandshake"
                     :title="'Last seen on ' + dateTime(new Date(client.stats.lastHandshake))">
-                    · {{timeago(new Date(client.stats.lastHandshake))}}
+                    · {{timeFormat(new Date(client.stats.lastHandshake))}}
                   </span>
                 </div>
               </div>
@@ -328,8 +329,8 @@ export default {
     getEndpoint() {
       return this.api.getEndpoint();
     },
-    timeago(date) {
-      return timeago().format(date);
+    timeFormat(date) {
+      return timeagoFormat(date);
     },
     dateTime(value) {
       return new Intl.DateTimeFormat(undefined, {
@@ -481,8 +482,8 @@ export default {
   },
   filters: {
     bytes,
-    timeago: value => {
-      return timeago().format(value);
+    timeFormat: value => {
+      return timeagoFormat(value);
     },
   },
   async mounted() {
