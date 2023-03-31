@@ -1,9 +1,11 @@
 <script setup>
+import Loading from './components/Loading.vue'
 import Credits from './components/Credits.vue'
 import QRCode from './components/QRCode.vue'
 import CreateClient from './components/CreateClient.vue'
 import DeleteClient from './components/DeleteClient.vue'
-import Loading from './components/Loading.vue'
+import Update from './components/Update.vue'
+import Login from './components/Login.vue'
 </script>
 
 <template>
@@ -22,22 +24,11 @@ import Loading from './components/Loading.vue'
         <img src="/img/logo.png" width="32" class="inline align-middle" />
         <span class="align-middle">WireGuard</span>
       </h1>
+
       <h2 class="text-sm text-gray-400 mb-10"></h2>
 
-      <div v-if="latestRelease" class="bg-red-800 p-4 text-white text-sm font-small mb-10 rounded-md shadow-lg"
-        :title="`v${currentRelease} → v${latestRelease.version}`">
-        <div class="container mx-auto flex flex-row flex-auto items-center">
-          <div class="flex-grow">
-            <p class="font-bold">There is an update available!</p>
-            <p>{{latestRelease.changelog}}</p>
-          </div>
-
-          <a href="https://github.com/WeeJeWel/wg-easy#updating" target="_blank"
-            class="p-3 rounded-md bg-white float-right font-sm font-semibold text-red-800 flex-shrink-0 border-2 border-red-800 hover:border-white hover:text-white hover:bg-red-800 transition-all">
-            Update →
-          </a>
-        </div>
-      </div>
+      <!-- Update notification -->
+      <Update v-if="latestRelease" :currentRelease="currentRelease" :latestRelease="latestRelease.version" :changelog="latestRelease.changelog" />
 
       <div class="shadow-md rounded-lg bg-white overflow-hidden">
         <div class="flex flex-row flex-auto items-center p-3 px-5 border border-b-2 border-gray-100">
@@ -298,38 +289,7 @@ import Loading from './components/Loading.vue'
     </div>
 
     <!-- Authentication -->
-    <div v-if="authenticated === false">
-      <h1 class="text-4xl font-medium my-16 text-gray-700 text-center">WireGuard</h1>
-
-      <form @submit="login" class="shadow rounded-md bg-white mx-auto w-64 p-5 overflow-hidden mt-10">
-        <!-- Avatar -->
-        <div class="h-20 w-20 mb-10 mt-5 mx-auto rounded-full bg-red-800 relative overflow-hidden">
-          <svg class="w-10 h-10 m-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
-            fill="currentColor">
-            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-          </svg>
-        </div>
-
-        <input type="password" name="password" placeholder="Password" v-model="password"
-          class="px-3 py-2 text-sm text-gray-500 mb-5 border-2 border-gray-100 rounded-lg w-full focus:border-red-800 outline-none" />
-
-        <button v-if="authenticating"
-          class="bg-red-800 w-full rounded shadow py-2 text-sm text-white cursor-not-allowed">
-          <svg class="w-5 animate-spin mx-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-            fill="currentColor">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-            </path>
-          </svg>
-        </button>
-        <input v-if="!authenticating && password" type="submit"
-          class="bg-red-800 w-full rounded shadow py-2 text-sm text-white hover:bg-red-700 transition cursor-pointer"
-          value="Sign In">
-        <input v-if="!authenticating && !password" type="submit"
-          class="bg-gray-200 w-full rounded shadow py-2 text-sm text-white cursor-not-allowed" value="Sign In">
-      </form>
-    </div>
+    <Login v-if="authenticated === false" @try="(password) => { this.password = password; this.login() }" />
 
     <Loading v-if="authenticated === null" />
 
@@ -518,7 +478,7 @@ export default {
         console.error("Authentication failed...");
         console.error(err.message || err.toString());
       }
-      console.log(`Login: ${this.authenticate}`);
+      console.log(`Login: ${this.authenticated}`);
       this.authenticating = false;
       this.password = null;
       return this.refresh();
