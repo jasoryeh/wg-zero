@@ -100,4 +100,26 @@ class API {
     });
   }
 
+  async save() {
+    return this.call({
+      method: 'get',
+      path: '/wireguard/save',
+    });
+  }
+
+  async reload() {
+    return this.call({
+      method: 'get',
+      path: '/wireguard/reload',
+    });
+  }
+
+  async updateName(clientRef, name) {
+    return this.call({
+      method: 'put',
+      path: `/wireguard/client/${clientRef}/name/`,
+      body: { name },
+    });
+  }
+
 }

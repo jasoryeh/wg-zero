@@ -90,7 +90,7 @@ module.exports = class Server {
     }
   })
   .get('/api/wireguard/server', async (req, res) => {
-    let intf = {...this.wireguard.config.interface};
+    let intf = JSON.parse(JSON.stringify(this.wireguard.config.interface));
     // hide sensitive?
     intf['PrivateKey'] = undefined;
     intf['PreUp'] = undefined;
@@ -98,6 +98,28 @@ module.exports = class Server {
     intf['PreDown'] = undefined;
     intf['PostDown'] = undefined;
     res.status(200).send(intf);
+  })
+  .get('/api/wireguard/save', async (req, res) => {
+    this.wireguard.export();
+    this.wireguard.reboot();
+  })
+  .get('/api/wireguard/reload', async (req, res) => {
+    this.wireguard.import();
+  })
+  .put('/api/wireguard/client/:clientRef/name', async (req, res) => {
+    const { clientRef } = req.params;
+    const { name } = req.body;
+    const pubKey = Buffer.from(clientRef, 'hex').toString('utf8');
+
+    let client = this.wireguard.getClient(pubKey);
+    if (!client) {
+      res.status(404).send({});
+    }
+
+    console.log(`Updating name for ${pubKey} - ${client._meta.Name} -> ${name}`);
+    client._meta.Name = name;
+
+    res.status(200).send({});
   });
  }
 };

@@ -33,6 +33,7 @@ const {
   generatePreSharedKey
 } = require('./WireGuardUtils');
 
+const BACKUP_DIR = 'wg-easy-backups';
 const DUMP_COLUMNS = ['public', 'preshared', 'lastEndpoint', 'allowedIPs', 'lastHandshake', 'rx', 'tx', 'persistentKeepalive'];
 /**
  * Reads `wg show <interface> dump`
@@ -72,13 +73,12 @@ function writeRawConfig(cfg) {
         lines.push(`#!${metaKey} = ${finalValue}`);
       }
     } else {
-      if ((value instanceof Array) && (key.startsWith('Pre') || key.startsWith("Post"))) {
+      if (value instanceof Array) {
         for (let cmd of value) {
           lines.push(`${key} = ${cmd}`);
         }
       } else {
-        let finalValue = (value instanceof Array) ? value.join(",") : value;
-        lines.push(`${key} = ${finalValue}`);
+        lines.push(`${key} = ${value}`);
       }
     }
   }
@@ -90,24 +90,30 @@ function writeRawConfig(cfg) {
       if (key == 'type') continue;
       let value = peer[key];
       if (key == '_meta') {
-        for (let metaKey in value) {
-          let metaValue = value[metaKey];
-          let finalValue = (metaValue instanceof Array) ? metalValue.join(",") : metaValue;
-          lines.push(`#!${metaKey} = ${finalValue}`);
-        }
-      } else {
-        if ((value instanceof Array) && (key.startsWith('Pre') || key.startsWith("Post"))) {
+        if (value instanceof Array) {
           for (let cmd of value) {
             lines.push(`${key} = ${cmd}`);
           }
         } else {
-          let finalValue = (value instanceof Array) ? value.join(",") : value;
-          lines.push(`${key} = ${finalValue}`);
+          lines.push(`${key} = ${value}`);
+        }
+      } else {
+        if (value instanceof Array) {
+          for (let cmd of value) {
+            lines.push(`${key} = ${cmd}`);
+          }
+        } else {
+          lines.push(`${key} = ${value}`);
         }
       }
     }
     lines.push('');
   }
+
+  let config_path = path.join(WG_PATH, `${WG_INTERFACE}.conf`);
+  fs.writeFileSync(config_path, lines.join('\n'), {
+    encoding: "utf8"
+  });
   return lines;
 }
 
@@ -167,27 +173,50 @@ function readRawConfig() {
   return parsed;
 }
 
+function backupSuffix() {
+  let d = new Date();
+  return (d.toLocaleDateString('en-US') + '_' + d.toLocaleTimeString('en-US')).replaceAll('/', '_').replaceAll(':', '_').replaceAll(' ', '_');
+}
+
 class WireGuard {
   constructor() {
     this.config = null;
   }
 
-  load() {
-    /*let raw_read = fs.readFileSync(`${WG_INTERFACE}.json`, 'utf8');
-    this.config = JSON.parse(raw_read);
+  async backup() {
+    console.log("Making a backup...");
+    await Util.exec(`mkdir -p ${WG_PATH}/${BACKUP_DIR}`);
+    await Util.exec(`cp ${WG_PATH}/${WG_INTERFACE}.conf ${WG_PATH}/${BACKUP_DIR}/${WG_INTERFACE}_${backupSuffix()}.conf`);
+    await Util.exec(`cp -f ${WG_PATH}/${WG_INTERFACE}.conf ${WG_PATH}/${BACKUP_DIR}/${WG_INTERFACE}_latest.conf`);
+    console.log("Backup complete.");
+  }
 
-    if (!this.config.interface || !this.config.peers) {
-      throw new Error("Invalid config loaaded!");
-    }*/
+  async revert() {
+    console.log("Reverting to last backup...");
+    await Util.exec(`cp -f ${WG_PATH}/${BACKUP_DIR}/${WG_INTERFACE}_latest.conf ${WG_PATH}/${WG_INTERFACE}.conf`);
+    console.log("Reverted.");
+  }
+
+  async reboot() {
+    console.log("Rebooting/reloading WireGuard...");
+    await Util.exec(`wg-quick down wg0`);
+    await Util.exec(`wg-quick up wg0`);
+    console.log("Rebooted.");
+  }
+
+  load() {
     this.import();
   }
 
   import() {
+    console.log("Importing...");
+    // no deep copy here since readRawConfig just regenerates every time
     let parsed = readRawConfig();
 
     let intf = parsed.interface;
     let peers = parsed.peers;
-    
+
+    // apply modifications to items, this should be reversed (if necessary before exporting)
     intf['Address'] = intf['Address'].split(',').map((item) => item.trim());
     intf['ListenPort'] = Number(intf['ListenPort']);
     if (intf['MTU']) {
@@ -205,9 +234,34 @@ class WireGuard {
     }
 
     this.config = parsed;
+    console.log("Import complete.");
   }
   
   export() {
+    console.log("Exporting...");
+    // back up
+    this.backup();
+
+    // deep copy
+    let parsed = JSON.parse(JSON.stringify(this.config));
+    
+    let intf = parsed.interface;
+    let peers = parsed.peers;
+
+    intf['Address'] = intf['Address'].join(',');
+    // ListenPort - number
+    // MTU - number
+    if (intf['DNS']) {
+      intf['DNS'] = intf['DNS'].join(',');
+    }
+
+    for (let peer of peers) {
+      peer['AllowedIPs'] = peer['AllowedIPs'].join(',');
+      // PersistentKeepalive - number
+    }
+
+    writeRawConfig(parsed);
+    console.log("Export complete.");
   }
 
   getClients() {
@@ -216,8 +270,9 @@ class WireGuard {
 
   getClient(publicKey) {
     for (let peer of this.config.peers) {
-      if (peer.PublicKey == publicKey) {}
-      return peer;
+      if (peer.PublicKey == publicKey) {
+        return peer;
+      }
     }
     return null;
   }

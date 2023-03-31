@@ -130,7 +130,7 @@ import Login from './components/Login.vue'
 
                   <!-- Edit -->
                   <span v-show="clientEditNameId !== client.Reference"
-                    @click="clientEditName = client.name; clientEditNameId = client.Reference; setTimeout(() => $refs['client-' + client.Reference + '-name'][0].select(), 1);"
+                    @click="clientEditName = client.name; clientEditNameId = client.Reference;"
                     class="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
                     <svg xmlns="http://www.w3.org/2000/svg"
                       class="h-4 w-4 inline align-middle opacity-25 hover:opacity-100" fill="none" viewBox="0 0 24 24"
@@ -346,6 +346,8 @@ export default {
   },
   methods: {
     bytes,
+    setTimeout,
+    setInterval,
     log(stuff) {
       console.log(stuff);
     },
@@ -452,8 +454,9 @@ export default {
         client.stats = cstats;
 
         // until replaced
+        client._meta = client._meta ?? {};
         client.Reference = buffer.Buffer.from(cid).toString('hex');
-        client.name = cid;
+        client.name = client._meta.Name || cid;
         client.addresses = [];
         for (let address of client.AllowedIPs) {
           let [_address, _subnet] = address.split("/");
@@ -463,6 +466,8 @@ export default {
           })
         }
       }
+
+      // make it available at the end.
       this.clients = clients;
     },
     async login(e) {
@@ -497,6 +502,9 @@ export default {
     async newClient(name) {
       // unimplemented
     },
+    async updateClientName(client, name) {
+      await this.api.updateName(client.Reference, name);
+    }
   },
   filters: {
     bytes,
