@@ -100,8 +100,8 @@ module.exports = class Server {
     res.status(200).send(intf);
   })
   .get('/api/wireguard/save', async (req, res) => {
-    this.wireguard.export();
-    this.wireguard.reboot();
+    await this.wireguard.export();
+    await this.wireguard.reboot();
   })
   .get('/api/wireguard/reload', async (req, res) => {
     this.wireguard.import();
