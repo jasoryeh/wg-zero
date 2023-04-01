@@ -66,6 +66,7 @@ module.exports = class Server {
   this.app.get('/api/meta', (req, res) => {
     res.status(200).send({
       auth: !!PASSWORD,
+      needsSetup: !this.wireguard.config,
     })
   });
   this.app.get('/api/auth', (req, res) => {
@@ -117,9 +118,19 @@ module.exports = class Server {
     res.status(200).send(intf);
   })
   .get('/api/wireguard/save', async (req, res) => {
-    await this.wireguard.export();
-    await this.wireguard.reboot();
-    res.status(200).send({});
+    try {
+      // back up
+      await this.backup();
+      await this.wireguard.export();
+      await this.wireguard.reboot();
+      res.status(200).send({});
+    } catch(err) {
+      console.error("Failed to save configuration: ");
+      console.error(err);
+      await this.revert();
+      await this.wireguard.reboot();
+      res.status(500).send({});
+    }
   })
   .get('/api/wireguard/reload', async (req, res) => {
     await this.wireguard.import();
@@ -131,6 +142,30 @@ module.exports = class Server {
   })
   .get('/api/wireguard/up', async (req, res) => {
     await this.wireguard.up();
+    res.status(200).send({});
+  })
+  .post('/api/wireguard/server/regenerate', async (req, res) => {
+    this.wireguard.config.Interface.PrivateKey = await generatePrivateKey();
+    res.status(200).send({});
+  })
+  .put('/api/wireguard/server/addresses', async (req, res) => {
+    const { addresses } = req.body;
+    this.wireguard.config.Address = addresses;
+    res.status(200).send({});
+  })
+  .put('/api/wireguard/server/port', async (req, res) => {
+    const { port } = req.body;
+    this.wireguard.config.ListenPort = port;
+    res.status(200).send({});
+  })
+  .post('/api/wireguard/server/new', async (req, res) => {
+    console.log("Setting up a new WireGuard configuration...");
+    try { await this.wireguard.backup(); } catch(_) {
+      console.log('Ignoring.');
+    }
+    await this.wireguard.init();
+    await this.wireguard.export();
+    console.log("Done.");
     res.status(200).send({});
   })
   .put('/api/wireguard/client/:clientRef/name', async (req, res) => {
@@ -145,6 +180,51 @@ module.exports = class Server {
 
     console.log(`Updating name for ${pubKey} - ${client._meta.Name} -> ${name}`);
     client._meta.Name = name;
+
+    res.status(200).send({});
+  })
+  .put('/api/wireguard/client/:clientRef/addresses', async (req, res) => {
+    const { clientRef } = req.params;
+    const { addresses } = req.body;
+    const pubKey = Buffer.from(clientRef, 'hex').toString('utf8');
+
+    let client = this.wireguard.getClient(pubKey);
+    if (!client) {
+      res.status(404).send({});
+    }
+
+    console.log(`Updating AllowedIPs for ${pubKey} - ${client.AllowedIPs} -> ${addresses}`);
+    client.AllowedIPs = addresses;
+
+    res.status(200).send({});
+  })
+  .put('/api/wireguard/client/:clientRef/publickey', async (req, res) => {
+    const { clientRef } = req.params;
+    const { publicKey } = req.body;
+    const pubKey = Buffer.from(clientRef, 'hex').toString('utf8');
+
+    let client = this.wireguard.getClient(pubKey);
+    if (!client) {
+      res.status(404).send({});
+    }
+
+    console.log(`Updating PublicKey for ${pubKey} - ${pubKey} -> ${publicKey}`);
+    client.PublicKey = publicKey;
+
+    res.status(200).send({});
+  })
+  .put('/api/wireguard/client/:clientRef/presharedkey', async (req, res) => {
+    const { clientRef } = req.params;
+    const { preSharedKey } = req.body;
+    const pubKey = Buffer.from(clientRef, 'hex').toString('utf8');
+
+    let client = this.wireguard.getClient(pubKey);
+    if (!client) {
+      res.status(404).send({});
+    }
+
+    console.log(`Updating PreSharedKey for ${pubKey} - ${client.PresharedKey} -> ${preSharedKey}`);
+    client.PresharedKey = preSharedKey;
 
     res.status(200).send({});
   });

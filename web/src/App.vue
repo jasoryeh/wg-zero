@@ -144,14 +144,32 @@ import { Buffer } from 'buffer/';
           </div>
 
           <!-- Loading server still -->
-          <div v-if="server === null" class="text-gray-200 p-5">
+          <div v-if="server === null && isServerConfigured()" class="text-gray-200 p-5">
             <Loading class="" />
+          </div>
+
+          <!-- Needs setup -->
+          <div v-if="!isServerConfigured()">
+            <p class="text-center m-10 text-gray-400 text-sm">
+            This server is not set up yet, click initialize to get started.
+            <br /><br />
+            <button @click="initializeServer()" v-if="!state_settingUp"
+              class="bg-red-800 text-white hover:bg-red-700 border-2 border-none py-2 px-4 rounded inline-flex items-center transition">
+              <Icon icon="heroicons-solid:bolt" class="w-4 mr-2" />
+              <span class="text-sm">Initialize</span>
+            </button>
+            <button v-else
+              class="bg-gray-800 text-white hover:bg-gray-700 border-2 border-none py-2 px-4 rounded inline-flex items-center transition">
+              <Icon icon="heroicons-solid:bolt" class="w-4 mr-2" />
+              <span class="text-sm">Initialize</span>
+            </button>
+            </p>
           </div>
         </div>
       </div>
 
       <!-- Clients -->
-      <div class="shadow-md rounded-lg bg-white overflow-hidden">
+      <div v-if="isServerConfigured()" class="shadow-md rounded-lg bg-white overflow-hidden">
         <!-- Clients card header -->
         <div class="flex flex-row flex-auto items-center p-3 px-5 border border-b-2 border-gray-100">
           <div class="flex-grow">
@@ -174,7 +192,7 @@ import { Buffer } from 'buffer/';
 
         <!-- Clients list -->
         <div>
-          <!-- Client -->
+          <!-- Client if there are any -->
           <div v-if="clients && clients.length > 0" v-for="client in clients" :key="client.PublicKey"
             class="relative overflow-hidden border-b border-gray-100 border-solid">
 
@@ -422,6 +440,9 @@ export default {
       clientsPersist: {},
       server: null,
 
+      /* state */
+      state_settingUp: false,
+
       /* unchanged */
       clientDelete: null,
       clientCreate: null,
@@ -458,6 +479,9 @@ export default {
         minute: 'numeric',
       }).format(value);
     },
+    isServerConfigured() {
+      return !this.meta.needsSetup;
+    },
     isServerUp() {
       return this.server && this.server._stats.up;
     },
@@ -489,6 +513,10 @@ export default {
       if (!this.authenticated) return;
 
       // request, and format data
+      this.meta = await this.api.getMeta();
+      if (!this.isServerConfigured()) {
+        return;
+      } 
       let clients = await this.api.getClients();
       let _stats = await this.api.getStats();
       this.server = await this.api.getServer();
@@ -607,6 +635,17 @@ export default {
     },
     async serverDown() {
       await this.api.down();
+    },
+    async initializeServer() {
+      this.state_settingUp = true;
+      try {
+        await this.api.setup();
+      } catch(err) {
+        console.error("Error while requesting setup...");
+        console.error(err);
+      } finally {
+        setTimeout(() => { this.state_settingUp = false; }, 5000);
+      }
     },
   },
   filters: {

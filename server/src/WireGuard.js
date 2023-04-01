@@ -44,7 +44,7 @@ async function readDump() {
   const dump = await Util.exec(`wg show ${WG_INTERFACE} dump`, {
     log: false,
   }); // capture dump data
-  debug("Client data updated.");
+  //debug("Client data updated.");
   const data = dump.trim().split('\n').slice(1).map((line) => line.split('\t')).map((data) => {
     let ret = {};
     for (let i = 0; i < data.length; i++) {
@@ -199,6 +199,18 @@ class WireGuard {
     return WG_INTERFACE;
   }
 
+  async init() {
+    this.config = {
+      interface: {
+        // optional?: type: 'Interface'
+        ListenPort: WG_PORT,
+        Address: ['10.1.3.1/24'],
+        PrivateKey: await generatePrivateKey()
+      },
+      peers: []
+    };
+  }
+
   async backup() {
     console.log("Making a backup...");
     await Util.exec(`mkdir -p ${WG_PATH}/${BACKUP_DIR}`);
@@ -269,9 +281,6 @@ class WireGuard {
   
   async export() {
     console.log("Exporting...");
-    // back up
-    await this.backup();
-
     // deep copy
     let parsed = JSON.parse(JSON.stringify(this.config));
     
@@ -290,13 +299,7 @@ class WireGuard {
       // PersistentKeepalive - number
     }
 
-    try {
-      writeRawConfig(parsed);
-    } catch(err) {
-      console.warn("Failed to commit new config to Wireguard, reverting...");
-      await this.revert();
-      console.warn("Reverted.");
-    }
+    writeRawConfig(parsed);
     console.log("Export complete.");
   }
 

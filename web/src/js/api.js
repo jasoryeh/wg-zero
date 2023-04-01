@@ -128,6 +128,13 @@ class API {
     });
   }
 
+  async setup() {
+    return this.call({
+      method: 'post',
+      path: '/wireguard/server/new',
+    });
+  }
+
   async updateName(clientRef, name) {
     return this.call({
       method: 'put',
