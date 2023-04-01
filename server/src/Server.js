@@ -120,14 +120,14 @@ module.exports = class Server {
   .get('/api/wireguard/save', async (req, res) => {
     try {
       // back up
-      await this.backup();
+      await this.wireguard.backup();
       await this.wireguard.export();
       await this.wireguard.reboot();
       res.status(200).send({});
     } catch(err) {
       console.error("Failed to save configuration: ");
       console.error(err);
-      await this.revert();
+      await this.wireguard.revert();
       await this.wireguard.reboot();
       res.status(500).send({});
     }
@@ -168,7 +168,13 @@ module.exports = class Server {
     console.log("Done.");
     res.status(200).send({});
   })
-  .put('/api/wireguard/client/:clientRef/name', async (req, res) => {
+  .put('/api/wireguard/clients/new', async (req, res) => {
+    const { publicKey, addresses, presharedKey } = req.body;
+    res.status(200).send({
+      client: await this.wireguard.addClient(publicKey, addresses, presharedKey),
+    });
+  })
+  .put('/api/wireguard/clients/:clientRef/name', async (req, res) => {
     const { clientRef } = req.params;
     const { name } = req.body;
     const pubKey = Buffer.from(clientRef, 'hex').toString('utf8');
@@ -183,7 +189,7 @@ module.exports = class Server {
 
     res.status(200).send({});
   })
-  .put('/api/wireguard/client/:clientRef/addresses', async (req, res) => {
+  .put('/api/wireguard/clients/:clientRef/addresses', async (req, res) => {
     const { clientRef } = req.params;
     const { addresses } = req.body;
     const pubKey = Buffer.from(clientRef, 'hex').toString('utf8');
@@ -198,7 +204,7 @@ module.exports = class Server {
 
     res.status(200).send({});
   })
-  .put('/api/wireguard/client/:clientRef/publickey', async (req, res) => {
+  .put('/api/wireguard/clients/:clientRef/publickey', async (req, res) => {
     const { clientRef } = req.params;
     const { publicKey } = req.body;
     const pubKey = Buffer.from(clientRef, 'hex').toString('utf8');
@@ -213,7 +219,7 @@ module.exports = class Server {
 
     res.status(200).send({});
   })
-  .put('/api/wireguard/client/:clientRef/presharedkey', async (req, res) => {
+  .put('/api/wireguard/clients/:clientRef/presharedkey', async (req, res) => {
     const { clientRef } = req.params;
     const { preSharedKey } = req.body;
     const pubKey = Buffer.from(clientRef, 'hex').toString('utf8');
@@ -227,6 +233,9 @@ module.exports = class Server {
     client.PresharedKey = preSharedKey;
 
     res.status(200).send({});
+  })
+  .delete('/api/wireguard/clients/:clientRef/delete', async (req, res) => {
+    
   })
   .post('/api/wireguard/generate/key/private', async (req, res) => {
     res.status(200).send({
