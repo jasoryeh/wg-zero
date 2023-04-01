@@ -1,18 +1,20 @@
 <script setup>
 import Loading from './components/Loading.vue'
 import Credits from './components/Credits.vue'
-import QRCode from './components/QRCode.vue'
+import ClientConfigModal from './components/QRCode.vue'
 import CreateClient from './components/CreateClient.vue'
 import DeleteClient from './components/DeleteClient.vue'
 import Update from './components/Update.vue'
 import Login from './components/Login.vue'
 
 import API from './js/api.js';
+import { IP6, IP4, IPPool, ofIPString } from './js/ip.js';
 
 import { Icon } from '@iconify/vue';
 import CryptoJS from 'crypto-js';
 import { format as timeagoFormat } from 'timeago.js';
 import { Buffer } from 'buffer/';
+import QRCode from 'qrcode';
 </script>
 
 <template>
@@ -250,6 +252,10 @@ import { Buffer } from 'buffer/';
                 <!--<img v-if="client._meta.Name && client._meta.Name.includes('@')" :src="`https://www.gravatar.com/avatar/${CryptoJS.MD5(client._meta.Name)}?d=404`" class="w-10 rounded-full absolute top-0 left-0" />-->
 
                 <div>
+                  <div v-show="clientsPersist && clientsPersist[client.PublicKey] && clientsPersist[client.PublicKey].isNew">
+                    <!-- Active dot -->
+                    <div class="text-[6px] translate-x-1 text-white px-1 rounded-full bg-blue-300 absolute top-0 right-0">NEW</div>
+                  </div>
                   <div v-if="isServerUp() && client.stats.lastHandshake && ((new Date() - new Date(client.stats.lastHandshake) < 1000 * 60 * 10))">
                     <!-- Ping radar animation -->
                     <div class="animate-ping w-4 h-4 p-1 bg-green-100 rounded-full absolute -bottom-1 -right-1"></div>
@@ -355,7 +361,7 @@ import { Buffer } from 'buffer/';
 
                   <!-- Show QR-->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Show QR Code" @click="qrcode = `${getEndpoint()}/api/wireguard/client/${client.Reference}/qrcode.svg`">
+                    title="Show QR Code" @click="showQR(client)">
                     <Icon icon="heroicons-outline:qrcode" class="w-5 h-5" />
                   </button>
 
@@ -397,10 +403,10 @@ import { Buffer } from 'buffer/';
       </div>
 
       <!-- QR Code-->
-      <QRCode v-if="qrcode" :qrcode="qrcode" @close="qrcode = null" />
+      <ClientConfigModal v-if="qrcode" :qrSVG="qrcode" @close="qrcode = null" />
 
       <!-- Create Dialog -->
-      <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="(name) => { newClient(name); clientCreate = null}" />
+      <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="({name, addresses, privateKey, publicKey, presharedKey }) => { newClient(name, addresses, privateKey, publicKey, presharedKey); clientCreate = null; }" />
 
       <!-- Delete Dialog -->
       <DeleteClient v-if="clientDelete" :name="clientDelete.name" @cancel="clientDelete = null" @confirm="clientDelete = null" />
@@ -533,50 +539,55 @@ export default {
         let cid = client.PublicKey;
         if (this.isServerUp()) {
           let cstats = stats[cid];
-          //console.log(cid, cstats);
+
+          if (!cstats) {
+            // no stats for client with pubkey cid
+            cstats = {
+              rx: 0,
+              tx: 0,
+            };
+          }
 
           /// initialize client data persistence if we dont have any historical data yet
           if (!this.clientsPersist[cid]) {
             this.clientsPersist[cid] = {};
-            // history
-            this.clientsPersist[cid].transferRxHistory = Array(50).fill(0);
-            this.clientsPersist[cid].transferTxHistory = Array(50).fill(0);
-            // last measurement (to find how much changed)
-            this.clientsPersist[cid].transferRxPrevious = cstats.rx;
-            this.clientsPersist[cid].transferTxPrevious = cstats.tx;
           }
+          var cpersist = this.clientsPersist[cid];
 
-          // Debug
-          // client.transferRx = this.clientsPersist[cid].transferRxPrevious + Math.random() * 1000;
-          // client.transferTx = this.clientsPersist[cid].transferTxPrevious + Math.random() * 1000;
+          // ensure history trackers exist
+          cpersist.transferRxHistory = cpersist.transferRxHistory ?? Array(50).fill(0);
+          cpersist.transferTxHistory = cpersist.transferTxHistory ?? Array(50).fill(0);
+          // last measurement (to find how much changed)
+          cpersist.transferRxPrevious = cpersist.transferRxPrevious ?? cstats.rx;
+          cpersist.transferTxPrevious = cpersist.transferTxPrevious ?? cstats.tx;
 
           // should we be updating the data in the history?
           if (updateCharts) {
             // how much is being transferred currently
-            this.clientsPersist[cid].transferRxCurrent = cstats.rx - this.clientsPersist[cid].transferRxPrevious;
-            this.clientsPersist[cid].transferTxCurrent = cstats.tx - this.clientsPersist[cid].transferTxPrevious;
+            cpersist.transferRxCurrent = cstats.rx - cpersist.transferRxPrevious;
+            cpersist.transferTxCurrent = cstats.tx - cpersist.transferTxPrevious;
             // update last transfer amount
-            this.clientsPersist[cid].transferRxPrevious = cstats.rx;
-            this.clientsPersist[cid].transferTxPrevious = cstats.tx;
+            cpersist.transferRxPrevious = cstats.rx;
+            cpersist.transferTxPrevious = cstats.tx;
             // store how much transferred over time
-            this.clientsPersist[cid].transferRxHistory.push(this.clientsPersist[cid].transferRxCurrent);
-            this.clientsPersist[cid].transferTxHistory.push(this.clientsPersist[cid].transferTxCurrent);
+            cpersist.transferRxHistory.push(cpersist.transferRxCurrent);
+            cpersist.transferTxHistory.push(cpersist.transferTxCurrent);
             // shift the data so that the graph shifts
-            this.clientsPersist[cid].transferRxHistory.shift();
-            this.clientsPersist[cid].transferTxHistory.shift();
+            cpersist.transferRxHistory.shift();
+            cpersist.transferTxHistory.shift();
           }
 
           // update transfer and receive on client object
-          client.transferTxCurrent = this.clientsPersist[cid].transferTxCurrent;
-          client.transferRxCurrent = this.clientsPersist[cid].transferRxCurrent;
+          client.transferTxCurrent = cpersist.transferTxCurrent;
+          client.transferRxCurrent = cpersist.transferRxCurrent;
           // update history on client object
-          client.transferTxHistory = this.clientsPersist[cid].transferTxHistory;
-          client.transferRxHistory = this.clientsPersist[cid].transferRxHistory;
+          client.transferTxHistory = cpersist.transferTxHistory;
+          client.transferRxHistory = cpersist.transferRxHistory;
           // max transfer on client object
           client.transferMax = Math.max(...client.transferTxHistory, ...client.transferRxHistory);
           // hover on client object
-          client.hoverTx = this.clientsPersist[cid].hoverTx;
-          client.hoverRx = this.clientsPersist[cid].hoverRx;
+          client.hoverTx = cpersist.hoverTx;
+          client.hoverRx = cpersist.hoverRx;
 
           client.stats = cstats;
         }
@@ -620,8 +631,17 @@ export default {
       this.authenticated = false;
       this.clients = null;
     },
-    async newClient(name) {
-      // unimplemented
+    async newClient(name, addresses, privateKey, publicKey, presharedKey) {
+      let res = await this.api.createClient(publicKey, addresses, presharedKey);
+      let client = res.client;
+      // todo: if not res.client fail
+      // ?? await this.refresh();
+      await this.api.updateName(Buffer.from(client.PublicKey).toString('hex'), name);
+      if (!this.clientsPersist[publicKey]) {
+        this.clientsPersist[publicKey] = {};
+      }
+      this.clientsPersist[publicKey].isNew = true;
+      this.clientsPersist[publicKey].PrivateKey = privateKey;
     },
     async updateClientName(client, name) {
       await this.api.updateName(client.Reference, name);
@@ -649,18 +669,46 @@ export default {
         setTimeout(() => { this.state_settingUp = false; }, 5000);
       }
     },
-    generateClientConfig(server, client, privateKey, allowedIPs = "0.0.0.0/0", presharedKey = null) {
-      return [
+    generateClientConfig(privateKey, addresses, publicKey, server, presharedKey = null) {
+      let config = [
         `[Interface]`,
         `PrivateKey = ${privateKey}`,
-        `Address = ${client.AllowedIPs}`,
-        /*`DNS = `,*/
+        `Address = ${addresses.join(',')}`,
+        `DNS = 1.1.1.1,1.0.0.1`,
+        '',
         `[Peer]`,
-        `PublicKey = ${client.PublicKey}`,
-        `AllowedIPs = ${allowedIPs}`,
+        `PublicKey = ${publicKey}`,
+        `AllowedIPs = 0.0.0.0/0, ::/0`,
         `Endpoint = ${server._meta.Host}:${server.ListenPort}`,
-        `PresharedKey = ${presharedKey}`,
-      ].join('\n');
+      ];
+      if (presharedKey) {
+        config.push(`PresharedKey = ${presharedKey}`);
+      }
+      return config.join('\n');
+    },
+    async showQR(client) {
+      let config = this.generateClientConfig(this.clientsPersist[client.PublicKey].PrivateKey, client.AllowedIPs, client.PublicKey, this.server, client.PresharedKey);
+      this.qrcode = await QRCode.toString(config, {type: 'svg', width: 512});
+    },
+    getNextIPs() {
+      let taken = [];
+      for (let client of this.clients) {
+        for (let addr of client.AllowedIPs) {
+          taken.push(addr.split("/")[0]);
+        }
+      }
+      let addrs = [];
+      for (let space of this.server.Address) {
+        let spaceStartAddress = space.split("/")[0];
+        let spaceStart = ofIPString(spaceStartAddress);
+        let pool = new IPPool(spaceStart);
+        for (let e of taken) {
+          pool.add(ofIPString(e));
+        }
+        let nextAddress = pool.next();
+        addrs.push(`${nextAddress.toString()}/${nextAddress.constructor.name == "IP4" ? 32 : 128}`);
+      }
+      return addrs;
     },
   },
   filters: {
@@ -672,6 +720,7 @@ export default {
   async mounted() {
     this.api = new API();
     window.wg_api = this.api;
+    window.wg_api.getNextIPs = this.getNextIPs;
 
     // get session
     this.meta = await this.api.getMeta();
