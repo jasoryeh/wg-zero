@@ -51,6 +51,7 @@ import { Icon } from '@iconify/vue';
                                         class="rounded p-2 border-2 border-gray-100 focus:border-gray-200 outline-none w-full"
                                         type="text" v-model.trim="clientCreateName" placeholder="Name" />
                                 </p>
+                                <p class="text-xs text-gray-500 mb-1">Optional, clients are referred to by public key if no name is given.</p>
                             </div>
                             <div class="mt-2">
                                 <p class="text-md text-gray-500 mb-1">Keys</p>
