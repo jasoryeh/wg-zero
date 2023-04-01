@@ -49,7 +49,16 @@ import { Icon } from '@iconify/vue';
                                 <p class="text-sm text-gray-500">
                                     <input
                                         class="rounded p-2 border-2 border-gray-100 focus:border-gray-200 outline-none w-full"
-                                        type="text" v-model.trim="clientCreateName" placeholder="Name" />
+                                        type="text" v-model.trim="clientName" placeholder="Name" />
+                                </p>
+                                <p class="text-xs text-gray-500 mb-1">The client IP addresses the server will expect you to connect from.</p>
+                            </div>
+                            <div class="mt-2">
+                                <p class="text-md text-gray-500 mb-1">Addresses</p>
+                                <p class="text-sm text-gray-500">
+                                    <input
+                                        class="rounded p-2 border-2 border-gray-100 focus:border-gray-200 outline-none w-full"
+                                        type="text" v-model.trim="clientAddress" placeholder="Addresses" />
                                 </p>
                                 <p class="text-xs text-gray-500 mb-1">Optional, clients are referred to by public key if no name is given.</p>
                             </div>
@@ -90,7 +99,7 @@ import { Icon } from '@iconify/vue';
                     </div>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button v-if="clientCreateName.length && privateKey.length" type="button" @click="submitted()"
+                    <button v-if="clientName.length && gen_private.length && gen_public.length" type="button" @click="submitted()"
                         class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-800 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
                         Create
                     </button>
@@ -112,8 +121,8 @@ import { Icon } from '@iconify/vue';
 export default {
     data() {
         return {
-            clientCreateName: "",
-            privateKey: "",
+            clientName: "",
+            clientAddress: "",
             gen_private: "",
             gen_preshared: "",
             gen_public: "",
@@ -140,16 +149,27 @@ export default {
             await this.genPublic();
         },
         submitted() {
-            this.$emit('submitted', this.clientCreateName);
+            this.$emit('submitted', {
+                name: this.clientName,
+                addresses: this.clientAddress.split(","),
+                privateKey: this.gen_private,
+                publicKey: this.gen_public,
+                presharedKey: this.gen_preshared,
+            });
         },
         cancel() {
             this.$emit('cancel');
-        }
+        },
+        genAddress() {
+            console.log(this.$parent);
+            this.clientAddress = window.wg_api.getNextIPs().join(',');
+        },
     },
     props: {
         qrcode: String,
     },
     mounted() {
+        this.genAddress();
         setInterval(() => {
             if (this.gen_original && this.gen_private != this.gen_original) {
                 this.gen_original = null;
