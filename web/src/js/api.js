@@ -86,6 +86,18 @@ class API {
     });
   }
 
+  async createClient(pub, addrs, psk) {
+    return this.call({
+      method: 'put',
+      path: '/wireguard/clients/new',
+      body: {
+        publicKey: pub,
+        addresses: addrs,
+        presharedKey: psk
+      }
+    });
+  }
+
   async getStats() {
     return this.call({
       method: 'get',
@@ -138,8 +150,8 @@ class API {
   async updateName(clientRef, name) {
     return this.call({
       method: 'put',
-      path: `/wireguard/client/${clientRef}/name/`,
-      body: { name },
+      path: `/wireguard/clients/${clientRef}/name/`,
+      body: { name: name },
     });
   }
 
