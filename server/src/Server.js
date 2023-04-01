@@ -95,7 +95,7 @@ module.exports = class Server {
   .get('/api/wireguard/stats', async (req, res) => {
     try {
       let stats = await this.wireguard.getStats();
-      res.status(200).send(stats);
+      res.status(200).send(stats.reduce((accumulator, obj) => Object.assign(accumulator, {[obj.public]: obj}), {}));
     } catch (err) {
       // server offline
       res.status(200).send([]);
@@ -227,6 +227,31 @@ module.exports = class Server {
     client.PresharedKey = preSharedKey;
 
     res.status(200).send({});
+  })
+  .post('/api/wireguard/generate/key/private', async (req, res) => {
+    res.status(200).send({
+      result: await generatePrivateKey(),
+    });
+  })
+  .post('/api/wireguard/generate/key/preshared', async (req, res) => {
+    res.status(200).send({
+      result: await generatePreSharedKey(),
+    });
+  })
+  .post('/api/wireguard/generate/key/public', async (req, res) => {
+    const { privateKey } = req.body;
+    if (!privateKey) {
+      res.status(404).send({ error: true });
+      return;
+    }
+    try {
+      res.status(200).send({
+        result: await generatePublicKey(privateKey),
+      });
+    } catch(err) {
+      console.error("Error generate public key for a key: ");
+      res.status(400).send({ error: true });
+    }
   });
  }
 };

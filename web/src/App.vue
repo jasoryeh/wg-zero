@@ -516,14 +516,10 @@ export default {
       this.meta = await this.api.getMeta();
       if (!this.isServerConfigured()) {
         return;
-      } 
-      let clients = await this.api.getClients();
-      let _stats = await this.api.getStats();
-      this.server = await this.api.getServer();
-      let stats = {};
-      for (let clientStat of _stats) {
-        stats[clientStat.public] = clientStat;
       }
+      this.server = await this.api.getServer();
+      let clients = await this.api.getClients();
+      let stats = await this.api.getStats();
 
       // handle data history
       // stats are only available when the interface is up
@@ -656,6 +652,7 @@ export default {
   },
   async mounted() {
     this.api = new API();
+    window.wg_api = this.api;
 
     // get session
     this.meta = await this.api.getMeta();

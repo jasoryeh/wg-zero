@@ -143,6 +143,34 @@ class API {
     });
   }
 
+  async generatePrivateKey() {
+    return await this.call({
+      method: 'post',
+      path: '/wireguard/generate/key/private',
+    });
+  }
+
+  async generatePresharedKey() {
+    return await this.call({
+      method: 'post',
+      path: '/wireguard/generate/key/preshared',
+    });
+  }
+
+  async generatePublicKey(privateKey) {
+    let result = await (this.call({
+      method: 'post',
+      path: '/wireguard/generate/key/public',
+      body: {
+        privateKey: privateKey,
+      }
+    }));
+    if (!result.result) {
+      throw new Error("Could not generate public key from private!")
+    }
+    return result;
+  }
+
 }
 
 export default API;

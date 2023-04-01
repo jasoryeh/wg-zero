@@ -31,7 +31,8 @@ import { Icon } from '@iconify/vue';
                 From: "opacity-100 translate-y-0 sm:scale-100"
                 To: "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             -->
-            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+            <!-- Main Panel -->
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:mt-8 sm:align-middle sm:max-w-lg sm:w-full"
                 role="dialog" aria-modal="true" aria-labelledby="modal-headline">
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
@@ -44,6 +45,7 @@ import { Icon } from '@iconify/vue';
                                 New Client
                             </h3>
                             <div class="mt-2">
+                                <p class="text-md text-gray-500 mb-1">Client Name</p>
                                 <p class="text-sm text-gray-500">
                                     <input
                                         class="rounded p-2 border-2 border-gray-100 focus:border-gray-200 outline-none w-full"
@@ -51,11 +53,37 @@ import { Icon } from '@iconify/vue';
                                 </p>
                             </div>
                             <div class="mt-2">
-                                <p class="text-sm text-gray-500">
-                                    <input
-                                        class="rounded p-2 border-2 border-gray-100 focus:border-gray-200 outline-none w-full"
-                                        type="text" v-model.trim="privateKey" placeholder="Private Key" />
-                                </p>
+                                <p class="text-md text-gray-500 mb-1">Keys</p>
+                                <div class="pl-2">
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500 mb-1">Private Key</p>
+                                        <p class="text-sm text-gray-500">
+                                            <input
+                                                v-on:blur="genPublic()"
+                                                class="rounded p-2 border-2 border-gray-100 focus:border-gray-200 outline-none w-full"
+                                                type="text" v-model.trim="gen_private" placeholder="Private Key" />
+                                        </p>
+                                        <p class="text-xs text-gray-500 mb-1">Provide a private key or <a class="text-blue-500" href="#" @click="regenerate()">let us generate you one</a>.</p>
+                                    </div>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500 mb-1">Public Key</p>
+                                        <p class="text-sm text-gray-500">
+                                            <input disabled 
+                                                class="rounded p-2 border-2 border-gray-100 focus:border-gray-200 outline-none w-full"
+                                                type="text" v-model.trim="gen_public" placeholder="Public Key" />
+                                        </p>
+                                        <p class="text-xs text-gray-500 mb-1">Automatically generated from your private key.</p>
+                                    </div>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500 mb-1">Preshared Key</p>
+                                        <p class="text-sm text-gray-500">
+                                            <input 
+                                                class="rounded p-2 border-2 border-gray-100 focus:border-gray-200 outline-none w-full"
+                                                type="text" v-model.trim="gen_preshared" placeholder="Preshared Key" />
+                                        </p>
+                                        <p class="text-xs text-gray-500 mb-1">Optional. If you would like to generate one <a class="text-blue-500" href="#" @click="genPreshared()">click here</a></p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -85,9 +113,31 @@ export default {
         return {
             clientCreateName: "",
             privateKey: "",
+            gen_private: "",
+            gen_preshared: "",
+            gen_public: "",
+            gen_original: "",
         }
     },
     methods: {
+        async genPrivate() {
+            this.gen_private = (await window.wg_api.generatePrivateKey()).result;
+            this.gen_original = this.gen_private;
+        },
+        async genPublic() {
+            try {
+                this.gen_public = (await window.wg_api.generatePublicKey(this.gen_private)).result;
+            } catch(err) {
+                this.gen_public = "";
+            }
+        },
+        async genPreshared() {
+            this.gen_preshared = (await window.wg_api.generatePresharedKey()).result;
+        },
+        async regenerate() {
+            await this.genPrivate();
+            await this.genPublic();
+        },
         submitted() {
             this.$emit('submitted', this.clientCreateName);
         },
@@ -97,7 +147,16 @@ export default {
     },
     props: {
         qrcode: String,
-    }
+    },
+    mounted() {
+        setInterval(() => {
+            if (this.gen_original && this.gen_private != this.gen_original) {
+                this.gen_original = null;
+                this.gen_private = "";
+                this.gen_public = "";
+            }
+        }, 100);
+    },
 };
 </script>
 
