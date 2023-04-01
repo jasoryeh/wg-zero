@@ -4,16 +4,12 @@ const fs = require('fs');
 const path = require('path');
 
 const debug = require('debug')('WireGuard');
-const uuid = require('uuid');
-const QRCode = require('qrcode');
 
 const Util = require('./Util');
-const ServerError = require('./ServerError');
 
 const {
   WG_INTERFACE,
   WG_PATH,
-  WG_OVERWRITE_ON_FAIL,
   WG_HOST,
   WG_PORT,
   WG_MTU,
@@ -35,13 +31,14 @@ const {
 
 const BACKUP_DIR = 'wg-easy-backups';
 const DUMP_COLUMNS = ['public', 'preshared', 'lastEndpoint', 'allowedIPs', 'lastHandshake', 'rx', 'tx', 'persistentKeepalive'];
+
 /**
  * Reads `wg show <interface> dump`
  * @returns Array of peers from the dump (ignores the interface result)
  */
-async function readDump() {
+async function readDump(interfaceName) {
   // read-in wireguard status from wg show <interface> dump
-  const dump = await Util.exec(`wg show ${WG_INTERFACE} dump`, {
+  const dump = await Util.exec(`wg show ${interfaceName} dump`, {
     log: false,
   }); // capture dump data
   //debug("Client data updated.");
@@ -60,11 +57,11 @@ async function readDump() {
   return data;
 }
 
-function getWireguardConfigPath() {
-  return path.join(WG_PATH, `${WG_INTERFACE}.conf`);
+function getWireguardConfigPath(base, interfaceName) {
+  return path.join(base, `${interfaceName}.conf`);
 }
 
-function writeRawConfig(cfg) {
+function writeRawConfig(base, interfaceName, cfg) {
   var lines = [];
   lines.push(`[Interface]`);
   for (let key in cfg.interface) {
@@ -122,7 +119,7 @@ function writeRawConfig(cfg) {
     lines.push('');
   }
 
-  fs.writeFileSync(getWireguardConfigPath(), lines.join('\n'), {
+  fs.writeFileSync(getWireguardConfigPath(base, interfaceName), lines.join('\n'), {
     encoding: "utf8"
   });
   return lines;
@@ -131,15 +128,16 @@ function writeRawConfig(cfg) {
 /**
  * Read the raw config.
  */
-function readRawConfig() {
-  let config_path = path.join(WG_PATH, `${WG_INTERFACE}.conf`);
-  let cfg_unparsed = (fs.readFileSync(getWireguardConfigPath(), 'utf8')).split('\n');
+function readRawConfig(base, interfaceName) {
+  let cfg_unparsed = (fs.readFileSync(getWireguardConfigPath(base, interfaceName), 'utf8')).split('\n');
   let parsed = {
     interface: {},
     peers: []
   };
 
-  var currentSection = {};
+  var currentSection = {
+    _meta: {}
+  };
   function _newSection() {
     if (currentSection.type) {
       if (currentSection.type == 'Interface') {
@@ -195,10 +193,6 @@ class WireGuard {
     this.config = null;
   }
 
-  getInterface() {
-    return WG_INTERFACE;
-  }
-
   async init() {
     this.config = {
       interface: {
@@ -211,26 +205,32 @@ class WireGuard {
     };
   }
 
+  getBackupDirName() {
+    return BACKUP_DIR;
+  }
+
   async backup() {
     console.log("Making a backup...");
-    await Util.exec(`mkdir -p ${WG_PATH}/${BACKUP_DIR}`);
-    await Util.exec(`cp ${WG_PATH}/${WG_INTERFACE}.conf ${WG_PATH}/${BACKUP_DIR}/${WG_INTERFACE}_${backupSuffix()}.conf`);
-    await Util.exec(`cp -f ${WG_PATH}/${WG_INTERFACE}.conf ${WG_PATH}/${BACKUP_DIR}/${WG_INTERFACE}_latest.conf`);
+    const backupDirectory = `${this.getConfigDirectory()}/${this.getBackupDirName()}`;
+    const interfaceFile = `${this.getConfigDirectory()}/${this.getInterfaceName()}.conf`;
+    await Util.exec(`mkdir -p ${backupDirectory}`);
+    await Util.exec(`cp ${interfaceFile}.conf ${backupDirectory}/${this.getInterfaceName()}_${backupSuffix()}.conf`);
+    await Util.exec(`cp -f ${interfaceFile}.conf ${backupDirectory}/${this.getInterfaceName()}_latest.conf`);
     console.log("Backup complete.");
   }
 
   async revert() {
     console.log("Reverting to last backup...");
-    await Util.exec(`cp -f ${WG_PATH}/${BACKUP_DIR}/${WG_INTERFACE}_latest.conf ${WG_PATH}/${WG_INTERFACE}.conf`);
+    await Util.exec(`cp -f ${this.getConfigDirectory()}/${this.getBackupDirName()}/${this.getInterfaceName()}_latest.conf ${this.getConfigDirectory()}/${this.getInterfaceName()}.conf`);
     console.log("Reverted.");
   }
 
   async down() {
-    return Util.exec(`wg-quick down ${WG_INTERFACE}`);
+    return Util.exec(`wg-quick down ${this.getInterfaceName()}`);
   }
 
   async up() {
-    return Util.exec(`wg-quick up ${WG_INTERFACE}`);
+    return Util.exec(`wg-quick up ${this.getInterfaceName()}`);
   }
 
   async reboot() {
@@ -253,7 +253,7 @@ class WireGuard {
   import() {
     console.log("Importing...");
     // no deep copy here since readRawConfig just regenerates every time
-    let parsed = readRawConfig();
+    let parsed = readRawConfig(this.getConfigDirectory(), this.getInterfaceName());
 
     let intf = parsed.interface;
     let peers = parsed.peers;
@@ -299,8 +299,12 @@ class WireGuard {
       // PersistentKeepalive - number
     }
 
-    writeRawConfig(parsed);
+    writeRawConfig(this.getConfigDirectory(), this.getInterfaceName(), parsed);
     console.log("Export complete.");
+  }
+
+  getInterface() {
+    return this.config.interface;
   }
 
   getClients() {
@@ -316,13 +320,43 @@ class WireGuard {
     return null;
   }
 
-  async getStats() {
-    return await readDump()
+  getInterfaceName() {
+    return WG_INTERFACE;
   }
 
-  async interfaceActive() {
+  getConfigDirectory() {
+    return WG_PATH;
+  }
+
+  async getStats() {
+    return await readDump(this.getInterfaceName());
+  }
+
+  async isUp() {
     let wgshow = await Util.exec('wg show', {log: false});
-    return wgshow.split('\n').includes(`interface: ${WG_INTERFACE}`);
+    return wgshow.split('\n').includes(`interface: ${this.getInterfaceName()}`);
+  }
+
+  getServerPort() {
+    return this.getInterface().ListenPort;
+  }
+
+  setServerPort(port) {
+    if (!Number.isInteger(port) && port <= 65535 && port >= 0) {
+      throw new Error("Invalid port: " + port);
+    }
+    this.getInterface().ListenPort = port;
+  }
+
+  getServerHost() {
+    if (!this.getInterface()._meta.Host) {
+      this.getInterface()._meta.Host = WG_HOST;
+    }
+    return this.getInterface()._meta.Host;
+  }
+
+  setServerHost(host) {
+    this.getInterface()._meta.Host = host;
   }
 }
 

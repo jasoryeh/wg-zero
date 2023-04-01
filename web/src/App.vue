@@ -93,13 +93,28 @@ import { Buffer } from 'buffer/';
 
                 <!-- Info -->
                 <div class="text-gray-400 text-xs">
+                  
+                  <!-- Host -->
+                  <span :title="`Host: ${server._meta.Host}`" style="cursor: default;">
+                    <Icon icon="heroicons-solid:globe-alt" class="align-middle h-3 inline" />
+                    {{server._meta.Host}}
+                  </span>
+
+                  <!-- Port -->
+                  <span :title="`Port: ${server.ListenPort}`" style="cursor: default;">
+                    ·
+                    <Icon icon="heroicons-solid:map-pin" class="align-middle h-3 inline" />
+                    {{server.ListenPort}}
+                  </span>
+
+                  <br />
 
                   <!-- Address -->
                   <span class="group">
                     <span 
                       class="inline-block border-t-2 border-b-2 border-transparent"
                       v-for="address in server.Address">
-                      <Icon icon="heroicons-solid:globe-alt" class="align-middle h-3 inline" />
+                      <Icon icon="heroicons-solid:funnel" class="align-middle h-3 inline" />
                       {{`${address}`}}&nbsp;
                     </span>
                   </span>
@@ -111,17 +126,10 @@ import { Buffer } from 'buffer/';
                     {{server.Interface}}
                   </span>
 
-                  <!-- Port -->
-                  <span :title="`Port: ${server.ListenPort}`" style="cursor: default;">
-                    ·
-                    <Icon icon="heroicons-solid:map-pin" class="align-middle h-3 inline" />
-                    {{server.ListenPort}}
-                  </span>
-
                   <br />
                   
-                  <!-- Port -->
-                  <span :title="`Port: ${server.ListenPort}`" style="cursor: default;">
+                  <!-- Public Key -->
+                  <span :title="`Public Key: ${server.PublicKey}`" style="cursor: default;">
                     <Icon icon="heroicons-solid:key" class="align-middle h-3 inline" />
                     {{server.PublicKey}}
                   </span>
@@ -637,6 +645,19 @@ export default {
       } finally {
         setTimeout(() => { this.state_settingUp = false; }, 5000);
       }
+    },
+    generateClientConfig(server, client, privateKey, allowedIPs = "0.0.0.0/0", presharedKey = null) {
+      return [
+        `[Interface]`,
+        `PrivateKey = ${privateKey}`,
+        `Address = ${client.AllowedIPs}`,
+        /*`DNS = `,*/
+        `[Peer]`,
+        `PublicKey = ${client.PublicKey}`,
+        `AllowedIPs = ${allowedIPs}`,
+        `Endpoint = ${server._meta.Host}:${server.ListenPort}`,
+        `PresharedKey = ${presharedKey}`,
+      ].join('\n');
     },
   },
   filters: {

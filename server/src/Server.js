@@ -7,7 +7,6 @@ const expressSession = require('express-session');
 const debug = require('debug')('Server');
 
 const Util = require('./Util');
-const ServerError = require('./ServerError');
 
 const {
   PORT,
@@ -102,9 +101,11 @@ module.exports = class Server {
     }
   })
   .get('/api/wireguard/server', async (req, res) => {
-    let intf = JSON.parse(JSON.stringify(this.wireguard.config.interface));
-    // from sensitive
+    this.wireguard.getServerHost();
+    let intf = JSON.parse(JSON.stringify(this.wireguard.getInterface()));
+    // information, but should not be stored i guess
     intf.PublicKey = intf['PrivateKey'] ? await generatePublicKey(intf['PrivateKey'], {log: false}) : null;
+    intf.Interface = this.wireguard.getInterfaceName();
     // hide sensitive?
     intf['PrivateKey'] = undefined;
     intf['PreUp'] = undefined;
@@ -113,8 +114,7 @@ module.exports = class Server {
     intf['PostDown'] = undefined;
     // append data
     intf._stats = {};
-    intf._stats.up = await this.wireguard.interfaceActive();
-    intf.Interface = this.wireguard.getInterface();
+    intf._stats.up = await this.wireguard.isUp();
     res.status(200).send(intf);
   })
   .get('/api/wireguard/save', async (req, res) => {
@@ -145,17 +145,17 @@ module.exports = class Server {
     res.status(200).send({});
   })
   .post('/api/wireguard/server/regenerate', async (req, res) => {
-    this.wireguard.config.Interface.PrivateKey = await generatePrivateKey();
+    this.wireguard.getInterface().PrivateKey = await generatePrivateKey();
     res.status(200).send({});
   })
   .put('/api/wireguard/server/addresses', async (req, res) => {
     const { addresses } = req.body;
-    this.wireguard.config.Address = addresses;
+    this.wireguard.getInterface().Address = addresses;
     res.status(200).send({});
   })
   .put('/api/wireguard/server/port', async (req, res) => {
     const { port } = req.body;
-    this.wireguard.config.ListenPort = port;
+    this.wireguard.config.interface.ListenPort = port;
     res.status(200).send({});
   })
   .post('/api/wireguard/server/new', async (req, res) => {
