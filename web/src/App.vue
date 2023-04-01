@@ -58,11 +58,6 @@ import { Buffer } from 'buffer/';
               <Icon icon="material-symbols:refresh-rounded" class="w-4 mr-2" />
               <span class="text-sm">Reload</span>
             </button>
-            <button @click="clientCreate = true; clientCreateName = '';"
-              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
-              <Icon icon="material-symbols:add" class="w-4 mr-2" />
-              <span class="text-sm">New</span>
-            </button>
           </div>
         </div>
 
