@@ -214,8 +214,8 @@ class WireGuard {
     const backupDirectory = `${this.getConfigDirectory()}/${this.getBackupDirName()}`;
     const interfaceFile = `${this.getConfigDirectory()}/${this.getInterfaceName()}.conf`;
     await Util.exec(`mkdir -p ${backupDirectory}`);
-    await Util.exec(`cp ${interfaceFile}.conf ${backupDirectory}/${this.getInterfaceName()}_${backupSuffix()}.conf`);
-    await Util.exec(`cp -f ${interfaceFile}.conf ${backupDirectory}/${this.getInterfaceName()}_latest.conf`);
+    await Util.exec(`cp ${interfaceFile} ${backupDirectory}/${this.getInterfaceName()}_${backupSuffix()}.conf`);
+    await Util.exec(`cp -f ${interfaceFile} ${backupDirectory}/${this.getInterfaceName()}_latest.conf`);
     console.log("Backup complete.");
   }
 
@@ -318,6 +318,27 @@ class WireGuard {
       }
     }
     return null;
+  }
+
+  addClient(publicKey, addresses, presharedKey = null) {
+    let peer = {
+      type: "Peer",
+      PublicKey: publicKey,
+      AllowedIPs: addresses,
+      _meta: {},
+    };
+    if (!!presharedKey) {
+      peer.PresharedKey = presharedKey;
+    }
+    this.config.peers.push(peer);
+
+    return this.getClient(publicKey);
+  }
+
+  deleteClient(publicKey) {
+    let client = this.getClient(publicKey);
+    let idx = this.config.peers.indexOf(client);
+    delete this.config.peers[idx];
   }
 
   getInterfaceName() {
