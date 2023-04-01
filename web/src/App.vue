@@ -300,7 +300,10 @@ import { Buffer } from 'buffer/';
                       class="rounded border-2 border-gray-100 focus:border-gray-200 outline-none w-fit text-black" />
                     <span v-show="clientEditAddressId !== client.Reference"
                       class="inline-block border-t-2 border-b-2 border-transparent"
-                      v-for="address in client.addresses">{{`${address}`}}&nbsp;</span>
+                      v-for="address in client.addresses">
+                      <Icon icon="heroicons-solid:funnel" class="align-middle h-3 inline" />
+                      {{`${address}`}}&nbsp;
+                    </span>
 
                     <!-- Edit -->
                     <span v-show="clientEditAddressId !== client.Reference"
