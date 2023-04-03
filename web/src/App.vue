@@ -361,16 +361,15 @@ import QRCode from 'qrcode';
 
                   <!-- Show QR-->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Show QR Code" @click="showQR(client)">
+                    title="Show QR Code" @click="showQR(client)" v-show="this.clientsPersist[client.PublicKey] && this.clientsPersist[client.PublicKey].PrivateKey">
                     <Icon icon="heroicons-outline:qrcode" class="w-5 h-5" />
                   </button>
 
                   <!-- Download Config -->
-                  <a :href="`${getEndpoint()}/api/wireguard/client/${client.Reference}/configuration`" download
-                    class="align-middle inline-block bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Download Configuration">
+                  <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
+                    title="Download Configuration" @click="downloadConfig(client)" v-show="this.clientsPersist[client.PublicKey] && this.clientsPersist[client.PublicKey].PrivateKey">
                     <Icon icon="heroicons:arrow-down-tray" class="w-5 h-5" />
-                  </a>
+                  </button>
 
                   <!-- Delete -->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
@@ -686,9 +685,29 @@ export default {
       }
       return config.join('\n');
     },
+    clientConfig(client) {
+      if (!this.clientsPersist[client.PublicKey]) {
+        throw Error("Client config can only be created when the client was created recently!");
+      }
+      return this.generateClientConfig(
+        this.clientsPersist[client.PublicKey].PrivateKey, 
+        client.AllowedIPs, 
+        client.PublicKey, 
+        this.server, 
+        client.PresharedKey);
+    },
     async showQR(client) {
-      let config = this.generateClientConfig(this.clientsPersist[client.PublicKey].PrivateKey, client.AllowedIPs, client.PublicKey, this.server, client.PresharedKey);
+      let config = this.clientConfig(client);
       this.qrcode = await QRCode.toString(config, {type: 'svg', width: 512});
+    },
+    async downloadConfig(client) {
+      let blob = new Blob([this.clientConfig(client)], { type: 'text/plain' });
+      let dummy = document.createElement('a');
+      dummy.href = URL.createObjectURL(blob);
+      dummy.download = `${client._meta.Name || client.PublicKey}.conf`;
+      document.body.appendChild(dummy);
+      dummy.click();
+      document.body.removeChild(dummy);
     },
     getNextIPs() {
       let taken = [];

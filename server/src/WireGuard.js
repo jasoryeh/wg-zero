@@ -14,7 +14,7 @@ const {
   WG_PORT,
   WG_MTU,
   WG_DEFAULT_DNS,
-  WG_DEFAULT_ADDRESS,
+  WG_ADDRESS_SPACE,
   WG_PERSISTENT_KEEPALIVE,
   WG_ALLOWED_IPS,
   WG_PRE_UP,
@@ -198,8 +198,13 @@ class WireGuard {
       interface: {
         // optional?: type: 'Interface'
         ListenPort: WG_PORT,
-        Address: ['10.1.3.1/24'],
-        PrivateKey: await generatePrivateKey()
+        Address: [ WG_ADDRESS_SPACE ],
+        PrivateKey: await generatePrivateKey(),
+        PreUp: [ WG_PRE_UP ],
+        PostUp: [ WG_POST_UP ],
+        PreDown: [ WG_PRE_DOWN ],
+        PostDown: [ WG_POST_DOWN ],
+        _meta: {},
       },
       peers: []
     };
