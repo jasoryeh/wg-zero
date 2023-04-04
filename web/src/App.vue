@@ -668,7 +668,7 @@ export default {
         setTimeout(() => { this.state_settingUp = false; }, 5000);
       }
     },
-    generateClientConfig(privateKey, addresses, publicKey, server, presharedKey = null) {
+    generateClientConfig(privateKey, addresses, server, presharedKey = null) {
       let config = [
         `[Interface]`,
         `PrivateKey = ${privateKey}`,
@@ -676,7 +676,7 @@ export default {
         `DNS = 1.1.1.1,1.0.0.1`,
         '',
         `[Peer]`,
-        `PublicKey = ${publicKey}`,
+        `PublicKey = ${server.PublicKey}`,
         `AllowedIPs = 0.0.0.0/0, ::/0`,
         `Endpoint = ${server._meta.Host}:${server.ListenPort}`,
       ];
@@ -692,7 +692,6 @@ export default {
       return this.generateClientConfig(
         this.clientsPersist[client.PublicKey].PrivateKey, 
         client.AllowedIPs, 
-        client.PublicKey, 
         this.server, 
         client.PresharedKey);
     },
