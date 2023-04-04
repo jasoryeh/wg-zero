@@ -12,6 +12,7 @@ docker run --rm -it \
     -v $PWD:/app \
     -v $PWD/mount/wireguard:/etc/wireguard \
     -e WG_PORT=51822 \
+    -e WG_HOST=$(curl checkip.amazonaws.com) \
     --cap-add=NET_ADMIN \
     --cap-add=SYS_MODULE \
     --sysctl=net.ipv4.ip_forward=1 \
