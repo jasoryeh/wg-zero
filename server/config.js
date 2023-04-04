@@ -8,6 +8,7 @@ module.exports.PASSWORD = process.env.PASSWORD;
 module.exports.WG_WEBUI = process.env.WG_WEBUI || true;
 
 module.exports.WG_INTERFACE = process.env.WG_INTERFACE || "wg0";
+module.exports.WG_INTERNET_INTERFACE = process.env.WG_INTERNET_INTERFACE || "eth0"; //todo: autodetect from container
 module.exports.WG_PATH = process.env.WG_PATH || '/etc/wireguard/';
 module.exports.WG_OVERWRITE_ON_FAIL = process.env.WG_OVERWRITE_ON_FAIL || true;
 module.exports.WG_HOST = process.env.WG_HOST || "127.0.0.1";
@@ -22,11 +23,16 @@ module.exports.WG_ALLOWED_IPS = process.env.WG_ALLOWED_IPS || '0.0.0.0/0, ::/0';
 
 module.exports.WG_PRE_UP = process.env.WG_PRE_UP || '';
 module.exports.WG_POST_UP = process.env.WG_POST_UP || `
-iptables -t nat -A POSTROUTING -s ${module.exports.WG_ADDRESS_SPACE} -o eth0 -j MASQUERADE;
-iptables -A INPUT -p udp -m udp --dport 51820 -j ACCEPT;
-iptables -A FORWARD -i ${module.exports.WG_INTERFACE} -j ACCEPT;
-iptables -A FORWARD -o ${module.exports.WG_INTERFACE} -j ACCEPT;
-`.split('\n').join(' ').trim();
+iptables -I INPUT -p udp --dport ${module.exports.WG_PORT} -j ACCEPT;
+iptables -I FORWARD -i ${module.exports.WG_PUBLIC_INTERFACE} -o ${module.exports.WG_INTERFACE} -j ACCEPT;
+iptables -I FORWARD -i ${module.exports.WG_INTERFACE} -j ACCEPT;
+iptables -t nat -A POSTROUTING -o ${module.exports.WG_PUBLIC_INTERFACE} -j MASQUERADE;
+`.split('\n').map(each => each.trim());
 
 module.exports.WG_PRE_DOWN = process.env.WG_PRE_DOWN || '';
-module.exports.WG_POST_DOWN = process.env.WG_POST_DOWN || '';
+module.exports.WG_POST_DOWN = process.env.WG_POST_DOWN || `
+iptables -D INPUT -p udp --dport ${module.exports.WG_PORT} -j ACCEPT;
+iptables -D FORWARD -i ${module.exports.WG_PUBLIC_INTERFACE} -o ${module.exports.WG_INTERFACE} -j ACCEPT;
+iptables -D FORWARD -i ${module.exports.WG_INTERFACE} -j ACCEPT;
+iptables -t nat -D POSTROUTING -o ${module.exports.WG_PUBLIC_INTERFACE} -j MASQUERADE;
+`.split('\n').join(' ').trim();
