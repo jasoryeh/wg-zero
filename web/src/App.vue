@@ -361,13 +361,13 @@ import QRCode from 'qrcode';
 
                   <!-- Show QR-->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Show QR Code" @click="showQR(client)" v-show="this.clientsPersist[client.PublicKey] && this.clientsPersist[client.PublicKey].PrivateKey">
+                    title="Show QR Code" @click="showQR(client)" v-show="clientsPersist[client.PublicKey] && clientsPersist[client.PublicKey].PrivateKey">
                     <Icon icon="heroicons-outline:qrcode" class="w-5 h-5" />
                   </button>
 
                   <!-- Download Config -->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Download Configuration" @click="downloadConfig(client)" v-show="this.clientsPersist[client.PublicKey] && this.clientsPersist[client.PublicKey].PrivateKey">
+                    title="Download Configuration" @click="downloadConfig(client)" v-show="clientsPersist[client.PublicKey] && clientsPersist[client.PublicKey].PrivateKey">
                     <Icon icon="heroicons:arrow-down-tray" class="w-5 h-5" />
                   </button>
 
