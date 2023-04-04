@@ -4,7 +4,7 @@ async function generatePrivateKey(opts = {}) {
 }
   
 async function generatePublicKey(privateKey, opts = {}) {
-    return await Util.exec(`echo ${privateKey} | wg pubkey`, {
+    return await Util.exec(`echo "${privateKey}" | wg pubkey`, {
       log: opts.log ?? 'echo ***hidden*** | wg pubkey',
     });
 }
