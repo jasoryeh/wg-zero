@@ -32,6 +32,10 @@ class IP4 {
         return new IP4(...ipstring.split(".").map(each => parseInt(each)));
     }
 
+    addressType() {
+        return 4;
+    }
+
     copy() {
         return new IP4(this.part1, this.part2, this.part3, this.part4);
     }
@@ -90,6 +94,10 @@ class IP6 {
         this.part6 = part6;
         this.part7 = part7;
         this.part8 = part8;
+    }
+
+    addressType() {
+        return 6;
     }
 
     static inRange(num) {
