@@ -2,16 +2,21 @@
 
 const Server = require('./src/Server');
 const WireGuard = require('./src/WireGuard');
-const debug = require('debug')('Server');
+const debug = require('debug')('wgeasy:Init');
 
 (async function() {
-  const wg = new WireGuard();
   try {
-    wg.import();
+    const wg = new WireGuard();
+    if (!wg.configExists()) {
+      debug(`Info: This looks like a new installation! A configuration will not be loaded.`);
+    } else {
+      wg.import();
+    }
+    const sv = new Server(wg);
+    // server is up
   } catch(error) {
-    console.warn(`Failure to import! The error follows (we will assume this is a first startup):`);
-    console.warn(`    Error message:` + error.message);
+    debug(`Error: Failure to import! The error follows:`);
+    debug(`    Error message:` + error.message);
     debug(error);
   }
-  const sv = new Server(wg);
 })();

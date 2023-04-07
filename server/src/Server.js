@@ -4,7 +4,7 @@ const path = require('path');
 
 const express = require('express');
 const expressSession = require('express-session');
-const debug = require('debug')('Server');
+const debug = require('debug')('wgeasy:Server');
 
 const Util = require('./Util');
 
@@ -45,14 +45,14 @@ module.exports = class Server {
     });
 
     if (WG_WEBUI) {
-      console.log("Web GUI enabled.");
       this.app.use('/', express.static(path.join(__dirname, '..', '..', 'web', 'dist')));
+      debug("UI enabled.");
     }
 
     this.routes();
 
     this.app.listen(PORT, () => {
-      console.log(`wg-easy is listening on ${PORT}`);
+      debug(`wg-easy is listening on ${PORT}`);
     });
  }
 
@@ -125,11 +125,13 @@ module.exports = class Server {
       await this.wireguard.reboot();
       res.status(200).send({});
     } catch(err) {
-      console.error("Failed to save configuration: ");
-      console.error(err);
+      debug("wireguard/save: Failed to save configuration in: ");
+      debug(err);
       await this.wireguard.revert();
       await this.wireguard.reboot();
-      res.status(500).send({});
+      res.status(500).send({
+        error: err
+      });
     }
   })
   .get('/api/wireguard/reload', async (req, res) => {
@@ -159,13 +161,13 @@ module.exports = class Server {
     res.status(200).send({});
   })
   .post('/api/wireguard/server/new', async (req, res) => {
-    console.log("Setting up a new WireGuard configuration...");
+    debug("wireguard/server/new: Setting up a new WireGuard configuration...");
     try { await this.wireguard.backup(); } catch(_) {
-      console.log('Ignoring.');
+      debug('wireguard/server/new: Ignoring backup error.');
     }
     await this.wireguard.init();
     await this.wireguard.export();
-    console.log("Done.");
+    debug("wireguard/server/new: Done creating WireGuard configuration.");
     res.status(200).send({});
   })
   .put('/api/wireguard/clients/new', async (req, res) => {
@@ -184,7 +186,7 @@ module.exports = class Server {
       res.status(404).send({});
     }
 
-    console.log(`Updating name for ${pubKey} - ${client._meta.Name} -> ${name}`);
+    debug(`wireguard/clients/${clientRef}/name: Updating name for ${pubKey} - ${client._meta.Name} -> ${name}`);
     client._meta.Name = name;
 
     res.status(200).send({});
@@ -199,7 +201,7 @@ module.exports = class Server {
       res.status(404).send({});
     }
 
-    console.log(`Updating AllowedIPs for ${pubKey} - ${client.AllowedIPs} -> ${addresses}`);
+    debug(`wireugard/${clientRef}/addresses: Updating AllowedIPs for ${pubKey} - ${client.AllowedIPs} -> ${addresses}`);
     client.AllowedIPs = addresses;
 
     res.status(200).send({});
@@ -214,7 +216,7 @@ module.exports = class Server {
       res.status(404).send({});
     }
 
-    console.log(`Updating PublicKey for ${pubKey} - ${pubKey} -> ${publicKey}`);
+    debug(`wireguard/clients/${clientRef}/publicKey: Updating PublicKey for ${pubKey} - ${pubKey} -> ${publicKey}`);
     client.PublicKey = publicKey;
 
     res.status(200).send({});
@@ -229,7 +231,7 @@ module.exports = class Server {
       res.status(404).send({});
     }
 
-    console.log(`Updating PreSharedKey for ${pubKey} - ${client.PresharedKey} -> ${preSharedKey}`);
+    debug(`wireguard/clients/${clientRef}/presharedkey: Updating PreSharedKey for ${pubKey} - ${client.PresharedKey} -> ${preSharedKey}`);
     client.PresharedKey = preSharedKey;
 
     res.status(200).send({});
@@ -258,7 +260,8 @@ module.exports = class Server {
         result: await generatePublicKey(privateKey),
       });
     } catch(err) {
-      console.error("Error generate public key for a key: ");
+      debug("wireugard/generate/key/public: Error generating public key for a key: ");
+      debug(err);
       res.status(400).send({ error: true });
     }
   });

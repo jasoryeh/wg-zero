@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const debug = require('debug')('WireGuard');
+const debug = require('debug')('wgeasy:WireGuard');
 
 const Util = require('./Util');
 
@@ -145,7 +145,8 @@ function readRawConfig(base, interfaceName) {
       } else if (currentSection.type == 'Peer') {
         parsed.peers.push(currentSection);
       } else {
-        console.warn(`Unknown section type ${currentSection.type}, will be discarded: \n${JSON.stringify(currentSection, null, 4)}\n`);
+        debug(`Unknown section type ${currentSection.type}...`);
+        debug(`    ...will be discarded: \n${JSON.stringify(currentSection, null, 4)}\n`);
       }
       currentSection = {
         _meta: {}
@@ -188,9 +189,23 @@ function backupSuffix() {
   return (d.toLocaleDateString('en-US') + '_' + d.toLocaleTimeString('en-US')).replaceAll('/', '_').replaceAll(':', '_').replaceAll(' ', '_');
 }
 
+function exists(file) {
+
+}
+
 class WireGuard {
   constructor() {
     this.config = null;
+  }
+  
+  configExists() {
+    const interfaceFile = `${this.getConfigDirectory()}/${this.getInterfaceName()}.conf`;
+    try {
+      fs.statSync(interfaceFile);
+      return true;
+    } catch(_) {
+      return false;
+    }
   }
 
   async init() {
@@ -215,19 +230,19 @@ class WireGuard {
   }
 
   async backup() {
-    console.log("Making a backup...");
+    debug("Making a backup...");
     const backupDirectory = `${this.getConfigDirectory()}/${this.getBackupDirName()}`;
     const interfaceFile = `${this.getConfigDirectory()}/${this.getInterfaceName()}.conf`;
     await Util.exec(`mkdir -p ${backupDirectory}`);
     await Util.exec(`cp ${interfaceFile} ${backupDirectory}/${this.getInterfaceName()}_${backupSuffix()}.conf`);
     await Util.exec(`cp -f ${interfaceFile} ${backupDirectory}/${this.getInterfaceName()}_latest.conf`);
-    console.log("Backup complete.");
+    debug("Backup complete.");
   }
 
   async revert() {
-    console.log("Reverting to last backup...");
+    debug("Reverting to last backup...");
     await Util.exec(`cp -f ${this.getConfigDirectory()}/${this.getBackupDirName()}/${this.getInterfaceName()}_latest.conf ${this.getConfigDirectory()}/${this.getInterfaceName()}.conf`);
-    console.log("Reverted.");
+    debug("Reverted.");
   }
 
   async down() {
@@ -239,15 +254,15 @@ class WireGuard {
   }
 
   async reboot() {
-    console.log("Rebooting/reloading WireGuard...");
+    debug("Rebooting/reloading WireGuard...");
     try {
       await this.down();
     } catch(ex) {
-      console.warn("A problem occurred while pulling the interface down: ");
-      console.warn(ex);
+      debug("A problem occurred while pulling the interface down: ");
+      debug(ex);
     }
     await this.up();
-    console.log("Rebooted.");
+    debug("Rebooted.");
   }
 
   validate() {
@@ -256,7 +271,7 @@ class WireGuard {
   }
 
   import() {
-    console.log("Importing...");
+    debug("Importing...");
     // no deep copy here since readRawConfig just regenerates every time
     let parsed = readRawConfig(this.getConfigDirectory(), this.getInterfaceName());
 
@@ -281,11 +296,11 @@ class WireGuard {
     }
 
     this.config = parsed;
-    console.log("Import complete.");
+    debug("Import complete.");
   }
   
   async export() {
-    console.log("Exporting...");
+    debug("Exporting...");
     // deep copy
     let parsed = JSON.parse(JSON.stringify(this.config));
     
@@ -305,7 +320,7 @@ class WireGuard {
     }
 
     writeRawConfig(this.getConfigDirectory(), this.getInterfaceName(), parsed);
-    console.log("Export complete.");
+    debug("Export complete.");
   }
 
   getInterface() {

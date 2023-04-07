@@ -1,6 +1,8 @@
 'use strict';
 
 const childProcess = require('child_process');
+const fs = require('fs');
+const debug = require('debug')('wgeasy:Util');
 
 module.exports = class Util {
 
@@ -22,10 +24,10 @@ module.exports = class Util {
   } = {}) {
     if (typeof log === 'string') {
       // eslint-disable-next-line no-console
-      console.log(`$ ${log}`);
+      debug(`$ ${log}`);
     } else if (log === true) {
       // eslint-disable-next-line no-console
-      console.log(`$ ${cmd}`);
+      debug(`$ ${cmd}`);
     }
 
     if (process.platform !== 'linux') {
