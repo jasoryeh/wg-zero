@@ -44,7 +44,7 @@ import QRCode from 'qrcode';
             <p class="text-2xl font-medium">Server</p>
             <p class="text-sm text-gray-500">Server details and controls.</p>
           </div>
-          <div class="flex-shrink-0">
+          <div class="flex-shrink-0" v-if="isServerConfigured()">
             <button @click="serverUp()" v-if="!isServerUp()" 
               class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
               <Icon icon="heroicons:play" class="w-4 mr-2" />
@@ -724,7 +724,7 @@ export default {
           pool.add(ofIPString(e));
         }
         let nextAddress = pool.next();
-        addrs.push(`${nextAddress.toString()}/${nextAddress.constructor.name == "IP4" ? 32 : 128}`);
+        addrs.push(`${nextAddress.toString()}/${nextAddress.addressType() == 4 ? 32 : 128}`);
       }
       return addrs;
     },
@@ -745,14 +745,23 @@ export default {
     await this.login();
 
     // start refreshing
-    setInterval(() => {
-      this.refresh({
-        updateCharts: true,
-      }).catch((error) => {
+    let refreshTask = async function() {
+      try {
+        await this.refresh({
+          updateCharts: true,
+        })
+        setTimeout(async () => {
+          await refreshTask();
+        }, 1000);
+      } catch(error) {
         console.error("Unable to update refresh data!");
         console.error(error);
-      });
-    }, 1000);
+        setTimeout(async () => {
+          await refreshTask();
+        }, 5000);
+      }
+    }.bind(this);
+    await refreshTask();
     this.checkForUpdates().then(() => {
       console.log("Updates check done.");
     });
