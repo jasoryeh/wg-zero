@@ -26,7 +26,7 @@ EXPOSE 51820/udp
 EXPOSE 51821/tcp
 
 # Set Environment
-ENV DEBUG=Server,WireGuard
+ENV DEBUG=wgeasy:*
 
 # Run Web UI
 WORKDIR /app
