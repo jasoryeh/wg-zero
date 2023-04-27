@@ -253,8 +253,12 @@ import QRCode from 'qrcode';
 
                 <div>
                   <div v-show="clientsPersist && clientsPersist[client.PublicKey] && clientsPersist[client.PublicKey].isNew">
-                    <!-- Active dot -->
+                    <!-- New (this session) -->
                     <div class="text-[6px] translate-x-1 text-white px-1 rounded-full bg-blue-300 absolute top-0 right-0">NEW</div>
+                  </div>
+                  <div v-show="client._meta && client._meta.___unsaved && client._meta.___unsaved === true">
+                    <!-- New (this session) -->
+                    <div class="text-[6px] translate-x-1 text-white px-1 rounded-full bg-yellow-300 absolute top-0 right-0">NEW</div>
                   </div>
                   <div v-if="isServerUp() && client.stats.lastHandshake && ((new Date() - new Date(client.stats.lastHandshake) < 1000 * 60 * 10))">
                     <!-- Ping radar animation -->

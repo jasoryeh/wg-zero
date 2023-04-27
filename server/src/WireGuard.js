@@ -69,6 +69,10 @@ function writeRawConfig(base, interfaceName, cfg) {
     let value = cfg.interface[key];
     if (key == '_meta') {
       for (let metaKey in value) {
+        if (metaKey.startsWith('___')) {
+          // temporary data is discarded
+          continue;
+        }
         let metaValue = value[metaKey];
         if (metaValue instanceof Array) {
           for (let cmd of value) {
@@ -97,6 +101,10 @@ function writeRawConfig(base, interfaceName, cfg) {
       let value = peer[key];
       if (key == '_meta') {
         for (let metaKey in value) {
+          if (metaKey.startsWith('___')) {
+            // temporary data is discarded
+            continue;
+          }
           let metaValue = value[metaKey];
           if (metaValue instanceof Array) {
             for (let cmd of value) {
@@ -345,7 +353,9 @@ class WireGuard {
       type: "Peer",
       PublicKey: publicKey,
       AllowedIPs: addresses,
-      _meta: {},
+      _meta: {
+        ___unsaved: true,
+      },
     };
     if (!!presharedKey) {
       peer.PresharedKey = presharedKey;
