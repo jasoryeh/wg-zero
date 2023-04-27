@@ -1,3 +1,7 @@
+if [ ! -z $RESETWS ]; then
+    rm -rf ./mount
+fi
+
 if [ -z $SKIPBUILD ]; then
     echo "Building container..."
     docker build -t wg-easy-test .
