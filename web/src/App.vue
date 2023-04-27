@@ -74,15 +74,19 @@ import QRCode from 'qrcode';
               <!-- Icon -->
               <div class="h-10 w-10 mr-5 rounded-full bg-gray-50 relative">
                 <Icon icon="heroicons:server-stack" class="w-6 h-6 m-2 text-gray-300" />
-                <div v-if="isServerUp()">
+                <div>
+                  <div v-if="server && server._meta && server._meta.___unsaved && server._meta.___unsaved === true">
+                    <!-- New (server) -->
+                    <div class="text-[6px] translate-x-1 text-white px-1 rounded-full bg-yellow-300 absolute top-0 right-0">NEW</div>
+                  </div>
                   <!-- Ping radar animation -->
-                  <div class="animate-ping w-4 h-4 p-1 bg-green-100 rounded-full absolute -bottom-1 -right-1"></div>
+                  <div v-if="isServerUp()" class="animate-ping w-4 h-4 p-1 bg-green-100 rounded-full absolute -bottom-1 -right-1"></div>
                   <!-- Active dot -->
-                  <div class="w-2 h-2 bg-green-500 rounded-full absolute bottom-0 right-0"></div>
-                </div>
-                <div v-else>
-                  <!-- Active dot -->
-                  <div class="w-2 h-2 bg-red-500 rounded-full absolute bottom-0 right-0"></div>
+                  <div v-if="isServerUp()" class="w-2 h-2 bg-green-500 rounded-full absolute bottom-0 right-0"></div>
+                  <div v-else>
+                    <!-- Active dot -->
+                    <div class="w-2 h-2 bg-red-500 rounded-full absolute bottom-0 right-0"></div>
+                  </div>
                 </div>
               </div>
 
@@ -257,7 +261,7 @@ import QRCode from 'qrcode';
                     <div class="text-[6px] translate-x-1 text-white px-1 rounded-full bg-blue-300 absolute top-0 right-0">NEW</div>
                   </div>
                   <div v-show="client._meta && client._meta.___unsaved && client._meta.___unsaved === true">
-                    <!-- New (this session) -->
+                    <!-- New (in server session) -->
                     <div class="text-[6px] translate-x-1 text-white px-1 rounded-full bg-yellow-300 absolute top-0 right-0">NEW</div>
                   </div>
                   <div v-if="isServerUp() && client.stats.lastHandshake && ((new Date() - new Date(client.stats.lastHandshake) < 1000 * 60 * 10))">

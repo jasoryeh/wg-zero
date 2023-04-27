@@ -227,7 +227,9 @@ class WireGuard {
         PostUp: WG_POST_UP,
         PreDown: WG_PRE_DOWN,
         PostDown: WG_POST_DOWN,
-        _meta: {},
+        _meta: {
+          ___unsaved: true
+        },
       },
       peers: []
     };
