@@ -8,6 +8,7 @@ if [ -z $SKIPBUILD ]; then
 fi
 
 echo "Entering environment..."
+docker rm -f wg-easy-test
 docker run --rm -it \
     --name=wg-easy-test \
     -p 51822:51822/udp \
