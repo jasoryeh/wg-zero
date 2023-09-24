@@ -45,14 +45,16 @@ module.exports = class Server {
     });
 
     if (WG_WEBUI) {
-      this.app.use('/', express.static(path.join(__dirname, '..', '..', 'web', 'dist')));
+      // Path to the web vite project: ../../web/dist
+      let path_webDirInProject = path.join(__dirname, '..', '..', 'web', 'dist');
+      this.app.use('/', express.static(path_webDirInProject));
       debug("UI enabled.");
     }
 
     this.routes();
 
     this.app.listen(PORT, () => {
-      debug(`wg-easy is listening on ${PORT}`);
+      debug(`wg-easy is listening on port ${PORT}`);
     });
  }
 
