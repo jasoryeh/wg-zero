@@ -13,7 +13,7 @@ if [ ! -d /app/server/node_modules ]; then
 fi
 if [ ! -d /app/web/node_modules ]; then
     echo "Looks like node_modules is not found in /app/web, running npm install"
-    cd /app/web && npm install
+    cd /app/web && npm install && npx vite build
 fi
 
 cd /app/server && node server.js
