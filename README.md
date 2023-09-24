@@ -139,3 +139,4 @@ This application is intended to be run from within a Docker container, the entry
 
 The recommended environment for developing is to develop in Docker. There are two scripts in the root directory intended to assist with development: `enter_dev.sh` and `dev.sh`.
 * `enter_dev.sh`: builds the container associated with the `Dockerfile` and immediately launches it 
+* `dev.sh`: To avoid changes on the host system from this app, do not run this on the host unless you would like to manage a server on the host, and instead run this in the container. It is intended to be run when you would like to simultaneously launch both the GUI server and the Wireguard VPN server.
