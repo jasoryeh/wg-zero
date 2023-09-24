@@ -51,10 +51,12 @@ To automatically install & run wg-easy, simply run:
 $ docker run \
     --name=wg-easy \
     -p 51820:51820/udp \
-    -p 51821:51821/tcp \
-    -v $PWD/mount/wireguard:/etc/wireguard \
     -e WG_PORT=51820 \
+    -p 51821:51821/tcp \
+    -e PORT=51821 \
+    -v $PWD/mount/wireguard:/etc/wireguard \
     -e WG_HOST=$(curl checkip.amazonaws.com) \
+    -e PASSWORD="your_secure_password_here!!" \
     --cap-add=NET_ADMIN \
     --cap-add=SYS_MODULE \
     --sysctl=net.ipv4.ip_forward=1 \
@@ -64,9 +66,9 @@ $ docker run \
     jasoryeh/wg-easy
 </pre>
 
-> 💡 Replace `YOUR_SERVER_IP` with your WAN IP, or a Dynamic DNS hostname.
-> 
-> 💡 Replace `YOUR_ADMIN_PASSWORD` with a password to log in on the Web UI.
+> 💡 If your want to manually specify the server's public IP Address, replace `$(curl checkip.amazonaws.com) with a public facing IP address, a public domain pointing to the server, or a Dynamic Domain pointed at this server.
+>
+> 💡  Replace `your_secure_password_here!!` with a different password!
 
 The Web UI will now be available on `http://0.0.0.0:51821`.
 
@@ -78,8 +80,10 @@ These options can be configured by setting environment variables using `-e KEY="
 | - | - | - | - |
 | `PASSWORD` | - | `foobar123` | When set, requires a password when logging in to the Web UI. |
 | `WG_HOST` | - | `vpn.myserver.com` | The public hostname of your VPN server. |
-| `WG_PORT` | `51820` | `12345` | The public UDP port of your VPN server. WireGuard will always listen on `51820` inside the Docker container. |
+| `WG_PORT` | `51820` | `12345` | The UDP port the actual Wireguard VPN server will listen to. |
+| `PORT` | `51821` | `12345` | The port on which the Wireguard GUI will listen to. |
 | `WG_INTERFACE` | `wg0` | `wg0` | Manually specify the interface name for the Wireguard server. |
+| `WG_INTERNET_INTERFACE` | `wg0` | `wg0` | Manually specify the network interface that this application will attempt to configure for use with the Wireguard VPN server. |
 | `WG_ADDRESS_SPACE` | `10.1.3.1/24` | `10.1.1.1/24` | Specify the address space that clients should use. |
 | `WG_PRE_UP` | `...` | - | See [config.js](https://github.com/WeeJeWel/wg-easy/blob/master/src/config.js#L19) for the default value. |
 | `WG_POST_UP` | `...` | `iptables ...` | See [config.js](https://github.com/WeeJeWel/wg-easy/blob/master/src/config.js#L20) for the default value. |

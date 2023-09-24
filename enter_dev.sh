@@ -17,11 +17,12 @@ docker rm -f wg-easy-test
 docker run --rm -it \
     --name=wg-easy-test \
     -p 51822:51822/udp \
+    -e WG_PORT=51822 \
     -p 51821:51821/tcp \
+    -e PORT=51821 \
     -p 5173:5173 \
     -v $PWD:/app \
     -v $PWD/mount/wireguard:/etc/wireguard \
-    -e WG_PORT=51822 \
     -e WG_HOST=$(curl checkip.amazonaws.com) \
     --cap-add=NET_ADMIN \
     --cap-add=SYS_MODULE \
@@ -29,3 +30,24 @@ docker run --rm -it \
     --sysctl=net.ipv4.conf.all.src_valid_mark=1 \
     --sysctl net.ipv6.conf.all.disable_ipv6=0 \
     wg-easy-test $*
+
+# explanations:
+
+# -- ports
+# 51822 = Wireguard server listen port
+# 51821 = Wireguard GUI server listen port
+# associated env to configure these ports to be used are under each port bind
+
+# -- volumes
+# $PWD:/app = Mount current directory (development directory) into the container
+# $PWD/mount/wireguard = Mount the current directory's mount/wireguard to persist the Wireguard configuration
+
+# -- more env
+# WG_HOST=$(curl ...) = get the server's IP
+
+# -- permissions
+# cap-add NET_ADMIN & SYS_MODULE = permissions necessary for the Wireguard server
+# sysctls = some configuration necessary for a working Wireguard VPN
+
+# -- container misc.
+# $* = run whatever arguments passed to this script in the server (e.g. bash)
