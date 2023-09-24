@@ -152,15 +152,22 @@ module.exports = class Server {
     this.wireguard.getInterface().PrivateKey = await generatePrivateKey();
     res.status(200).send({});
   })
+  .post('/api/wireguard/server/host', async (req, res) => {
+    // update the Wireguard hostname that is sent with configuration files
+    const { host } = req.body;
+    this.wireguard.setServerHost(host);
+    res.status(200).send({host: this.wireguard.getServerHost()});
+  })
   .put('/api/wireguard/server/addresses', async (req, res) => {
     const { addresses } = req.body;
     this.wireguard.getInterface().Address = addresses;
     res.status(200).send({});
   })
   .put('/api/wireguard/server/port', async (req, res) => {
+    // set the VPN server's port
     const { port } = req.body;
-    this.wireguard.config.interface.ListenPort = port;
-    res.status(200).send({});
+    this.wireguard.setServerPort(port);
+    res.status(200).send({port: this.wireguard.getSErverPort()});
   })
   .post('/api/wireguard/server/new', async (req, res) => {
     debug("wireguard/server/new: Setting up a new WireGuard configuration...");
