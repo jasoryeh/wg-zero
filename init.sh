@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Default production initialization script.
+
 if [ ! -d /app ]; then
     echo "Your machine does not appear to have a /app directory indicating this is not running inside of the container."
     echo "    This script is intended to run inside a container, please see the README."

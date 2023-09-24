@@ -1,3 +1,6 @@
+# FROM HOST: Run to enter a container-based development environment.
+#   Run with ./dev.sh to watch application files and live update.
+
 # Workspace reset flag 
 #    (deletes ./mount in the current directory 
 #      which is the default mount in this directory)
