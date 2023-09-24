@@ -109,3 +109,29 @@ docker pull jasoryeh/wg-easy
 ```
 
 And then run the `docker run -d \ ...` command above again.
+
+## Contributor Brief
+This section is intended as a briefing for contributors looking to contribute to this repository at `jasoryeh/wg-easy`.
+
+### Notes
+This application is intended to be run in a Docker container. This is a primarily Javascript application.
+
+### Structure
+This repository essentially contains two components of wg-easy, the web component and the server component. 
+
+To summarize without extensively elaborating: 
+* the **server** compoennt will actually (HTTP Requests -> wg-quick, wg, file IO, etc) interface with the Wireguard server; 
+  * a `expressjs` node javascript application at its core
+* the **web** component is purely the user interface and will attempt to perform as many operations as securely (and developmentally) feasible on the client side (essentially acting as the user entering wg commands).
+  * a `vite` javascript web application at its core
+
+### Running
+To start up this application, the following must occur (in order):
+1. Both the `web` and `server` components are initialized (npm install)
+2. The `web`'s web components are built and a `dist` folder exists (npx vite build)
+3. The `server` now starts up (npx nodemon)
+
+This application is intended to be run from within a Docker container, the entrypoint is the `init.sh` script, this script does all of the above steps and is specific to the container only.
+
+The recommended environment for developing is to develop in Docker. There are two scripts in the root directory intended to assist with development: `enter_dev.sh` and `dev.sh`.
+* `enter_dev.sh`: builds the container associated with the `Dockerfile` and immediately launches it 

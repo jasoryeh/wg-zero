@@ -1,12 +1,17 @@
+# Workspace reset flag 
+#    (deletes ./mount in the current directory 
+#      which is the default mount in this directory)
 if [ ! -z $RESETWS ]; then
     rm -rf ./mount
 fi
 
+# Skip rebuilding the container every time
 if [ -z $SKIPBUILD ]; then
     echo "Building container..."
     docker build -t wg-easy-test .
 fi
 
+# Runs the container just built
 echo "Entering environment..."
 docker rm -f wg-easy-test
 docker run --rm -it \
