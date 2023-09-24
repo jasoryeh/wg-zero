@@ -121,22 +121,41 @@ This section is intended as a briefing for contributors looking to contribute to
 This application is intended to be run in a Docker container. This is a primarily Javascript application.
 
 ### Structure
-This repository essentially contains two components of wg-easy, the web component and the server component. 
+This repository contains two components of wg-easy, the web component and the server component. 
+There are no additional configuration files, any additional information is also stored inside of the Wireguard 
+configuration file as a comment.
 
 To summarize without extensively elaborating: 
-* the **server** compoennt will actually (HTTP Requests -> wg-quick, wg, file IO, etc) interface with the Wireguard server; 
+* the **server** component will actually (HTTP Requests -> wg-quick, wg, file IO, etc) interface with the Wireguard server; 
   * a `expressjs` node javascript application at its core
 * the **web** component is purely the user interface and will attempt to perform as many operations as securely (and developmentally) feasible on the client side (essentially acting as the user entering wg commands).
   * a `vite` javascript web application at its core
+* the **configuration** is solely read from `wg0.conf`
+  * additional information is stored in a similar format to `Key = Value`s inside of the `.conf` file, but is prefixed with a `#!`
+  * e.g. The name of peers are stored inside the `.conf` as `#!Name = Profile Name` under each peer
+  * configuration stored with `#!` is found in `_meta` (metadata)
 
 ### Running
-To start up this application, the following must occur (in order):
+To start up this application on the host (not recommended), the following must occur (in order):
 1. Both the `web` and `server` components are initialized (npm install)
 2. The `web`'s web components are built and a `dist` folder exists (npx vite build)
 3. The `server` now starts up (npx nodemon)
 
-This application is intended to be run from within a Docker container, the entrypoint is the `init.sh` script, this script does all of the above steps and is specific to the container only.
+### Note on Development
+This application is intended to be run normally from within a Docker container, using `init.sh`.
 
-The recommended environment for developing is to develop in Docker. There are two scripts in the root directory intended to assist with development: `enter_dev.sh` and `dev.sh`.
+The recommended environment for developing for this repository is to develop in Docker.
+There are two scripts in the root directory intended to assist with development: `enter_dev.sh` and `dev.sh`.
 * `enter_dev.sh`: builds the container associated with the `Dockerfile` and immediately launches it 
 * `dev.sh`: To avoid changes on the host system from this app, do not run this on the host unless you would like to manage a server on the host, and instead run this in the container. It is intended to be run when you would like to simultaneously launch both the GUI server and the Wireguard VPN server.
+
+To spin up a container with both the GUI and Wireguard VPN server running, and
+  additionally, have `nodemon` and `vite` running:
+```
+./enter_dev.sh ./dev.sh
+```
+
+### Contributions
+Welcome! This fork of `wg-easy-test` aims to be much more flexible, feature-rich, configurable than the original repository whilst retaining it's "easy" title. All contributions are welcome!
+
+See 
