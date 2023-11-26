@@ -552,8 +552,7 @@ export default {
         }
         var cpersist = this.clientsPersist[cid];
         
-        // in case of saved private keys
-        console.log(client._meta)
+        // in case of saved private keys, repopulate the private key
         if (client._meta.privateKey) {
           cpersist.PrivateKey = client._meta.privateKey;
         }
