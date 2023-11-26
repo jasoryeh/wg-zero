@@ -26,7 +26,7 @@ module.exports.WG_POST_UP = process.env.WG_POST_UP || `
 iptables -I INPUT -p udp --dport ${module.exports.WG_PORT} -j ACCEPT;
 iptables -I FORWARD -i ${module.exports.WG_INTERNET_INTERFACE} -o ${module.exports.WG_INTERFACE} -j ACCEPT;
 iptables -I FORWARD -i ${module.exports.WG_INTERFACE} -j ACCEPT;
-iptables -t nat -A POSTROUTING -o ${module.exports.WG_PUBLIC_INTERFACE} -j MASQUERADE;
+iptables -t nat -A POSTROUTING -o ${module.exports.WG_INTERNET_INTERFACE} -j MASQUERADE;
 `;
 
 module.exports.WG_PRE_DOWN = process.env.WG_PRE_DOWN || '';
@@ -34,7 +34,7 @@ module.exports.WG_POST_DOWN = process.env.WG_POST_DOWN || `
 iptables -D INPUT -p udp --dport ${module.exports.WG_PORT} -j ACCEPT;
 iptables -D FORWARD -i ${module.exports.WG_INTERNET_INTERFACE} -o ${module.exports.WG_INTERFACE} -j ACCEPT;
 iptables -D FORWARD -i ${module.exports.WG_INTERFACE} -j ACCEPT;
-iptables -t nat -D POSTROUTING -o ${module.exports.WG_PUBLIC_INTERFACE} -j MASQUERADE;
+iptables -t nat -D POSTROUTING -o ${module.exports.WG_INTERNET_INTERFACE} -j MASQUERADE;
 `;
 
 module.exports.WG_PRE_UP = module.exports.WG_PRE_UP.split('\n').map(each => each.trim());
