@@ -350,13 +350,22 @@ class WireGuard {
     return null;
   }
 
-  addClient(publicKey, addresses, presharedKey = null) {
+  /**
+   * Add a client to the in-memory configuration.
+   * @param {*} publicKey The public key for the client.
+   * @param {*} addresses Addresses this client is allowed to use.
+   * @param {*} presharedKey The optional preshared key.
+   * @param {*} privateKey A optional private key if the user wishes to store the private key on the server.
+   * @returns 
+   */
+  addClient(publicKey, addresses, presharedKey = null, privateKey = null) {
     let peer = {
       type: "Peer",
       PublicKey: publicKey,
       AllowedIPs: addresses,
       _meta: {
         ___unsaved: true,
+        privateKey: privateKey
       },
     };
     if (!!presharedKey) {

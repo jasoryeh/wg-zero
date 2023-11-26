@@ -180,9 +180,9 @@ module.exports = class Server {
     res.status(200).send({});
   })
   .put('/api/wireguard/clients/new', async (req, res) => {
-    const { publicKey, addresses, presharedKey } = req.body;
+    const { privateKey, publicKey, addresses, presharedKey } = req.body;
     res.status(200).send({
-      client: await this.wireguard.addClient(publicKey, addresses, presharedKey),
+      client: await this.wireguard.addClient(publicKey, addresses, presharedKey, privateKey),
     });
   })
   .put('/api/wireguard/clients/:clientRef/name', async (req, res) => {

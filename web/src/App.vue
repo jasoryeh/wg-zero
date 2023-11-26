@@ -544,6 +544,20 @@ export default {
       // stats are only available when the interface is up
       for (let client of clients) {
         let cid = client.PublicKey;
+
+        // persistent data
+        /// initialize client data persistence if we dont have any historical data yet
+        if (!this.clientsPersist[cid]) {
+          this.clientsPersist[cid] = {};
+        }
+        var cpersist = this.clientsPersist[cid];
+        
+        // in case of saved private keys
+        console.log(client._meta)
+        if (client._meta.privateKey) {
+          cpersist.PrivateKey = client._meta.privateKey;
+        }
+
         if (this.isServerUp()) {
           let cstats = stats[cid];
 
@@ -554,12 +568,6 @@ export default {
               tx: 0,
             };
           }
-
-          /// initialize client data persistence if we dont have any historical data yet
-          if (!this.clientsPersist[cid]) {
-            this.clientsPersist[cid] = {};
-          }
-          var cpersist = this.clientsPersist[cid];
 
           // ensure history trackers exist
           cpersist.transferRxHistory = cpersist.transferRxHistory ?? Array(50).fill(0);
@@ -604,6 +612,11 @@ export default {
         client.Reference = Buffer.from(cid).toString('hex');
         client.name = client._meta.Name || cid;
         client.addresses = client.AllowedIPs;
+        
+        // if private key is saved
+        if (client._meta.PrivateKey) {
+          client.PrivateKey = client._meta.PrivateKey;
+        }
       }
 
       // make it available at the end.
@@ -639,7 +652,7 @@ export default {
       this.clients = null;
     },
     async newClient(name, addresses, privateKey, publicKey, presharedKey) {
-      let res = await this.api.createClient(publicKey, addresses, presharedKey);
+      let res = await this.api.createClient(publicKey, addresses, presharedKey, privateKey);
       let client = res.client;
       // todo: if not res.client fail
       // ?? await this.refresh();

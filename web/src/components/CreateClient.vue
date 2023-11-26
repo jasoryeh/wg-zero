@@ -93,6 +93,18 @@ import { Icon } from '@iconify/vue';
                                         </p>
                                         <p class="text-xs text-gray-500 mb-1">Optional. If you would like to generate one <a class="text-blue-500" href="#" @click="genPreshared()">click here</a></p>
                                     </div>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500">
+                                            <input  
+                                                class="rounded p-2 border-2 border-gray-100 focus:border-gray-200 outline-none mr-2"
+                                                type="checkbox" v-model.trim="form_persist_privatekey" />
+                                            <span v-if="form_persist_privatekey">Saving to server</span>
+                                            <span v-else>Not saving to server</span>
+                                        </p>
+                                        <span class="text-xs text-gray-500 mb-1">Optional. For your convenience, this is default to on. <br />
+                                            When on, private keys will be sent and saved to the server. <br />
+                                            When off, the client's private key will only be available until leaving this page.</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -127,6 +139,7 @@ export default {
             gen_preshared: "",
             gen_public: "",
             gen_original: "",
+            form_persist_privatekey: true,
         }
     },
     methods: {
@@ -155,6 +168,7 @@ export default {
                 privateKey: this.gen_private,
                 publicKey: this.gen_public,
                 presharedKey: this.gen_preshared,
+                persistPrivateKey: this.form_persist_privatekey,
             });
         },
         cancel() {

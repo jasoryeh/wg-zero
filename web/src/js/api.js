@@ -86,14 +86,15 @@ class API {
     });
   }
 
-  async createClient(pub, addrs, psk) {
+  async createClient(pub, addrs, psk, prk) {
     return this.call({
       method: 'put',
       path: '/wireguard/clients/new',
       body: {
         publicKey: pub,
         addresses: addrs,
-        presharedKey: psk
+        presharedKey: psk,
+        privateKey: prk
       }
     });
   }
