@@ -1,5 +1,6 @@
 # FROM HOST: Run to enter a container-based development environment.
 #   Run with ./dev.sh to watch application files and live update.
+CWD=$PWD
 
 # Workspace reset flag 
 #    (deletes ./mount in the current directory 
@@ -12,6 +13,13 @@ fi
 if [ -z $SKIPBUILD ]; then
     echo "Building container..."
     docker build -t wg-easy-test .
+fi
+
+if [ -z "${UNMODIFIED}" ]; then
+    echo "Removing built and installed files before starting..."
+    rm -rf $CWD/web/node_modules
+    rm -rf $CWD/web/dist
+    rm -rf $CWD/server/node_modules
 fi
 
 # Runs the container just built
