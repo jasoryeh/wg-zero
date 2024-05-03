@@ -3,6 +3,7 @@
 const { release } = require('./package.json');
 
 module.exports.RELEASE = release;
+module.exports.HOST = process.env.HOST || "0.0.0.0";
 module.exports.PORT = process.env.PORT || 51821;
 module.exports.PASSWORD = process.env.PASSWORD;
 module.exports.WG_WEBUI = process.env.WG_WEBUI || true;

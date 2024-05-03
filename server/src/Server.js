@@ -10,6 +10,7 @@ const Util = require('./Util');
 
 const {
   PORT,
+  HOST,
   RELEASE,
   PASSWORD,
   WG_WEBUI,
@@ -53,9 +54,9 @@ module.exports = class Server {
     }
 
     this.routes();
-
-    this.app.listen(PORT, () => {
-      debug(`wg-easy is listening on port ${PORT}`);
+    this.app.listen
+    this.app.listen(PORT, HOST, () => {
+      debug(`wg-easy is listening on port ${HOST}:${PORT}`);
     });
  }
 
