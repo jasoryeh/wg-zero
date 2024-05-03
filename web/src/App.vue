@@ -42,7 +42,7 @@ import QRCode from 'qrcode';
         <div class="flex flex-row flex-auto items-center p-3 px-5 border border-b-2 border-gray-100">
           <div class="flex-grow">
             <p class="text-2xl font-medium">Server</p>
-            <p class="text-sm text-gray-500">Server details and controls.</p>
+            <p class="text-sm text-gray-500"><span class="text-[8px] bg-amber-300 p-1 rounded font-light mr-1" v-if="readonly">READ ONLY</span>Server details and controls.</p>
           </div>
           <div class="flex-shrink-0" v-if="isServerConfigured()">
             <button @click="serverUp()" v-if="!isServerUp()" 
@@ -200,10 +200,10 @@ import QRCode from 'qrcode';
         </div>
 
         <!-- Clients list -->
-        <div>
+        <div class="clients-list">
           <!-- Client if there are any -->
           <div v-if="clients && clients.length > 0" v-for="client in clients" :key="client.PublicKey"
-            class="relative overflow-hidden border-b border-gray-100 border-solid">
+            class="relative overflow-hidden border-b border-gray-100 border-solid" :id="['client-' + btoa(client.PublicKey)]">
 
             <!-- Chart -->
             <div v-if="isServerUp()" class="absolute z-0 bottom-0 left-0 right-0" style="width: 100%; height: 20%;">
@@ -413,7 +413,7 @@ import QRCode from 'qrcode';
       <ClientConfigModal v-if="qrcode" :qrSVG="qrcode" @close="qrcode = null" />
 
       <!-- Create Dialog -->
-      <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="({name, addresses, privateKey, publicKey, presharedKey }) => { newClient(name, addresses, privateKey, publicKey, presharedKey); clientCreate = null; }" />
+      <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="({name, addresses, privateKey, publicKey, presharedKey }) => { newClient(name, addresses, privateKey, publicKey, presharedKey); clientCreate = null; scrollToClient(publicKey); }" />
 
       <!-- Delete Dialog -->
       <DeleteClient v-if="clientDelete" :name="clientDelete.name" @cancel="clientDelete = null" @confirm="clientDelete = null" />
@@ -474,6 +474,8 @@ export default {
 
       currentRelease: null,
       latestRelease: null,
+
+      readonly: null,
     }
   },
   methods: {
@@ -506,7 +508,7 @@ export default {
     },
     async checkForUpdates() {
       const currentRelease = (await this.api.getRelease()).release;
-      const latestRelease = await fetch('https://weejewel.github.io/wg-easy/changelog.json')
+      const latestRelease = await fetch('https://raw.githubusercontent.com/jasoryeh/wg-easy/ca4f65287f15bbabce0bf7052d0ceedf401c6795/docs/changelog.json')
         .then(res => res.json())
         .then(releases => {
           const releasesArray = Object.entries(releases).map(([version, changelog]) => ({
@@ -530,6 +532,9 @@ export default {
     },
     async refresh({ updateCharts = false } = {}) {
       if (!this.authenticated) return;
+
+      // readonly?
+      this.readonly = (await this.api.isReadonly()).readonly;
 
       // request, and format data
       this.meta = await this.api.getMeta();
@@ -747,6 +752,12 @@ export default {
         addrs.push(`${nextAddress.toString()}/${nextAddress.addressType() == 4 ? 32 : 128}`);
       }
       return addrs;
+    },
+    scrollToClient(pubKey) {
+      document.getElementById(`client-${btoa(pubKey)}`).scrollIntoView();
+    },
+    btoa(t) {
+      return window.btoa(t);
     },
   },
   filters: {

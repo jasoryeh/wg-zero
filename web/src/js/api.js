@@ -184,6 +184,13 @@ class API {
     return result;
   }
 
+  async isReadonly() {
+    return this.call({
+      method: 'get',
+      path: '/readonly',
+    });
+  }
+
 }
 
 export default API;

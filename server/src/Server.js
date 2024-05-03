@@ -13,6 +13,7 @@ const {
   RELEASE,
   PASSWORD,
   WG_WEBUI,
+  WG_READONLY,
 } = require('../config');
 
 const {
@@ -129,8 +130,13 @@ module.exports = class Server {
     } catch(err) {
       debug("wireguard/save: Failed to save configuration in: ");
       debug(err);
-      await this.wireguard.revert();
-      await this.wireguard.reboot();
+      try {
+        await this.wireguard.revert();
+        await this.wireguard.reboot();
+      } catch(err1) {
+        debug("wireguard/save: Failure recovery: Failed to revert!");
+        debug(err);
+      }
       res.status(500).send({
         error: err
       });
@@ -147,6 +153,11 @@ module.exports = class Server {
   .get('/api/wireguard/up', async (req, res) => {
     await this.wireguard.up();
     res.status(200).send({});
+  })
+  .get('/api/readonly', async (req, res) => {
+    res.status(200).send({
+      readonly: WG_READONLY,
+    });
   })
   .post('/api/wireguard/server/regenerate', async (req, res) => {
     this.wireguard.getInterface().PrivateKey = await generatePrivateKey();

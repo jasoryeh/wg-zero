@@ -8,6 +8,7 @@ const debug = require('debug')('wgeasy:WireGuard');
 const Util = require('./Util');
 
 const {
+  WG_READONLY,
   WG_INTERFACE,
   WG_PATH,
   WG_HOST,
@@ -61,7 +62,13 @@ function getWireguardConfigPath(base, interfaceName) {
   return path.join(base, `${interfaceName}.conf`);
 }
 
-function writeRawConfig(base, interfaceName, cfg) {
+function writeRawConfig(lines, base, interfaceName) {
+  fs.writeFileSync(getWireguardConfigPath(base, interfaceName), lines.join('\n'), {
+    encoding: "utf8"
+  });
+  return lines;
+}
+function generateRawConfig(cfg) {
   var lines = [];
   lines.push(`[Interface]`);
   for (let key in cfg.interface) {
@@ -127,9 +134,6 @@ function writeRawConfig(base, interfaceName, cfg) {
     lines.push('');
   }
 
-  fs.writeFileSync(getWireguardConfigPath(base, interfaceName), lines.join('\n'), {
-    encoding: "utf8"
-  });
   return lines;
 }
 
@@ -241,6 +245,9 @@ class WireGuard {
 
   async backup() {
     debug("Making a backup...");
+    if (WG_READONLY) {
+      throw new Error("No backups can be made in read only mode!");
+    }
     const backupDirectory = `${this.getConfigDirectory()}/${this.getBackupDirName()}`;
     const interfaceFile = `${this.getConfigDirectory()}/${this.getInterfaceName()}.conf`;
     await Util.exec(`mkdir -p ${backupDirectory}`);
@@ -251,6 +258,9 @@ class WireGuard {
 
   async revert() {
     debug("Reverting to last backup...");
+    if (WG_READONLY) {
+      throw new Error("No reverts can be made in read only mode!");
+    }
     await Util.exec(`cp -f ${this.getConfigDirectory()}/${this.getBackupDirName()}/${this.getInterfaceName()}_latest.conf ${this.getConfigDirectory()}/${this.getInterfaceName()}.conf`);
     debug("Reverted.");
   }
@@ -329,7 +339,15 @@ class WireGuard {
       // PersistentKeepalive - number
     }
 
-    writeRawConfig(this.getConfigDirectory(), this.getInterfaceName(), parsed);
+    var configLines = generateRawConfig(parsed);
+
+    if (WG_READONLY) {
+      console.error("Export results: ");
+      console.error(configLines.join("\n"));
+      throw new Error("Cannot export, this instance is in read only mode!");
+    }
+
+    writeRawConfig(configLines, this.getConfigDirectory(), this.getInterfaceName());
     debug("Export complete.");
   }
 
