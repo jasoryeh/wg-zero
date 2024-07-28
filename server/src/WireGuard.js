@@ -266,10 +266,16 @@ class WireGuard {
   }
 
   async down() {
+    if (WG_READONLY) {
+      throw new Error("No power actions can be made in read only mode!");
+    }
     return Util.exec(`wg-quick down ${this.getInterfaceName()}`);
   }
 
   async up() {
+    if (WG_READONLY) {
+      throw new Error("No power actions can be made in read only mode!");
+    }
     return Util.exec(`wg-quick up ${this.getInterfaceName()}`);
   }
 
