@@ -19,6 +19,26 @@ import QRCode from 'qrcode';
 
 <template>
   <div v-cloak class="container mx-auto max-w-3xl">
+    <!-- Alerts -->
+    <div class="shadow-md rounded-lg mb-8 mt-8">
+      <!-- Server card header -->
+      <div :class="['flex flex-row flex-auto items-center p-3 px-5 mb-1', 
+                    (alert.color ? 'border-'+alert.color : 'border-red-500'), 
+                    (alert.color ? 'bg-'+alert.color : 'bg-red-500'), 
+                    (alert.textColor ? 'text-'+alert.textColor : 'text-white'),
+                    ((!alert.expires) || (alert.expires && (new Date(alert.expires) < new Date())) ? 'hidden' : '')]" 
+                    v-for="alert of alerts">
+        <div class="flex-grow">
+          <Icon :icon="alert.icon ?? 'heroicons:bell-alert'" class="inline mr-2" />
+          <span class="font-medium" v-html="alert.text ?? 'An unknown error has occurred.'"></span>
+        </div>
+        <div class="flex-shrink p-2" v-on:click="alert.expires = new Date()">
+          <Icon :icon="'heroicons:trash'" class="inline" />
+        </div>
+      </div>
+    </div>
+    <!--end-->
+
     <div v-if="authenticated === true">
       <!-- Logout button -->
       <span v-if="meta && meta.auth"
@@ -31,7 +51,7 @@ import QRCode from 'qrcode';
         <img src="/img/logo.png" width="32" class="inline align-middle" />
         <span class="align-middle">WireGuard</span>
       </h1>
-      <h2 class="text-sm text-gray-400 mb-10"></h2>
+      <h2 class="text-sm text-gray-400 mb-10"><!-- Subtitle --></h2>
 
       <!-- Update notification -->
       <Update v-if="latestRelease" :currentRelease="currentRelease" :latestRelease="latestRelease.version" :changelog="latestRelease.changelog" />
@@ -461,6 +481,15 @@ export default {
 
       /* state */
       state_settingUp: false,
+      alerts: [
+        {
+          "color": "red-500",
+          "textColor": "white",
+          "text": "An alert here.",
+          "icon": null,
+          "expires": null,
+        }
+      ],
 
       /* unchanged */
       clientDelete: null,
@@ -482,6 +511,20 @@ export default {
     bytes,
     setTimeout,
     setInterval,
+    alert(msg, time = 5, icon = null, color = null, textColor = null) {
+      let after = new Date();
+      after.setSeconds(after.getSeconds() + time);
+      var build = {
+        color,
+        textColor,
+        "text": msg,
+        icon,
+        expires: after,
+      };
+      this.alerts.push(build);
+      console.log(this.alerts);
+      return build;
+    },
     log(stuff) {
       console.log(stuff);
     },
@@ -642,8 +685,10 @@ export default {
       } catch(err) {
         console.error("Authentication failed...");
         console.error(err.message || err.toString());
+        this.alert('Authentication Failed! ' + err.message || err.toString());
       }
       console.log(`Login: ${this.authenticated}`);
+      this.alert(this.authenticated ? 'Login Succeeded.' : 'Login Failed.', 5, null, this.authenticated ? 'green-500' : 'red-500', 'white');
       this.authenticating = false;
       this.password = null;
       return this.refresh();
