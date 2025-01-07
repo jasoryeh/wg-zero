@@ -440,7 +440,7 @@ import QRCode from 'qrcode';
       <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="({name, addresses, privateKey, publicKey, presharedKey }) => { newClient(name, addresses, privateKey, publicKey, presharedKey); clientCreate = null; scrollToClient(publicKey); }" />
 
       <!-- Delete Dialog -->
-      <DeleteClient v-if="clientDelete" :name="clientDelete.name" @cancel="clientDelete = null" @confirm="clientDelete = null" />
+      <DeleteClient v-if="clientDelete" :name="clientDelete.name" @cancel="clientDelete = null" @confirm="console.log(clientDelete); deleteClient(clientDelete.PublicKey); clientDelete = null" />
     </div>
 
     <!-- Authentication -->
@@ -716,29 +716,40 @@ export default {
       }
       this.clientsPersist[publicKey].isNew = true;
       this.clientsPersist[publicKey].PrivateKey = privateKey;
+      this.alert(`Client '${name}'' at <b>${addresses}</b> was created, but <b>not</b> committed. <br />Click 'Save' to commit this client to the server.`, 15, null, 'orange-700');
     },
     async updateClientName(client, name) {
       await this.api.updateName(client.Reference, name);
     },
     async reloadServer() {
       await this.api.reload();
+      this.alert('The server configuration has been reloaded.', 5, null, 'blue-700');
     },
     async commitServer() {
       await this.api.save();
+      this.alert('The settings were saved to the server.', 5, null, 'green-600');
     },
     async serverUp() {
       await this.api.up();
+      this.alert('The server was started.', 5, null, 'green-700');
     },
     async serverDown() {
       await this.api.down();
+      this.alert('The server was stopped.', 5, null, 'orange-700');
+    },
+    async deleteClient(publicKey) {
+      await this.api.deleteClient(publicKey);
+      this.alert(`The client with public key '${publicKey}' was deleted.`, 15, null, 'red-600');
     },
     async initializeServer() {
       this.state_settingUp = true;
       try {
         await this.api.setup();
+        this.alert("Server is set up! Please verify your settings and press 'Start' to start it!", 5, null, "green-500");
       } catch(err) {
         console.error("Error while requesting setup...");
         console.error(err);
+        this.alert("There was an error setting up your server!");
       } finally {
         setTimeout(() => { this.state_settingUp = false; }, 5000);
       }
@@ -782,6 +793,7 @@ export default {
       document.body.appendChild(dummy);
       dummy.click();
       document.body.removeChild(dummy);
+      this.alert(`Downloaded configuration for client '<b>${client._meta.Name || client.PublicKey}</b>'`, 15, null, 'purple-700');
     },
     getNextIPs() {
       let taken = [];

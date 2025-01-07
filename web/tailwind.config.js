@@ -6,7 +6,7 @@ module.exports = {
   ],
   safelist: [
     {
-      pattern: /bg-(red|green|blue|orange|yellow)-(100|200|300|400|500|600|700|800|900)/, // You can display all the colors that you need
+      pattern: /bg-(red|green|blue|orange|yellow|purple)-(100|200|300|400|500|600|700|800|900)/, // You can display all the colors that you need
       variants: ['lg', 'hover', 'focus', 'lg:hover'],      // Optional
     },
   ],

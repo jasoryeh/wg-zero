@@ -99,6 +99,16 @@ class API {
     });
   }
 
+  async deleteClient(publicKey) {
+    return this.call({
+      method: 'delete',
+      path: `/wireguard/clients/${publicKey}/delete`,
+      body: {
+        publicKey,
+      }
+    });
+  }
+
   async getStats() {
     return this.call({
       method: 'get',
