@@ -326,7 +326,8 @@ import QRCode from 'qrcode';
                   <!-- Edit -->
                   <span v-show="clientEditNameId !== client.Reference"
                     @click="clientEditName = client.name; clientEditNameId = client.Reference;"
-                    class="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                    class="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                    :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null">
                     <Icon icon="heroicons:pencil-square" class="h-4 w-4 ml-1 inline align-middle opacity-25 hover:opacity-100" />
                   </span>
                 </div>
@@ -353,7 +354,8 @@ import QRCode from 'qrcode';
                     <!-- Edit -->
                     <span v-show="clientEditAddressId !== client.Reference"
                       @click="clientEditAddress = client.addresses.join(','); clientEditAddressId = client.Reference; setTimeout(() => $refs['client-' + client.Reference + '-address'][0].select(), 1);"
-                      class="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                      class="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+                    :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null">
                       <Icon icon="heroicons:pencil-square" class="h-4 w-4 ml-1 inline align-middle opacity-25 hover:opacity-100" />
                     </span>
                   </span>
@@ -463,7 +465,7 @@ import QRCode from 'qrcode';
       <ViewClientConfig v-if="viewClientConfig" :config="viewClientConfig" @close="viewClientConfig = null" />
 
       <!-- Create Dialog -->
-      <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="({name, addresses, privateKey, publicKey, presharedKey }) => { newClient(name, addresses, privateKey, publicKey, presharedKey); clientCreate = null; scrollToClient(publicKey); }" />
+      <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="({name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey }) => { newClient(name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey); clientCreate = null; scrollToClient(publicKey); }" />
 
       <!-- Delete Dialog -->
       <DeleteClient v-if="clientDelete" :name="clientDelete.name" @cancel="clientDelete = null" @confirm="console.log(clientDelete); deleteClient(clientDelete.PublicKey); clientDelete = null" />
@@ -732,9 +734,9 @@ export default {
       this.clients = null;
       this.alert('Logged out.', 5, null, 'blue-500');
     },
-    async newClient(name, addresses, privateKey, publicKey, presharedKey) {
+    async newClient(name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey) {
       try {
-        let res = await this.api.createClient(publicKey, addresses, presharedKey, privateKey);
+        let res = await this.api.createClient(publicKey, addresses, presharedKey, privateKey, persistPrivateKey);
         let client = res.client;
         // todo: if not res.client fail
         // ?? await this.refresh();

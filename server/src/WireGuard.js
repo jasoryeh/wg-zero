@@ -376,7 +376,7 @@ class WireGuard {
    * @param {*} privateKey A optional private key if the user wishes to store the private key on the server.
    * @returns 
    */
-  addClient(publicKey, addresses, presharedKey = null, privateKey = null) {
+  addClient(publicKey, addresses, presharedKey = null, privateKey = null, persistPrivateKey = true) {
     assertNotReadOnly("Cannot add clients in read-only mode!");
     let peer = {
       type: "Peer",
@@ -384,7 +384,7 @@ class WireGuard {
       AllowedIPs: addresses,
       _meta: {
         ___unsaved: true,
-        privateKey: privateKey
+        privateKey: persistPrivateKey ? privateKey : undefined,
       },
     };
     if (!!presharedKey) {
