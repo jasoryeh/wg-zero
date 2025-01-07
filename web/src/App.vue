@@ -26,13 +26,17 @@ import QRCode from 'qrcode';
                     (alert.color ? 'border-'+alert.color : 'border-red-500'), 
                     (alert.color ? 'bg-'+alert.color : 'bg-red-500'), 
                     (alert.textColor ? 'text-'+alert.textColor : 'text-white'),
-                    ((!alert.expires) || (alert.expires && (new Date(alert.expires) < new Date())) ? 'hidden' : '')]" 
-                    v-for="alert of alerts">
+                    ((alert.expires && (new Date(alert.expires) > new Date())) ? '' : 'hidden')]" 
+                    v-for="alert of alerts" :key="alert.__hash">
         <div class="flex-grow">
           <Icon :icon="alert.icon ?? 'heroicons:bell-alert'" class="inline mr-2" />
           <span class="font-medium" v-html="alert.text ?? 'An unknown error has occurred.'"></span>
         </div>
         <div class="flex-shrink p-2" v-on:click="alert.expires = new Date()">
+          <span class="mr-1 opacity-20">
+            <small v-if="alert.expires">{{ Math.floor((new Date(alert.expires) - new Date()) / 100) / 10 }}</small>
+            <small v-else>...</small>
+          </span>
           <Icon :icon="'heroicons:trash'" class="inline" />
         </div>
       </div>
@@ -699,6 +703,7 @@ export default {
       this.api.password = null;
       this.authenticated = false;
       this.clients = null;
+      this.alert('Logged out.', 5, null, 'blue-500');
     },
     async newClient(name, addresses, privateKey, publicKey, presharedKey) {
       let res = await this.api.createClient(publicKey, addresses, presharedKey, privateKey);
@@ -812,6 +817,9 @@ export default {
     },
   },
   async mounted() {
+    // modify alerts
+    setInterval(() => { this.alerts.forEach((a) => a.__hash = Math.random()); }, 100);
+
     this.api = new API();
     window.wg_api = this.api;
     window.wg_api.getNextIPs = this.getNextIPs;
