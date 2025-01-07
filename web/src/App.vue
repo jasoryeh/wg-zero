@@ -416,6 +416,14 @@ import QRCode from 'qrcode';
                     <Icon icon="heroicons:arrow-down-tray" class="w-5 h-5" />
                   </button>
 
+                  <!-- Info for no configuration -->
+                  <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
+                    title="Configuration download/viewing is unavailable because the private key was not saved at creation."
+                    v-if="!(clientsPersist[client.PublicKey] && clientsPersist[client.PublicKey].PrivateKey)" 
+                    @click="alert('Configuration download/viewing is unavailable because the private key was not saved at creation.', 15, 'heroicons:information-circle', 'blue-500')">
+                    <Icon icon="heroicons:no-symbol" class="w-5 h-5" />
+                  </button>
+
                   <!-- Delete -->
                   <button 
                     :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
