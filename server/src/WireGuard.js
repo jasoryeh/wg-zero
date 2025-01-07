@@ -214,6 +214,7 @@ function assertNotReadOnly(msg) {
 class WireGuard {
   constructor() {
     this.config = null;
+    debug('Read Only: ' + WG_READONLY);
   }
   
   configExists() {
