@@ -205,6 +205,12 @@ function exists(file) {
 
 }
 
+function assertNotReadOnly(msg) {
+  if (WG_READONLY) {
+    throw new Error("The application is in Read Only mode, could not perform action: " + msg ?? "...");
+  }
+}
+
 class WireGuard {
   constructor() {
     this.config = null;
@@ -245,9 +251,7 @@ class WireGuard {
 
   async backup() {
     debug("Making a backup...");
-    if (WG_READONLY) {
-      throw new Error("No backups can be made in read only mode!");
-    }
+    assertNotReadOnly("No backups can be made in read only mode!");
     const backupDirectory = `${this.getConfigDirectory()}/${this.getBackupDirName()}`;
     const interfaceFile = `${this.getConfigDirectory()}/${this.getInterfaceName()}.conf`;
     await Util.exec(`mkdir -p ${backupDirectory}`);
@@ -258,24 +262,18 @@ class WireGuard {
 
   async revert() {
     debug("Reverting to last backup...");
-    if (WG_READONLY) {
-      throw new Error("No reverts can be made in read only mode!");
-    }
+    assertNotReadOnly("No revers can be made in read only mode!");
     await Util.exec(`cp -f ${this.getConfigDirectory()}/${this.getBackupDirName()}/${this.getInterfaceName()}_latest.conf ${this.getConfigDirectory()}/${this.getInterfaceName()}.conf`);
     debug("Reverted.");
   }
 
   async down() {
-    if (WG_READONLY) {
-      throw new Error("No power actions can be made in read only mode!");
-    }
+    assertNotReadOnly("No power actions can be made in read only mode!");
     return Util.exec(`wg-quick down ${this.getInterfaceName()}`);
   }
 
   async up() {
-    if (WG_READONLY) {
-      throw new Error("No power actions can be made in read only mode!");
-    }
+    assertNotReadOnly("No power actions can be made in read only mode!");
     return Util.exec(`wg-quick up ${this.getInterfaceName()}`);
   }
 
@@ -347,11 +345,10 @@ class WireGuard {
 
     var configLines = generateRawConfig(parsed);
 
-    if (WG_READONLY) {
-      console.error("Export results: ");
-      console.error(configLines.join("\n"));
-      throw new Error("Cannot export, this instance is in read only mode!");
-    }
+    console.error("Export results: ");
+    console.error(configLines.join("\n"));
+
+    assertNotReadOnly("No exports allowed in read only mode!");
 
     writeRawConfig(configLines, this.getConfigDirectory(), this.getInterfaceName());
     debug("Export complete.");
