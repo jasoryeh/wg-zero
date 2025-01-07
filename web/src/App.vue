@@ -6,6 +6,7 @@ import CreateClient from './components/CreateClient.vue'
 import DeleteClient from './components/DeleteClient.vue'
 import Update from './components/Update.vue'
 import Login from './components/Login.vue'
+import ViewClientConfig from './components/ViewClientConfig.vue'
 
 import API from './js/api.js';
 import { IP6, IP4, IPPool, ofIPString } from './js/ip.js';
@@ -397,10 +398,16 @@ import QRCode from 'qrcode';
                     <div class="rounded-full w-4 h-4 m-1 bg-white"></div>
                   </div>
 
-                  <!-- Show QR-->
+                  <!-- Show QR -->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
                     title="Show QR Code" @click="showQR(client)" v-show="clientsPersist[client.PublicKey] && clientsPersist[client.PublicKey].PrivateKey">
                     <Icon icon="heroicons-outline:qrcode" class="w-5 h-5" />
+                  </button>
+
+                  <!-- View Config -->
+                  <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
+                    title="Show Client Config" @click="showClientConfig(client)" v-show="clientsPersist[client.PublicKey] && clientsPersist[client.PublicKey].PrivateKey">
+                    <Icon icon="heroicons-outline:code-bracket-square" class="w-5 h-5" />
                   </button>
 
                   <!-- Download Config -->
@@ -443,6 +450,9 @@ import QRCode from 'qrcode';
 
       <!-- QR Code-->
       <ClientConfigModal v-if="qrcode" :qrSVG="qrcode" @close="qrcode = null" />
+
+      <!-- Client Configuration Viewer -->
+      <ViewClientConfig v-if="viewClientConfig" :config="viewClientConfig" @close="viewClientConfig = null" />
 
       <!-- Create Dialog -->
       <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="({name, addresses, privateKey, publicKey, presharedKey }) => { newClient(name, addresses, privateKey, publicKey, presharedKey); clientCreate = null; scrollToClient(publicKey); }" />
@@ -512,6 +522,7 @@ export default {
       clientEditAddress: null,
       clientEditAddressId: null,
       qrcode: null,
+      viewClientConfig: null,
 
       currentRelease: null,
       latestRelease: null,
@@ -828,6 +839,9 @@ export default {
     async showQR(client) {
       let config = this.clientConfig(client);
       this.qrcode = await QRCode.toString(config, {type: 'svg', width: 512});
+    },
+    async showClientConfig(client) {
+      this.viewClientConfig = this.clientConfig(client);
     },
     async downloadConfig(client) {
       let blob = new Blob([this.clientConfig(client)], { type: 'text/plain' });
