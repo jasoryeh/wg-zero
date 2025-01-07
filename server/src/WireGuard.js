@@ -402,8 +402,7 @@ class WireGuard {
 
   deleteClient(publicKey) {
     let client = this.getClient(publicKey);
-    let idx = this.config.peers.indexOf(client);
-    delete this.config.peers[idx];
+    this.config.peers = this.config.peers.filter((peer) => peer != client);
   }
 
   getInterfaceName() {

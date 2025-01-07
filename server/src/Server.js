@@ -257,8 +257,11 @@ module.exports = class Server {
 
     res.status(200).send({});
   })
-  .delete('/api/wireguard/clients/:clientRef/delete', async (req, res) => {
-    
+  .delete('/api/wireguard/clients/:publicKey/delete', async (req, res) => {
+    var publicKey = req.params.publicKey;
+    res.status(200).send({
+      result: await this.wireguard.deleteClient(publicKey),
+    });
   })
   .post('/api/wireguard/generate/key/private', async (req, res) => {
     res.status(200).send({
