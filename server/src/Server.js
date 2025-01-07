@@ -143,15 +143,15 @@ module.exports = class Server {
       });
     }
   })
-  .get('/api/wireguard/reload', async (req, res) => {
+  .post('/api/wireguard/reload', async (req, res) => {
     await this.wireguard.import();
     res.status(200).send({});
   })
-  .get('/api/wireguard/down', async (req, res) => {
+  .post('/api/wireguard/down', async (req, res) => {
     await this.wireguard.down();
     res.status(200).send({});
   })
-  .get('/api/wireguard/up', async (req, res) => {
+  .post('/api/wireguard/up', async (req, res) => {
     await this.wireguard.up();
     res.status(200).send({});
   })

@@ -132,21 +132,21 @@ class API {
 
   async reload() {
     return this.call({
-      method: 'get',
+      method: 'post',
       path: '/wireguard/reload',
     });
   }
 
   async up() {
     return this.call({
-      method: 'get',
+      method: 'post',
       path: '/wireguard/up',
     });
   }
 
   async down() {
     return this.call({
-      method: 'get',
+      method: 'post',
       path: '/wireguard/down',
     });
   }
