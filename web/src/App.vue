@@ -917,7 +917,7 @@ export default {
       });
     }.bind(this), 1000);
     setInterval(async function () {
-      await this.refreshTask();
+      await this.refresh();
     }.bind(this), 1000);
 
     this.checkForUpdates().then(() => {
