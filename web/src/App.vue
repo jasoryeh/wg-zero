@@ -28,7 +28,7 @@ import QRCode from 'qrcode';
                     (alert.color ? 'bg-'+alert.color : 'bg-red-500'), 
                     (alert.textColor ? 'text-'+alert.textColor : 'text-white'),
                     ((alert.expires && (new Date(alert.expires) > new Date())) ? '' : 'hidden')]" 
-                    v-for="alert of alerts" :key="alert.__hash">
+                    v-for="alert of alerts.filter((alert) => (alert.expires && (new Date(alert.expires) > new Date())))" :key="alert.__hash">
         <div class="flex-grow">
           <Icon :icon="alert.icon ?? 'heroicons:bell-alert'" class="inline mr-2" />
           <span class="font-medium" v-html="alert.text ?? 'An unknown error has occurred.'"></span>
