@@ -22,7 +22,10 @@ You have found the easiest way to install & manage WireGuard on any Linux host!
 * Download a client's configuration file.
 * Statistics for which clients are connected.
 * Tx/Rx charts for each connected client.
-* Client private keys are held on the client.
+* Client private keys can be kept secret.
+* Easy migration from an unmanaged configuration.
+* Read-only mode.
+* Simple manual configuration when editing `wg0.conf`.
 
 ## Requirements
 
@@ -158,4 +161,6 @@ To spin up a container with both the GUI and Wireguard VPN server running, and
 ### Contributions
 Welcome! This fork of `wg-easy-test` aims to be much more flexible, feature-rich, configurable than the original repository whilst retaining it's "easy" title. All contributions are welcome!
 
-See 
+### Fork Goals:
+- Minimize external non-WireGuard configuration (maintain one configuration file as much as possible: `/etc/wireguard/wg0.conf`)
+
