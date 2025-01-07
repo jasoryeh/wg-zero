@@ -33,174 +33,6 @@ const {
 const BACKUP_DIR = 'wg-easy-backups';
 const DUMP_COLUMNS = ['public', 'preshared', 'lastEndpoint', 'allowedIPs', 'lastHandshake', 'rx', 'tx', 'persistentKeepalive'];
 
-/**
- * Reads `wg show <interface> dump`
- * @returns Array of peers from the dump (ignores the interface result)
- */
-async function readDump(interfaceName) {
-  // read-in wireguard status from wg show <interface> dump
-  const dump = await Util.exec(`wg show ${interfaceName} dump`, {
-    log: false,
-  }); // capture dump data
-  //debug("Client data updated.");
-  const data = dump.trim().split('\n').slice(1).map((line) => line.split('\t')).map((data) => {
-    let ret = {};
-    for (let i = 0; i < data.length; i++) {
-      ret[DUMP_COLUMNS[i]] = data[i];
-    }
-    ret['lastHandshake'] = Number(ret['lastHandshake']);
-    ret['lastHandshake'] = (ret['lastHandshake'] == 0) ? null : new Date(ret['lastHandshake'] * 1000);
-    ret['rx'] = Number(ret['rx']);
-    ret['tx'] = Number(ret['tx']);
-    ret['persistentKeepalive'] = ret['persistentKeepalive'] == 'on'
-    return ret;
-  });
-  return data;
-}
-
-function getWireguardConfigPath(base, interfaceName) {
-  return path.join(base, `${interfaceName}.conf`);
-}
-
-function writeRawConfig(lines, base, interfaceName) {
-  fs.writeFileSync(getWireguardConfigPath(base, interfaceName), lines.join('\n'), {
-    encoding: "utf8"
-  });
-  return lines;
-}
-function generateRawConfig(cfg) {
-  var lines = [];
-  lines.push(`[Interface]`);
-  for (let key in cfg.interface) {
-    if (key == 'type') continue;
-    let value = cfg.interface[key];
-    if (key == '_meta') {
-      for (let metaKey in value) {
-        if (metaKey.startsWith('___')) {
-          // temporary data is discarded
-          continue;
-        }
-        let metaValue = value[metaKey];
-        if (metaValue instanceof Array) {
-          for (let cmd of value) {
-            lines.push(`#!${metaKey} = ${cmd}`);
-          }
-        } else {
-          lines.push(`#!${metaKey} = ${metaValue}`);
-        }
-      }
-    } else {
-      if (value instanceof Array) {
-        for (let cmd of value) {
-          lines.push(`${key} = ${cmd}`);
-        }
-      } else {
-        lines.push(`${key} = ${value}`);
-      }
-    }
-  }
-  lines.push('');
-
-  for (let peer of cfg.peers) {
-    lines.push(`[Peer]`);
-    for (let key in peer) {
-      if (key == 'type') continue;
-      let value = peer[key];
-      if (key == '_meta') {
-        for (let metaKey in value) {
-          if (metaKey.startsWith('___')) {
-            // temporary data is discarded
-            continue;
-          }
-          let metaValue = value[metaKey];
-          if (metaValue instanceof Array) {
-            for (let cmd of value) {
-              lines.push(`#!${metaKey} = ${cmd}`);
-            }
-          } else {
-            lines.push(`#!${metaKey} = ${metaValue}`);
-          }
-        }
-      } else {
-        if (value instanceof Array) {
-          for (let cmd of value) {
-            lines.push(`${key} = ${cmd}`);
-          }
-        } else {
-          lines.push(`${key} = ${value}`);
-        }
-      }
-    }
-    lines.push('');
-  }
-
-  return lines;
-}
-
-/**
- * Read the raw config.
- */
-function readRawConfig(base, interfaceName) {
-  let cfg_unparsed = (fs.readFileSync(getWireguardConfigPath(base, interfaceName), 'utf8')).split('\n');
-  let parsed = {
-    interface: {},
-    peers: []
-  };
-
-  var currentSection = {
-    _meta: {}
-  };
-  function _newSection() {
-    if (currentSection.type) {
-      if (currentSection.type == 'Interface') {
-        parsed.interface = currentSection;
-      } else if (currentSection.type == 'Peer') {
-        parsed.peers.push(currentSection);
-      } else {
-        debug(`Unknown section type ${currentSection.type}...`);
-        debug(`    ...will be discarded: \n${JSON.stringify(currentSection, null, 4)}\n`);
-      }
-      currentSection = {
-        _meta: {}
-      };
-    }
-  }
-
-  for (let i = 0; i < cfg_unparsed.length; i++) {
-    var line = cfg_unparsed[i].trim();
-    if ((line.startsWith("#") && !line.startsWith("#!")) || line.length == 0) continue;
-
-    if (line.startsWith('[') && line.endsWith(']')) {
-      _newSection();
-      line = line.replace("[", "").replace("]", "");
-      currentSection.type = line;
-    } else {
-      var [key, value] = line.split(" = ", 2).map((item) => item.trim());
-      let dataTo = currentSection;
-      if (key.startsWith("#!")) {
-        key = key.replace("#!", "");
-        dataTo = currentSection._meta;
-      }
-      if (dataTo[key]) {
-        if (!(dataTo[key] instanceof Array)) {
-          dataTo[key] = [ dataTo[key] ];
-        }
-        dataTo[key].push(value);
-      } else {
-        dataTo[key] = value;
-      }
-    }
-  }
-  _newSection();
-
-  return parsed;
-}
-
-function backupSuffix() {
-  let d = new Date();
-  return (d.toLocaleDateString('en-US') + '_' + d.toLocaleTimeString('en-US')).replaceAll('/', '_').replaceAll(':', '_').replaceAll(' ', '_');
-}
-
 function assertNotReadOnly(msg) {
   if (WG_READONLY) {
     throw new Error("The application is in Read Only mode, could not perform action: " + msg ?? "...");
@@ -212,9 +44,13 @@ class WireGuard {
     this.config = null;
     debug('Read Only: ' + WG_READONLY);
   }
+
+  getConfigPath() {
+    return `${this.getConfigDirectory()}/${this.getInterfaceName()}.conf`;
+  }
   
   configExists() {
-    const interfaceFile = `${this.getConfigDirectory()}/${this.getInterfaceName()}.conf`;
+    const interfaceFile = this.getConfigPath();
     try {
       fs.statSync(interfaceFile);
       return true;
@@ -246,13 +82,22 @@ class WireGuard {
     return BACKUP_DIR;
   }
 
+  getBackupDir() {
+    return `${this.getConfigDirectory()}/${this.getBackupDirName()}`;
+  }
+
+  backupSuffix() {
+    let d = new Date();
+    return (d.toLocaleDateString('en-US') + '_' + d.toLocaleTimeString('en-US')).replaceAll('/', '_').replaceAll(':', '_').replaceAll(' ', '_');
+  }
+
   async backup() {
     debug("Making a backup...");
     assertNotReadOnly("No backups can be made in read only mode!");
-    const backupDirectory = `${this.getConfigDirectory()}/${this.getBackupDirName()}`;
-    const interfaceFile = `${this.getConfigDirectory()}/${this.getInterfaceName()}.conf`;
+    const backupDirectory = this.getBackupDir();
+    const interfaceFile = this.getConfigPath();
     await Util.exec(`mkdir -p ${backupDirectory}`);
-    await Util.exec(`cp ${interfaceFile} ${backupDirectory}/${this.getInterfaceName()}_${backupSuffix()}.conf`);
+    await Util.exec(`cp ${interfaceFile} ${backupDirectory}/${this.getInterfaceName()}_${this.backupSuffix()}.conf`);
     await Util.exec(`cp -f ${interfaceFile} ${backupDirectory}/${this.getInterfaceName()}_latest.conf`);
     debug("Backup complete.");
   }
@@ -291,10 +136,155 @@ class WireGuard {
 
   }
 
+
+  getWireguardConfigPath(base, interfaceName) {
+    return path.join(base, `${interfaceName}.conf`);
+  }
+
+  writeRawConfig(lines, base, interfaceName) {
+    fs.writeFileSync(this.getWireguardConfigPath(base, interfaceName), lines.join('\n'), {
+      encoding: "utf8"
+    });
+    return lines;
+  }
+
+  /**
+   * Read the raw config.
+   */
+  _parseRawConfig(base, interfaceName) {
+    let cfg_unparsed = (fs.readFileSync(this.getWireguardConfigPath(base, interfaceName), 'utf8')).split('\n');
+    let parsed = {
+      interface: {},
+      peers: []
+    };
+
+    var currentSection = {
+      _meta: {}
+    };
+    function _newSection() {
+      if (currentSection.type) {
+        if (currentSection.type == 'Interface') {
+          parsed.interface = currentSection;
+        } else if (currentSection.type == 'Peer') {
+          parsed.peers.push(currentSection);
+        } else {
+          debug(`Unknown section type ${currentSection.type}...`);
+          debug(`    ...will be discarded: \n${JSON.stringify(currentSection, null, 4)}\n`);
+        }
+        currentSection = {
+          _meta: {}
+        };
+      }
+    }
+
+    for (let i = 0; i < cfg_unparsed.length; i++) {
+      var line = cfg_unparsed[i].trim();
+      if ((line.startsWith("#") && !line.startsWith("#!")) || line.length == 0) continue;
+
+      if (line.startsWith('[') && line.endsWith(']')) {
+        _newSection();
+        line = line.replace("[", "").replace("]", "");
+        currentSection.type = line;
+      } else {
+        var [key, value] = line.split(" = ", 2).map((item) => item.trim());
+        let dataTo = currentSection;
+        if (key.startsWith("#!")) {
+          key = key.replace("#!", "");
+          dataTo = currentSection._meta;
+        }
+        if (dataTo[key]) {
+          if (!(dataTo[key] instanceof Array)) {
+            dataTo[key] = [ dataTo[key] ];
+          }
+          dataTo[key].push(value);
+        } else {
+          dataTo[key] = value;
+        }
+      }
+    }
+    _newSection();
+
+    return parsed;
+  }
+
+  parseRawConfig() {
+    return this._parseRawConfig(this.getConfigDirectory(), this.getInterfaceName());
+  }
+
+
+  generateRawConfig(cfg) {
+    var lines = [];
+    lines.push(`[Interface]`);
+    for (let key in cfg.interface) {
+      if (key == 'type') continue;
+      let value = cfg.interface[key];
+      if (key == '_meta') {
+        for (let metaKey in value) {
+          if (metaKey.startsWith('___')) {
+            // temporary data is discarded
+            continue;
+          }
+          let metaValue = value[metaKey];
+          if (metaValue instanceof Array) {
+            for (let cmd of value) {
+              lines.push(`#!${metaKey} = ${cmd}`);
+            }
+          } else {
+            lines.push(`#!${metaKey} = ${metaValue}`);
+          }
+        }
+      } else {
+        if (value instanceof Array) {
+          for (let cmd of value) {
+            lines.push(`${key} = ${cmd}`);
+          }
+        } else {
+          lines.push(`${key} = ${value}`);
+        }
+      }
+    }
+    lines.push('');
+
+    for (let peer of cfg.peers) {
+      lines.push(`[Peer]`);
+      for (let key in peer) {
+        if (key == 'type') continue;
+        let value = peer[key];
+        if (key == '_meta') {
+          for (let metaKey in value) {
+            if (metaKey.startsWith('___')) {
+              // temporary data is discarded
+              continue;
+            }
+            let metaValue = value[metaKey];
+            if (metaValue instanceof Array) {
+              for (let cmd of value) {
+                lines.push(`#!${metaKey} = ${cmd}`);
+              }
+            } else {
+              lines.push(`#!${metaKey} = ${metaValue}`);
+            }
+          }
+        } else {
+          if (value instanceof Array) {
+            for (let cmd of value) {
+              lines.push(`${key} = ${cmd}`);
+            }
+          } else {
+            lines.push(`${key} = ${value}`);
+          }
+        }
+      }
+      lines.push('');
+    }
+
+    return lines;
+  }
+
   import() {
     debug("Importing...");
-    // no deep copy here since readRawConfig just regenerates every time
-    let parsed = readRawConfig(this.getConfigDirectory(), this.getInterfaceName());
+    // no deep copy here since parseRawConfig just regenerates every time
+    let parsed = this.parseRawConfig();
 
     let intf = parsed.interface;
     let peers = parsed.peers;
@@ -340,7 +330,7 @@ class WireGuard {
       // PersistentKeepalive - number
     }
 
-    var configLines = generateRawConfig(parsed);
+    var configLines = this.generateRawConfig(parsed);
 
     console.error("Export results: ");
     console.error(configLines.join("\n"));
@@ -409,8 +399,37 @@ class WireGuard {
     return WG_PATH;
   }
 
+  /**
+   * Reads `wg show <interface> dump`
+   * @returns Array of peers from the dump (ignores the interface result)
+   */
+  async _readDump(interfaceName) {
+    // read-in wireguard status from wg show <interface> dump
+    const dump = await Util.exec(`wg show ${interfaceName} dump`, {
+      log: false,
+    }); // capture dump data
+    //debug("Client data updated.");
+    const data = dump.trim().split('\n').slice(1).map((line) => line.split('\t')).map((data) => {
+      let ret = {};
+      for (let i = 0; i < data.length; i++) {
+        ret[DUMP_COLUMNS[i]] = data[i];
+      }
+      ret['lastHandshake'] = Number(ret['lastHandshake']);
+      ret['lastHandshake'] = (ret['lastHandshake'] == 0) ? null : new Date(ret['lastHandshake'] * 1000);
+      ret['rx'] = Number(ret['rx']);
+      ret['tx'] = Number(ret['tx']);
+      ret['persistentKeepalive'] = ret['persistentKeepalive'] == 'on'
+      return ret;
+    });
+    return data;
+  }
+
+  async readDump() {
+    return this._readDump(this.getInterfaceName());
+  }
+
   async getStats() {
-    return await readDump(this.getInterfaceName());
+    return await this.readDump();
   }
 
   async isUp() {
