@@ -3,6 +3,7 @@
 const path = require('path');
 
 const express = require('express');
+require('express-async-errors');
 const expressSession = require('express-session');
 const debug = require('debug')('wgeasy:Server');
 
@@ -284,10 +285,18 @@ module.exports = class Server {
         result: await generatePublicKey(privateKey),
       });
     } catch(err) {
-      debug("wireugard/generate/key/public: Error generating public key for a key: ");
+      debug("wireuguard/generate/key/public: Error generating public key for a key: ");
       debug(err);
       res.status(400).send({ error: true });
     }
+  });
+
+  // errors
+  this.app.use((err, req, res, next) => {
+    debug("An error has occurred in the Server route: " + err);
+    res.status(500).send({
+      error: err.message,
+    });
   });
  }
 };
