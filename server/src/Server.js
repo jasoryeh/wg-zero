@@ -209,6 +209,7 @@ module.exports = class Server {
     }
 
     debug(`wireguard/clients/${clientRef}/name: Updating name for ${pubKey} - ${client._meta.Name} -> ${name}`);
+    this.wireguard.assertNotReadOnly('Cannot update name in read-only mode!');
     client._meta.Name = name;
 
     res.status(200).send({});
@@ -224,6 +225,7 @@ module.exports = class Server {
     }
 
     debug(`wireugard/${clientRef}/addresses: Updating AllowedIPs for ${pubKey} - ${client.AllowedIPs} -> ${addresses}`);
+    this.wireguard.assertNotReadOnly('Cannot update address in read-only mode!');
     client.AllowedIPs = addresses;
 
     res.status(200).send({});
@@ -239,6 +241,7 @@ module.exports = class Server {
     }
 
     debug(`wireguard/clients/${clientRef}/publicKey: Updating PublicKey for ${pubKey} - ${pubKey} -> ${publicKey}`);
+    this.wireguard.assertNotReadOnly('Cannot public key in read-only mode!');
     client.PublicKey = publicKey;
 
     res.status(200).send({});
@@ -254,6 +257,7 @@ module.exports = class Server {
     }
 
     debug(`wireguard/clients/${clientRef}/presharedkey: Updating PreSharedKey for ${pubKey} - ${client.PresharedKey} -> ${preSharedKey}`);
+    this.wireguard.assertNotReadOnly('Cannot update pre-shared key in read-only mode!');
     client.PresharedKey = preSharedKey;
 
     res.status(200).send({});

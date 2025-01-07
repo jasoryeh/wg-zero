@@ -201,10 +201,6 @@ function backupSuffix() {
   return (d.toLocaleDateString('en-US') + '_' + d.toLocaleTimeString('en-US')).replaceAll('/', '_').replaceAll(':', '_').replaceAll(' ', '_');
 }
 
-function exists(file) {
-
-}
-
 function assertNotReadOnly(msg) {
   if (WG_READONLY) {
     throw new Error("The application is in Read Only mode, could not perform action: " + msg ?? "...");
@@ -381,6 +377,7 @@ class WireGuard {
    * @returns 
    */
   addClient(publicKey, addresses, presharedKey = null, privateKey = null) {
+    assertNotReadOnly("Cannot add clients in read-only mode!");
     let peer = {
       type: "Peer",
       PublicKey: publicKey,
@@ -399,6 +396,7 @@ class WireGuard {
   }
 
   deleteClient(publicKey) {
+    assertNotReadOnly("Cannot delete clients in read-only mode!");
     let client = this.getClient(publicKey);
     this.config.peers = this.config.peers.filter((peer) => peer != client);
   }
@@ -441,6 +439,12 @@ class WireGuard {
   setServerHost(host) {
     this.getInterface()._meta.Host = host;
   }
+
+  assertNotReadOnly(msg) {
+    assertNotReadOnly(msg);
+  }
 }
+
+WireGuard.assertNotReadOnly = assertNotReadOnly;
 
 module.exports = WireGuard;

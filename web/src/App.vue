@@ -70,11 +70,13 @@ import QRCode from 'qrcode';
           </div>
           <div class="flex-shrink-0" v-if="isServerConfigured()">
             <button @click="serverUp()" v-if="!isServerUp()" 
+              :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
               class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
               <Icon icon="heroicons:play" class="w-4 mr-2" />
               <span class="text-sm">Start</span>
             </button>
             <button @click="serverDown()" v-else
+              :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
               class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
               <Icon icon="heroicons:stop" class="w-4 mr-2" />
               <span class="text-sm">Stop</span>
@@ -184,18 +186,20 @@ import QRCode from 'qrcode';
           <!-- Needs setup -->
           <div v-if="!isServerConfigured()">
             <p class="text-center m-10 text-gray-400 text-sm">
-            This server is not set up yet, click initialize to get started.
-            <br /><br />
-            <button @click="initializeServer()" v-if="!state_settingUp"
-              class="bg-red-800 text-white hover:bg-red-700 border-2 border-none py-2 px-4 rounded inline-flex items-center transition">
-              <Icon icon="heroicons-solid:bolt" class="w-4 mr-2" />
-              <span class="text-sm">Initialize</span>
-            </button>
-            <button v-else
-              class="bg-gray-800 text-white hover:bg-gray-700 border-2 border-none py-2 px-4 rounded inline-flex items-center transition">
-              <Icon icon="heroicons-solid:bolt" class="w-4 mr-2" />
-              <span class="text-sm">Initialize</span>
-            </button>
+              <span v-if="!readonly">This server is not set up yet, click initialize to get started.</span>
+              <span v-else>This server is in Read-Only mode, an existing server may be monitored in this mode, however, the creation of a server is not allowed.</span>
+              <br /><br />
+              <button @click="initializeServer()" v-if="!state_settingUp"
+                :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
+                class="bg-red-800 text-white hover:bg-red-700 border-2 border-none py-2 px-4 rounded inline-flex items-center transition">
+                <Icon icon="heroicons-solid:bolt" class="w-4 mr-2" />
+                <span class="text-sm">Initialize</span>
+              </button>
+              <button v-else
+                class="bg-gray-800 text-white hover:bg-gray-700 border-2 border-none py-2 px-4 rounded inline-flex items-center transition">
+                <Icon icon="heroicons-solid:bolt" class="w-4 mr-2" />
+                <span class="text-sm">Initialize</span>
+              </button>
             </p>
           </div>
         </div>
@@ -211,11 +215,13 @@ import QRCode from 'qrcode';
           </div>
           <div class="flex-shrink-0">
             <button @click="commitServer()"
+              :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
               class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
               <Icon icon="material-symbols:save" class="w-4 mr-2" />
               <span class="text-sm">Save</span>
             </button>
             <button @click="clientCreate = true; clientCreateName = '';"
+              :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
               class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
               <Icon icon="material-symbols:add" class="w-4 mr-2" />
               <span class="text-sm">New</span>
@@ -404,7 +410,9 @@ import QRCode from 'qrcode';
                   </button>
 
                   <!-- Delete -->
-                  <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
+                  <button 
+                    :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
+                    class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
                     title="Delete Client" @click="clientDelete = client">
                     <Icon icon="heroicons:trash" class="w-5 h-5" />
                   </button>
@@ -706,40 +714,76 @@ export default {
       this.alert('Logged out.', 5, null, 'blue-500');
     },
     async newClient(name, addresses, privateKey, publicKey, presharedKey) {
-      let res = await this.api.createClient(publicKey, addresses, presharedKey, privateKey);
-      let client = res.client;
-      // todo: if not res.client fail
-      // ?? await this.refresh();
-      await this.api.updateName(Buffer.from(client.PublicKey).toString('hex'), name);
-      if (!this.clientsPersist[publicKey]) {
-        this.clientsPersist[publicKey] = {};
+      try {
+        let res = await this.api.createClient(publicKey, addresses, presharedKey, privateKey);
+        let client = res.client;
+        // todo: if not res.client fail
+        // ?? await this.refresh();
+        await this.api.updateName(Buffer.from(client.PublicKey).toString('hex'), name);
+        if (!this.clientsPersist[publicKey]) {
+          this.clientsPersist[publicKey] = {};
+        }
+        this.clientsPersist[publicKey].isNew = true;
+        this.clientsPersist[publicKey].PrivateKey = privateKey;
+        this.alert(`Client '${name}'' at <b>${addresses}</b> was created, but <b>not</b> committed. <br />Click 'Save' to commit this client to the server.`, 15, null, 'orange-700');
+      } catch(err) {
+        console.error(err);
+        this.alert('An error occurred while processing that request.');
       }
-      this.clientsPersist[publicKey].isNew = true;
-      this.clientsPersist[publicKey].PrivateKey = privateKey;
-      this.alert(`Client '${name}'' at <b>${addresses}</b> was created, but <b>not</b> committed. <br />Click 'Save' to commit this client to the server.`, 15, null, 'orange-700');
     },
     async updateClientName(client, name) {
-      await this.api.updateName(client.Reference, name);
+      try {
+        await this.api.updateName(client.Reference, name);
+        this.alert('The client name was updated!', 5, null, 'green-600');
+      } catch(err) {
+        console.error(err);
+        this.alert('An error occurred while processing that request.');
+      }
     },
     async reloadServer() {
-      await this.api.reload();
-      this.alert('The server configuration has been reloaded.', 5, null, 'blue-700');
+      try {
+        await this.api.reload();
+        this.alert('The server configuration has been reloaded.', 5, null, 'blue-700');
+      } catch(err) {
+        console.error(err);
+        this.alert('An error occurred while processing that request.');
+      }
     },
     async commitServer() {
-      await this.api.save();
-      this.alert('The settings were saved to the server.', 5, null, 'green-600');
+      try {
+        await this.api.save();
+        this.alert('The settings were saved to the server.', 5, null, 'green-600');
+      } catch(err) {
+        console.error(err);
+        this.alert('An error occurred while processing that request.');
+      }
     },
     async serverUp() {
-      await this.api.up();
-      this.alert('The server was started.', 5, null, 'green-700');
+      try {
+        await this.api.up();
+        this.alert('The server was started.', 5, null, 'green-700');
+      } catch(err) {
+        console.error(err);
+        this.alert('An error occurred while processing that request.');
+      }
     },
     async serverDown() {
-      await this.api.down();
-      this.alert('The server was stopped.', 5, null, 'orange-700');
+      try {
+        await this.api.down();
+        this.alert('The server was stopped.', 5, null, 'orange-700');
+      } catch(err) {
+        console.error(err);
+        this.alert('An error occurred while processing that request.');
+      }
     },
     async deleteClient(publicKey) {
-      await this.api.deleteClient(publicKey);
-      this.alert(`The client with public key '${publicKey}' was deleted.`, 15, null, 'red-600');
+      try {
+        await this.api.deleteClient(publicKey);
+        this.alert(`The client with public key '${publicKey}' was deleted.`, 15, null, 'red-600');
+      } catch(err) {
+        console.error(err);
+        this.alert('An error occurred while processing that request.');
+      }
     },
     async initializeServer() {
       this.state_settingUp = true;
