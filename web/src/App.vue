@@ -197,8 +197,9 @@ import QRCode from 'qrcode';
                 <span class="text-sm">Initialize</span>
               </button>
               <button v-else
-                class="bg-gray-800 text-white hover:bg-gray-700 border-2 border-none py-2 px-4 rounded inline-flex items-center transition">
-                <Icon icon="heroicons-solid:bolt" class="w-4 mr-2" />
+                class="cursor-not-allowed pointer-events-none opacity-25
+                     bg-gray-800 text-white hover:bg-gray-700 border-2 border-none py-2 px-4 rounded inline-flex items-center transition">
+                <Icon icon="heroicons-solid:arrow-path" class="w-4 mr-2 animate-spin" />
                 <span class="text-sm">Initialize</span>
               </button>
             </p>
@@ -544,6 +545,11 @@ export default {
     bytes,
     setTimeout,
     setInterval,
+    alertError(msg, err, ...args) {
+        console.error("AlertError: " + msg + ":");
+        console.error(err);
+      return this.alert(msg + ": <br/><pre class=\"text-xs\">" + err + "</pre>", ...args);
+    },
     alert(msg, time = 5, icon = null, color = null, textColor = null) {
       let after = new Date();
       after.setSeconds(after.getSeconds() + time);
@@ -606,7 +612,14 @@ export default {
       this.currentRelease = currentRelease;
       this.latestRelease = latestRelease;
     },
-    async refresh({ updateCharts = false } = {}) {
+    async refresh(...args) {
+      try {
+        return await this._refresh(...args);
+      } catch(err) {
+        this.alertError("An error occurred while refreshing", err, 1);
+      }
+    },
+    async _refresh({ updateCharts = false } = {}) {
       if (!this.authenticated) return;
 
       // readonly?
@@ -716,9 +729,7 @@ export default {
       try {
         this.authenticated = await this.api.tryAuth();
       } catch(err) {
-        console.error("Authentication failed...");
-        console.error(err.message || err.toString());
-        this.alert('Authentication Failed! ' + err.message || err.toString());
+        this.alertError("Authentication Failed!", err);
       }
       console.log(`Login: ${this.authenticated}`);
       this.alert(this.authenticated ? 'Login Succeeded.' : 'Login Failed.', 5, null, this.authenticated ? 'green-500' : 'red-500', 'white');
@@ -748,8 +759,7 @@ export default {
         this.clientsPersist[publicKey].PrivateKey = privateKey;
         this.alert(`Client '${name}'' at <b>${addresses}</b> was created, but <b>not</b> committed. <br />Click 'Save' to commit this client to the server.`, 15, null, 'orange-700');
       } catch(err) {
-        console.error(err);
-        this.alert('An error occurred while processing that request.');
+        this.alertError("An error occurred while creating the new client", err);
       }
     },
     async updateClientName(client, name) {
@@ -757,8 +767,7 @@ export default {
         await this.api.updateName(client.Reference, name);
         this.alert('The client name was updated!', 5, null, 'green-600');
       } catch(err) {
-        console.error(err);
-        this.alert('An error occurred while processing that request.');
+        this.alertError("An error occurred while updating the client name", err);
       }
     },
     async reloadServer() {
@@ -766,8 +775,7 @@ export default {
         await this.api.reload();
         this.alert('The server configuration has been reloaded.', 5, null, 'blue-700');
       } catch(err) {
-        console.error(err);
-        this.alert('An error occurred while processing that request.');
+        this.alertError("An error occurred while reloading settings", err);
       }
     },
     async commitServer() {
@@ -775,8 +783,7 @@ export default {
         await this.api.save();
         this.alert('The settings were saved to the server.', 5, null, 'green-600');
       } catch(err) {
-        console.error(err);
-        this.alert('An error occurred while processing that request.');
+        this.alertError("An error occurred while saving the server changes", err);
       }
     },
     async serverUp() {
@@ -784,8 +791,7 @@ export default {
         await this.api.up();
         this.alert('The server was started.', 5, null, 'green-700');
       } catch(err) {
-        console.error(err);
-        this.alert('An error occurred while processing that request.');
+        this.alertError("An error occurred while creating starting the server", err);
       }
     },
     async serverDown() {
@@ -793,8 +799,7 @@ export default {
         await this.api.down();
         this.alert('The server was stopped.', 5, null, 'orange-700');
       } catch(err) {
-        console.error(err);
-        this.alert('An error occurred while processing that request.');
+        this.alertError("An error occurred while stopping the server", err);
       }
     },
     async deleteClient(publicKey) {
@@ -802,8 +807,7 @@ export default {
         await this.api.deleteClient(publicKey);
         this.alert(`The client with public key '${publicKey}' was deleted.`, 15, null, 'red-600');
       } catch(err) {
-        console.error(err);
-        this.alert('An error occurred while processing that request.');
+        this.alertError("An error occurred while deleting the client '" + publicKey + "''", err);
       }
     },
     async initializeServer() {
@@ -812,11 +816,9 @@ export default {
         await this.api.setup();
         this.alert("Server is set up! Please verify your settings and press 'Start' to start it!", 5, null, "green-500");
       } catch(err) {
-        console.error("Error while requesting setup...");
-        console.error(err);
-        this.alert("There was an error setting up your server!");
+        this.alertError("An error occurred while setting up the server!", err, 15);
       } finally {
-        setTimeout(() => { this.state_settingUp = false; }, 5000);
+        setTimeout(() => { this.state_settingUp = false; }, 1000);
       }
     },
     generateClientConfig(privateKey, addresses, server, presharedKey = null) {
@@ -909,23 +911,15 @@ export default {
     await this.login();
 
     // start refreshing
-    let refreshTask = async function() {
-      try {
-        await this.refresh({
-          updateCharts: true,
-        })
-        setTimeout(async () => {
-          await refreshTask();
-        }, 1000);
-      } catch(error) {
-        console.error("Unable to update refresh data!");
-        console.error(error);
-        setTimeout(async () => {
-          await refreshTask();
-        }, 5000);
-      }
-    }.bind(this);
-    await refreshTask();
+    setInterval(async function() {
+      await this.refresh({
+        updateCharts: true,
+      });
+    }.bind(this), 1000);
+    setInterval(async function () {
+      await this.refreshTask();
+    }.bind(this), 1000);
+
     this.checkForUpdates().then(() => {
       console.log("Updates check done.");
     });
