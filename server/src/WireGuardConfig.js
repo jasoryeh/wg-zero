@@ -78,6 +78,10 @@ class IniSection {
         value.forEach((v) => this.add(key, v));
     }
 
+    hasMetadata(key) {
+        return this.getOneMetadata(key) != null;
+    }
+
     getMetadata(key) {
         return this.config.filter((entry) => entry.isMeta() && entry.key == key);
     }
@@ -206,6 +210,7 @@ class WireGuardInterface {
      */
     constructor(iniSection) {
         this.iniSection = iniSection;
+        this.enforceFields();
     }
 
     static create() {
@@ -216,6 +221,10 @@ class WireGuardInterface {
         return this.iniSection.toJson();
     }
 
+    enforceFields() {
+
+    }
+
     /**
      * WireGuard Settings
      */
@@ -224,7 +233,7 @@ class WireGuardInterface {
      * @returns {String[]}
      */
     getAddresses() {
-        return IniSection.unCommaSeparated(this.iniSection.getOne(INTERFACE_ADDRESS).value);
+        return this.iniSection.has(INTERFACE_ADDRESS) ? IniSection.unCommaSeparated(this.iniSection.getOne(INTERFACE_ADDRESS).value) : null;
     }
     setAddresses(...addresses) {
         this.iniSection.set(INTERFACE_ADDRESS, IniSection.commaSeparated(addresses));
@@ -234,7 +243,7 @@ class WireGuardInterface {
      * @returns {Number}
      */
     getListenPort() {
-        return parseInt(this.iniSection.getOne(INTERFACE_LISTENPORT).value);
+        return this.iniSection.has(INTERFACE_LISTENPORT) ? parseInt(this.iniSection.getOne(INTERFACE_LISTENPORT).value) : null;
     }
     setListenPort(port) {
         this.iniSection.set(INTERFACE_LISTENPORT, port);
@@ -245,7 +254,7 @@ class WireGuardInterface {
      * @returns {String}
      */
     getPrivateKey() {
-        return this.iniSection.getOne(INTERFACE_PRIVATEKEY).value;
+        return this.iniSection.has(INTERFACE_PRIVATEKEY) ? this.iniSection.getOne(INTERFACE_PRIVATEKEY).value : null;
     }
     setPrivateKey(pk) {
         this.iniSection.set(INTERFACE_PRIVATEKEY, pk);
@@ -255,14 +264,14 @@ class WireGuardInterface {
      * @returns {String[]}
      */
     getDNS() {
-        return IniSection.unCommaSeparated(this.iniSection.getOne(INTERFACE_DNS).value);
+        return this.iniSection.has(INTERFACE_DNS) ? IniSection.unCommaSeparated(this.iniSection.getOne(INTERFACE_DNS).value) : null;
     }
     setDNS(...dnss) {
         this.iniSection.set(INTERFACE_DNS, IniSection.commaSeparated(dnss));
     }
 
     getTable() {
-        return this.iniSection.getOne(INTERFACE_TABLE).value;
+        return this.iniSection.has(INTERFACE_TABLE) ? this.iniSection.getOne(INTERFACE_TABLE).value : null;
     }
     setTable(table) {
         this.iniSection.set(INTERFACE_TABLE, table);
@@ -272,7 +281,7 @@ class WireGuardInterface {
      * @returns {Number}
      */
     getMTU() {
-        return parseInt(this.iniSection.getOne(INTERFACE_MTU)).value;
+        return this.iniSection.has(INTERFACE_MTU) ? parseInt(this.iniSection.getOne(INTERFACE_MTU)).value : null;
     }
     setMTU(mtu) {
         this.iniSection.set(INTERFACE_MTU, mtu);
@@ -282,7 +291,7 @@ class WireGuardInterface {
      * @returns {String[]}
      */
     getPreUp() {
-        return this.iniSection.get(INTERFACE_PREUP).value;
+        return this.iniSection.has(INTERFACE_PREUP) ? this.iniSection.get(INTERFACE_PREUP).map((entry => entry.value)) : null;
     }
     setPreUp(...cmds) {
         this.iniSection.set(INTERFACE_PREUP, ...cmds);
@@ -291,7 +300,7 @@ class WireGuardInterface {
      * @returns {String[]}
      */
     getPostUp() {
-        return this.iniSection.get(INTERFACE_POSTUP).map((entry) => entry.value);
+        return tthis.iniSection.has(INTERFACE_POSTUP) ? his.iniSection.get(INTERFACE_POSTUP).map((entry) => entry.value) : null;
     }
     setPostUp(...cmds) {
         this.iniSection.set(INTERFACE_POSTUP, ...cmds);
@@ -300,7 +309,7 @@ class WireGuardInterface {
      * @returns {String[]}
      */
     getPreDown() {
-        return this.iniSection.get(INTERFACE_PREDOWN).map((entry) => entry.value);
+        return this.iniSection.has(INTERFACE_PREDOWN) ? this.iniSection.get(INTERFACE_PREDOWN).map((entry => entry.value)) : null;
     }
     setPreDown(...cmds) {
         this.iniSection.set(INTERFACE_PREDOWN, ...cmds);
@@ -309,7 +318,7 @@ class WireGuardInterface {
      * @returns {String[]}
      */
     getPostDown() {
-        return this.iniSection.get(INTERFACE_POSTDOWN).map((entry) => entry.value);
+        return this.iniSection.has(INTERFACE_POSTDOWN) ? this.iniSection.get(INTERFACE_POSTDOWN).map((entry) => entry.value) : null;
     }
     setPostDown(...cmds) {
         this.iniSection.set(INTERFACE_POSTDOWN, ...cmds);
@@ -319,7 +328,7 @@ class WireGuardInterface {
      * @returns {Boolean}
      */
     getSaveConfig() {
-        return this.iniSection.getOne(INTERFACE_SAVECONFIG).value == 'true';
+        return this.iniSection.has(INTERFACE_SAVECONFIG) ? this.iniSection.getOne(INTERFACE_SAVECONFIG).value == 'true' : null;
     }
     /**
      * @param {Boolean} what 
@@ -337,7 +346,7 @@ class WireGuardInterface {
      * @returns {String}
      */
     getHostAddress() {
-        this.iniSection.getOneMetadata('Host').value;
+        return this.iniSection.hasMetadata('Host') ? this.iniSection.getOneMetadata('Host').value : null;
     }
     setHostAddress(host) {
         this.iniSection.setMetadata('Host', host);
@@ -363,6 +372,7 @@ const PEER_SECTION = 'Peer';
 class WireGuardPeer {
     constructor(iniSection) {
         this.iniSection = iniSection;
+        this.enforceFields();
     }
 
     static create() {
@@ -373,26 +383,41 @@ class WireGuardPeer {
         return this.iniSection.toJson();
     }
 
+    enforceFields() {
+        let pubKey = this.getPublicKey();
+        var name = this.getName();
+        if (name != null) {
+            debug("Enforcing name property to public key on peer: " + pubKey);
+            this.setName("Unnamed Peer: '" + pubKey + "'");
+            name = this.getName();
+            debug("\t name set to: '" + name + "'")
+        }
+        if (this.getEnabled() === null) {
+            debug("Enforcing enabled property on peer: " + name)
+            this.setEnabled(true);
+        }
+    }
+
     /**
      * WireGuard Settings
      */
 
     getEndpoint() {
-        return this.iniSection.getOne(PEER_ENDPOINT).value;
+        return this.iniSection.has(PEER_ENDPOINT) ? this.iniSection.getOne(PEER_ENDPOINT).value : null;
     }
     setEndpoint(ep) {
         this.iniSection.set(PEER_ENDPOINT, ep);
     }
 
     getAllowedIPs() {
-        return IniSection.unCommaSeparated(this.iniSection.getOne(PEER_ALLOWEDIPS).value);
+        return this.iniSection.has(PEER_ALLOWEDIPS) ? IniSection.unCommaSeparated(this.iniSection.getOne(PEER_ALLOWEDIPS).value) : null;
     }
     setAllowedIPs(...ips) {
         this.iniSection.set(PEER_ALLOWEDIPS, IniSection.commaSeparated(ips));
     }
 
     getPublicKey() {
-        return this.iniSection.getOne(PEER_PUBLICKEY).value;
+        return this.iniSection.has(PEER_PUBLICKEY) ? this.iniSection.getOne(PEER_PUBLICKEY).value : null;
     }
     setPublicKey(pk) {
         this.iniSection.set(PEER_PUBLICKEY, pk);
@@ -403,7 +428,7 @@ class WireGuardPeer {
      * @returns {Number}
      */
     getPersistentKeepalive() {
-        return parseInt(this.iniSection.getOne(PEER_PERSISTENTKEEPALIVE).value);
+        return this.iniSection.has(PEER_PERSISTENTKEEPALIVE) ? parseInt(this.iniSection.getOne(PEER_PERSISTENTKEEPALIVE).value) : null;
     }
     /**
      * @param {Number} pka 
@@ -414,7 +439,7 @@ class WireGuardPeer {
 
 
     getPresharedKey() {
-        return this.iniSection.getOne(PEER_PRESHAREDKEY).value;
+        return this.iniSection.has(PEER_PRESHAREDKEY) ? this.iniSection.getOne(PEER_PRESHAREDKEY).value : null;
     }
     setPresharedKey(psk) {
         this.iniSection.set(PEER_PRESHAREDKEY, psk);
@@ -425,17 +450,24 @@ class WireGuardPeer {
      */
 
     getPrivateKey() {
-        return this.iniSection.getOneMetadata('privateKey').value;
+        return this.iniSection.hasMetadata('privateKey') ? this.iniSection.getOneMetadata('privateKey').value : null;
     }
     setPrivateKey(key) {
         this.iniSection.setMetadata('privateKey', key);
     }
 
     getName() {
-        return this.iniSection.getOneMetadata('Name').value;
+        return this.iniSection.hasMetadata('Name') ? this.iniSection.getOneMetadata('Name').value : null;
     }
     setName(name) {
         this.iniSection.setMetadata('Name', name);
+    }
+
+    getEnabled() {
+        return this.iniSection.hasMetadata('enabled') ? this.iniSection.getOneMetadata('enabled').value == 'true' : null;
+    }
+    setEnabled(enabled) {
+        this.iniSection.setMetadata('enabled', enabled);
     }
 }
 
