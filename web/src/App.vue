@@ -891,6 +891,15 @@ export default {
     btoa(t) {
       return window.btoa(t);
     },
+    initAPI() {
+      this.api = new API();
+      window.wg_api = this.api;
+      window.wg_api.getNextIPs = this.getNextIPs;
+    },
+    async initAndLogin() {
+      this.meta = await this.api.getMeta();
+      await this.login();
+    }
   },
   filters: {
     bytes,
@@ -899,16 +908,24 @@ export default {
     },
   },
   async mounted() {
-    // modify alerts
+    // modify alerts so vue rerenders them
     setInterval(() => { this.alerts.forEach((a) => a.__hash = Math.random()); }, 100);
 
-    this.api = new API();
-    window.wg_api = this.api;
-    window.wg_api.getNextIPs = this.getNextIPs;
-
     // get session
-    this.meta = await this.api.getMeta();
-    await this.login();
+    await new Promise(async function(resolve, reject) {
+      (async function init() {
+        try {
+          await this.initAPI();
+          await this.initAndLogin();
+          resolve();
+        } catch(err) {
+          this.alertError("An error occurred while connecting to the backend service. Did the service start correctly?", err, 5);
+          console.warn("Continuing to retry later...");
+          setTimeout(init.bind(this), 5000);
+        }
+      }.bind(this))();
+    }.bind(this));
+
 
     // start refreshing
     setInterval(async function() {
