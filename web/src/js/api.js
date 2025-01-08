@@ -167,6 +167,22 @@ class API {
     });
   }
 
+  async disable(clientRef) {
+    return this.call({
+      method: 'put',
+      path: `/wireguard/clients/${clientRef}/disable`,
+      body: { },
+    });
+  }
+
+  async enable(clientRef) {
+    return this.call({
+      method: 'put',
+      path: `/wireguard/clients/${clientRef}/enable`,
+      body: { },
+    });
+  }
+
   async generatePrivateKey() {
     return await this.call({
       method: 'post',

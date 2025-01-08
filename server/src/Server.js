@@ -290,6 +290,36 @@ module.exports = class Server {
 
     res.status(200).send({});
   })
+  .put('/api/wireguard/clients/:clientRef/disable', async (req, res) => {
+    const { clientRef } = req.params;
+    const pubKey = Buffer.from(clientRef, 'hex').toString('utf8');
+
+    let client = this.wireguard.getClient(pubKey);
+    if (!client) {
+      res.status(404).send({});
+    }
+
+    debug(`wireguard/clients/${clientRef}/disable: Disabling ${pubKey} - ${pubKey}`);
+    this.wireguard.assertNotReadOnly('Cannot update client in read-only mode!');
+    client.setEnabled(false);
+
+    res.status(200).send({});
+  })
+  .put('/api/wireguard/clients/:clientRef/enable', async (req, res) => {
+    const { clientRef } = req.params;
+    const pubKey = Buffer.from(clientRef, 'hex').toString('utf8');
+
+    let client = this.wireguard.getClient(pubKey);
+    if (!client) {
+      res.status(404).send({});
+    }
+
+    debug(`wireguard/clients/${clientRef}/enable: Enabling ${pubKey} - ${pubKey}`);
+    this.wireguard.assertNotReadOnly('Cannot update client in read-only mode!');
+    client.setEnabled(true);
+
+    res.status(200).send({});
+  })
   .delete('/api/wireguard/clients/:publicKey/delete', async (req, res) => {
     var publicKey = req.params.publicKey;
     res.status(200).send({

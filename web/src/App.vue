@@ -388,15 +388,14 @@ import QRCode from 'qrcode';
               </div>
 
               <!-- Right side -->
-              <div class="text-right">
+              <div class="text-right min-w-fit">
                 <div class="text-gray-400">
-
                   <!-- Enable/Disable -->
-                  <div @click="disableClient(client)" v-if="client.enabled === true" title="Disable Client"
+                  <div @click="disableClient(client)" v-if="client._meta.enabled === true" title="Disable Client"
                     class="inline-block align-middle rounded-full w-10 h-6 mr-1 bg-red-800 cursor-pointer hover:bg-red-700 transition-all mx-1">
                     <div class="rounded-full w-4 h-4 m-1 ml-5 bg-white"></div>
                   </div>
-                  <div @click="enableClient(client)" v-if="client.enabled === false" title="Enable Client"
+                  <div @click="enableClient(client)" v-if="client._meta.enabled === false" title="Enable Client"
                     class="inline-block align-middle rounded-full w-10 h-6 mr-1 bg-gray-200 cursor-pointer hover:bg-gray-300 transition-all mx-1">
                     <div class="rounded-full w-4 h-4 m-1 bg-white"></div>
                   </div>
@@ -808,6 +807,24 @@ export default {
         this.alert(`The client with public key '${publicKey}' was deleted.`, 15, null, 'red-600');
       } catch(err) {
         this.alertError("An error occurred while deleting the client '" + publicKey + "''", err);
+      }
+    },
+    async disableClient(client) {
+      try {
+        await this.api.disable(client.Reference);
+        client._meta.enabled = false;
+        this.alert("Disabled Peer '" + client._meta.Name + "''", 5, null, "blue-400");
+      } catch(err) {
+        this.alertError("An error occurred while disabling the client '" + client.PublicKey + "''", err);
+      }
+    },
+    async enableClient(client) {
+      try {
+        await this.api.enable(client.Reference);
+        client._meta.enabled = true;
+        this.alert("Enabled Peer '" + client._meta.Name + "''", 5, null, "blue-400");
+      } catch(err) {
+        this.alertError("An error occurred while enabling the client '" + client.PublicKey + "''", err);
       }
     },
     async initializeServer() {
