@@ -29,8 +29,8 @@ const {
   generatePublicKey,
   generatePreSharedKey
 } = require('./WireGuardUtils');
+const { WireGuardConfig, WireGuardInterface, IniSection, WireGuardPeer } = require('./WireGuardConfig');
 
-const BACKUP_DIR = 'wg-easy-backups';
 const DUMP_COLUMNS = ['public', 'preshared', 'lastEndpoint', 'allowedIPs', 'lastHandshake', 'rx', 'tx', 'persistentKeepalive'];
 
 function assertNotReadOnly(msg) {
@@ -41,71 +41,34 @@ function assertNotReadOnly(msg) {
 
 class WireGuard {
   constructor() {
-    this.config = null;
+    this.config = new WireGuardConfig(WG_INTERFACE + ".conf"); // use defaults
     debug('Read Only: ' + WG_READONLY);
   }
 
-  getConfigPath() {
-    return `${this.getConfigDirectory()}/${this.getInterfaceName()}.conf`;
-  }
-  
-  configExists() {
-    const interfaceFile = this.getConfigPath();
-    try {
-      fs.statSync(interfaceFile);
-      return true;
-    } catch(_) {
-      return false;
-    }
-  }
-
   async init() {
-    this.config = {
-      interface: {
-        // optional?: type: 'Interface'
-        ListenPort: WG_PORT,
-        Address: [ WG_ADDRESS_SPACE ],
-        PrivateKey: await generatePrivateKey(),
-        PreUp: WG_PRE_UP,
-        PostUp: WG_POST_UP,
-        PreDown: WG_PRE_DOWN,
-        PostDown: WG_POST_DOWN,
-        _meta: {
-          ___unsaved: true
-        },
-      },
-      peers: []
-    };
-  }
-
-  getBackupDirName() {
-    return BACKUP_DIR;
-  }
-
-  getBackupDir() {
-    return `${this.getConfigDirectory()}/${this.getBackupDirName()}`;
-  }
-
-  backupSuffix() {
-    let d = new Date();
-    return (d.toLocaleDateString('en-US') + '_' + d.toLocaleTimeString('en-US')).replaceAll('/', '_').replaceAll(':', '_').replaceAll(' ', '_');
+    let newInterface = WireGuardInterface.create();
+    this.config.wgInterface = newInterface;
+    newInterface.setListenPort(WG_PORT);
+    newInterface.setAddresses(...WG_ADDRESS_SPACE.split(','))
+    newInterface.setPrivateKey(await generatePrivateKey());
+    if (WG_PRE_UP) newInterface.setPreUp(...WG_PRE_UP.split('\n').map((line) => line.trim()).filter((line) => line.length > 0));
+    if (WG_POST_UP) newInterface.setPostUp(...WG_POST_UP.split('\n').map((line) => line.trim()).filter((line) => line.length > 0));
+    if (WG_PRE_DOWN) newInterface.setPreDown(...WG_PRE_DOWN.split('\n').map((line) => line.trim()).filter((line) => line.length > 0));
+    if (WG_POST_DOWN) newInterface.setPostdown(...WG_POST_DOWN.split('\n').map((line) => line.trim()).filter((line) => line.length > 0));
+    this.export();
   }
 
   async backup() {
     debug("Making a backup...");
     assertNotReadOnly("No backups can be made in read only mode!");
-    const backupDirectory = this.getBackupDir();
-    const interfaceFile = this.getConfigPath();
-    await Util.exec(`mkdir -p ${backupDirectory}`);
-    await Util.exec(`cp ${interfaceFile} ${backupDirectory}/${this.getInterfaceName()}_${this.backupSuffix()}.conf`);
-    await Util.exec(`cp -f ${interfaceFile} ${backupDirectory}/${this.getInterfaceName()}_latest.conf`);
+    this.config.backupFSCopy();
     debug("Backup complete.");
   }
 
   async revert() {
     debug("Reverting to last backup...");
-    assertNotReadOnly("No revers can be made in read only mode!");
-    await Util.exec(`cp -f ${this.getConfigDirectory()}/${this.getBackupDirName()}/${this.getInterfaceName()}_latest.conf ${this.getConfigDirectory()}/${this.getInterfaceName()}.conf`);
+    assertNotReadOnly("No reverts can be made in read only mode!");
+    this.config.revert();
     debug("Reverted.");
   }
 
@@ -120,7 +83,7 @@ class WireGuard {
   }
 
   async reboot() {
-    debug("Rebooting/reloading WireGuard...");
+    assertNotReadOnly("No power actions can be made in read only mode!");
     try {
       await this.down();
     } catch(ex) {
@@ -131,213 +94,23 @@ class WireGuard {
     debug("Rebooted.");
   }
 
-  validate() {
-    // currently validates interfaces only
-
-  }
-
-
-  getWireguardConfigPath(base, interfaceName) {
-    return path.join(base, `${interfaceName}.conf`);
-  }
-
-  writeRawConfig(lines, base, interfaceName) {
-    fs.writeFileSync(this.getWireguardConfigPath(base, interfaceName), lines.join('\n'), {
-      encoding: "utf8"
-    });
-    return lines;
-  }
-
-  /**
-   * Read the raw config.
-   */
-  _parseRawConfig(base, interfaceName) {
-    let cfg_unparsed = (fs.readFileSync(this.getWireguardConfigPath(base, interfaceName), 'utf8')).split('\n');
-    let parsed = {
-      interface: {},
-      peers: []
-    };
-
-    var currentSection = {
-      _meta: {}
-    };
-    function _newSection() {
-      if (currentSection.type) {
-        if (currentSection.type == 'Interface') {
-          parsed.interface = currentSection;
-        } else if (currentSection.type == 'Peer') {
-          parsed.peers.push(currentSection);
-        } else {
-          debug(`Unknown section type ${currentSection.type}...`);
-          debug(`    ...will be discarded: \n${JSON.stringify(currentSection, null, 4)}\n`);
-        }
-        currentSection = {
-          _meta: {}
-        };
-      }
-    }
-
-    for (let i = 0; i < cfg_unparsed.length; i++) {
-      var line = cfg_unparsed[i].trim();
-      if ((line.startsWith("#") && !line.startsWith("#!")) || line.length == 0) continue;
-
-      if (line.startsWith('[') && line.endsWith(']')) {
-        _newSection();
-        line = line.replace("[", "").replace("]", "");
-        currentSection.type = line;
-      } else {
-        var [key, value] = line.split(" = ", 2).map((item) => item.trim());
-        let dataTo = currentSection;
-        if (key.startsWith("#!")) {
-          key = key.replace("#!", "");
-          dataTo = currentSection._meta;
-        }
-        if (dataTo[key]) {
-          if (!(dataTo[key] instanceof Array)) {
-            dataTo[key] = [ dataTo[key] ];
-          }
-          dataTo[key].push(value);
-        } else {
-          dataTo[key] = value;
-        }
-      }
-    }
-    _newSection();
-
-    return parsed;
-  }
-
-  parseRawConfig() {
-    return this._parseRawConfig(this.getConfigDirectory(), this.getInterfaceName());
-  }
-
-
-  generateRawConfig(cfg) {
-    var lines = [];
-    lines.push(`[Interface]`);
-    for (let key in cfg.interface) {
-      if (key == 'type') continue;
-      let value = cfg.interface[key];
-      if (key == '_meta') {
-        for (let metaKey in value) {
-          if (metaKey.startsWith('___')) {
-            // temporary data is discarded
-            continue;
-          }
-          let metaValue = value[metaKey];
-          if (metaValue instanceof Array) {
-            for (let cmd of value) {
-              lines.push(`#!${metaKey} = ${cmd}`);
-            }
-          } else {
-            lines.push(`#!${metaKey} = ${metaValue}`);
-          }
-        }
-      } else {
-        if (value instanceof Array) {
-          for (let cmd of value) {
-            lines.push(`${key} = ${cmd}`);
-          }
-        } else {
-          lines.push(`${key} = ${value}`);
-        }
-      }
-    }
-    lines.push('');
-
-    for (let peer of cfg.peers) {
-      lines.push(`[Peer]`);
-      for (let key in peer) {
-        if (key == 'type') continue;
-        let value = peer[key];
-        if (key == '_meta') {
-          for (let metaKey in value) {
-            if (metaKey.startsWith('___')) {
-              // temporary data is discarded
-              continue;
-            }
-            let metaValue = value[metaKey];
-            if (metaValue instanceof Array) {
-              for (let cmd of value) {
-                lines.push(`#!${metaKey} = ${cmd}`);
-              }
-            } else {
-              lines.push(`#!${metaKey} = ${metaValue}`);
-            }
-          }
-        } else {
-          if (value instanceof Array) {
-            for (let cmd of value) {
-              lines.push(`${key} = ${cmd}`);
-            }
-          } else {
-            lines.push(`${key} = ${value}`);
-          }
-        }
-      }
-      lines.push('');
-    }
-
-    return lines;
-  }
-
   import() {
     debug("Importing...");
-    // no deep copy here since parseRawConfig just regenerates every time
-    let parsed = this.parseRawConfig();
-
-    let intf = parsed.interface;
-    let peers = parsed.peers;
-
-    // apply modifications to items, this should be reversed (if necessary before exporting)
-    intf['Address'] = intf['Address'].split(',').map((item) => item.trim());
-    intf['ListenPort'] = Number(intf['ListenPort']);
-    if (intf['MTU']) {
-      intf['MTU'] = Number(intf['MTU']);
-    }
-    if (intf['DNS']) {
-      intf['DNS'] = intf['DNS'].split(',').map((item) => item.trim());
-    }
-
-    for (let peer of peers) {
-      peer['AllowedIPs'] = peer['AllowedIPs'].split(',').map((item) => item.trim());
-      if(peer['PersistentKeepalive']) {
-        peer['PersistentKeepalive'] = Number(peer['PersistentKeepalive']);
-      }
-    }
-
-    this.config = parsed;
+    this.config.loadExisting();
     debug("Import complete.");
   }
   
   async export() {
     debug("Exporting...");
-    // deep copy
-    let parsed = JSON.parse(JSON.stringify(this.config));
-    
-    let intf = parsed.interface;
-    let peers = parsed.peers;
-
-    intf['Address'] = intf['Address'].join(',');
-    // ListenPort - number
-    // MTU - number
-    if (intf['DNS']) {
-      intf['DNS'] = intf['DNS'].join(',');
-    }
-
-    for (let peer of peers) {
-      peer['AllowedIPs'] = peer['AllowedIPs'].join(',');
-      // PersistentKeepalive - number
-    }
-
-    var configLines = this.generateRawConfig(parsed);
+    var configLines = this.config.toLines();
 
     console.error("Export results: ");
     console.error(configLines.join("\n"));
 
     assertNotReadOnly("No exports allowed in read only mode!");
 
-    writeRawConfig(configLines, this.getConfigDirectory(), this.getInterfaceName());
+    this.backup();
+    this.config.save();
     debug("Export complete.");
   }
 
@@ -350,12 +123,7 @@ class WireGuard {
   }
 
   getClient(publicKey) {
-    for (let peer of this.config.peers) {
-      if (peer.PublicKey == publicKey) {
-        return peer;
-      }
-    }
-    return null;
+    return this.config.peers.find((peer) => peer.getPublicKey() == publicKey);
   }
 
   /**
@@ -368,17 +136,14 @@ class WireGuard {
    */
   addClient(publicKey, addresses, presharedKey = null, privateKey = null, persistPrivateKey = true) {
     assertNotReadOnly("Cannot add clients in read-only mode!");
-    let peer = {
-      type: "Peer",
-      PublicKey: publicKey,
-      AllowedIPs: addresses,
-      _meta: {
-        ___unsaved: true,
-        privateKey: persistPrivateKey ? privateKey : undefined,
-      },
-    };
+    let peer = WireGuardPeer.create();
+    peer.setPublicKey(publicKey);
+    peer.setAllowedIPs(...addresses);
     if (!!presharedKey) {
-      peer.PresharedKey = presharedKey;
+      peer.setPresharedKey(presharedKey);
+    }
+    if (privateKey && persistPrivateKey) {
+      peer.setPrivateKey(privateKey);
     }
     this.config.peers.push(peer);
 
@@ -387,16 +152,11 @@ class WireGuard {
 
   deleteClient(publicKey) {
     assertNotReadOnly("Cannot delete clients in read-only mode!");
-    let client = this.getClient(publicKey);
-    this.config.peers = this.config.peers.filter((peer) => peer != client);
+    this.config.peers = this.config.peers.filter((peer) => peer.getPublicKey() != publicKey);
   }
 
   getInterfaceName() {
     return WG_INTERFACE;
-  }
-
-  getConfigDirectory() {
-    return WG_PATH;
   }
 
   /**
@@ -438,25 +198,26 @@ class WireGuard {
   }
 
   getServerPort() {
-    return this.getInterface().ListenPort;
+    return this.config.getInterface().getListenPort();
   }
 
   setServerPort(port) {
     if (!Number.isInteger(port) && port <= 65535 && port >= 0) {
       throw new Error("Invalid port: " + port);
     }
-    this.getInterface().ListenPort = port;
+    this.config.getInterface().setListenPort(port);
   }
 
   getServerHost() {
-    if (!this.getInterface()._meta.Host) {
-      this.getInterface()._meta.Host = WG_HOST;
+    let intf = this.config.getInterface();
+    if (!intf.getHostAddress()) {
+      intf.setHostAddress(WG_HOST);
     }
-    return this.getInterface()._meta.Host;
+    return intf.getHostAddress();
   }
 
   setServerHost(host) {
-    this.getInterface()._meta.Host = host;
+    this.config.getInterface().setHostAddress(host);
   }
 
   assertNotReadOnly(msg) {

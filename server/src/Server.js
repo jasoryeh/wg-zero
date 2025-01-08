@@ -23,6 +23,7 @@ const {
   generatePublicKey,
   generatePreSharedKey
 } = require('./WireGuardUtils');
+const { IniSection } = require('./WireGuardConfig');
 
 module.exports = class Server {
   constructor(WireGuard) {
@@ -70,7 +71,7 @@ module.exports = class Server {
   this.app.get('/api/meta', (req, res) => {
     res.status(200).send({
       auth: !!PASSWORD,
-      needsSetup: !this.wireguard.config,
+      needsSetup: !this.wireguard.config || !this.wireguard.config.wgInterface,
     })
   });
   this.app.get('/api/auth', (req, res) => {
@@ -94,7 +95,23 @@ module.exports = class Server {
     });
   })
   .get('/api/wireguard/clients', (req, res) => {
-    res.status(200).send(this.wireguard.getClients());
+    let json_res = [];
+    let clients = this.wireguard.getClients();
+    for (let client of clients) {
+      let jsoned = client.toJson();
+      let json = {};
+      Object.assign(json, jsoned.entries);
+      Object.keys(jsoned.entries).forEach((k) => json[k] = json[k][0] ? json[k][0].value : null);
+      json._meta = jsoned.metadata;
+      Object.keys(json._meta).forEach((k) => json._meta[k] = json._meta[k][0] ? json._meta[k][0].value : null);
+
+      // formatting
+      json['AllowedIPs'] = IniSection.unCommaSeparated(json['AllowedIPs']);
+      
+      json_res.push(json);
+    }
+
+    res.status(200).send(json_res);
   })
   .get('/api/wireguard/stats', async (req, res) => {
     try {
@@ -106,8 +123,17 @@ module.exports = class Server {
     }
   })
   .get('/api/wireguard/server', async (req, res) => {
-    this.wireguard.getServerHost();
-    let intf = JSON.parse(JSON.stringify(this.wireguard.getInterface()));
+    let jsoned = this.wireguard.config.getInterface().toJson();
+    let json = {};
+    Object.assign(json, jsoned.entries);
+    Object.keys(jsoned.entries).forEach((k) => json[k] = json[k][0] ? json[k][0].value : null);
+    json._meta = jsoned.metadata;
+    Object.keys(json._meta).forEach((k) => json._meta[k] = json._meta[k][0] ? json._meta[k][0].value : null);
+
+    let intf = json;
+    // formatting
+    intf['Address'] = IniSection.unCommaSeparated(intf['Address']);
+    intf['DNS'] = IniSection.unCommaSeparated(intf['DNS']);
     // information, but should not be stored i guess
     intf.PublicKey = intf['PrivateKey'] ? await generatePublicKey(intf['PrivateKey'], {log: false}) : null;
     intf.Interface = this.wireguard.getInterfaceName();
@@ -120,6 +146,7 @@ module.exports = class Server {
     // append data
     intf._stats = {};
     intf._stats.up = await this.wireguard.isUp();
+    
     res.status(200).send(intf);
   })
   .get('/api/wireguard/save', async (req, res) => {
@@ -162,7 +189,8 @@ module.exports = class Server {
     });
   })
   .post('/api/wireguard/server/regenerate', async (req, res) => {
-    this.wireguard.getInterface().PrivateKey = await generatePrivateKey();
+    this.wireguard.
+    this.wireguard.config.getInterface().setPrivateKey(await generatePrivateKey());
     res.status(200).send({});
   })
   .post('/api/wireguard/server/host', async (req, res) => {
@@ -173,14 +201,14 @@ module.exports = class Server {
   })
   .put('/api/wireguard/server/addresses', async (req, res) => {
     const { addresses } = req.body;
-    this.wireguard.getInterface().Address = addresses;
+    this.wireguard.config.getInterface().setHostAddress(addresses);
     res.status(200).send({});
   })
   .put('/api/wireguard/server/port', async (req, res) => {
     // set the VPN server's port
     const { port } = req.body;
     this.wireguard.setServerPort(port);
-    res.status(200).send({port: this.wireguard.getSErverPort()});
+    res.status(200).send({port: this.wireguard.getServerPort()});
   })
   .post('/api/wireguard/server/new', async (req, res) => {
     debug("wireguard/server/new: Setting up a new WireGuard configuration...");
@@ -210,7 +238,7 @@ module.exports = class Server {
 
     debug(`wireguard/clients/${clientRef}/name: Updating name for ${pubKey} - ${client._meta.Name} -> ${name}`);
     this.wireguard.assertNotReadOnly('Cannot update name in read-only mode!');
-    client._meta.Name = name;
+    client.setName(name);
 
     res.status(200).send({});
   })
@@ -224,9 +252,9 @@ module.exports = class Server {
       res.status(404).send({});
     }
 
-    debug(`wireugard/${clientRef}/addresses: Updating AllowedIPs for ${pubKey} - ${client.AllowedIPs} -> ${addresses}`);
+    debug(`wireugard/${clientRef}/addresses: Updating AllowedIPs for ${pubKey} - ${client.getAllowedIPs()} -> ${addresses}`);
     this.wireguard.assertNotReadOnly('Cannot update address in read-only mode!');
-    client.AllowedIPs = addresses;
+    client.setAllowedIPs(...addresses);
 
     res.status(200).send({});
   })
@@ -242,7 +270,7 @@ module.exports = class Server {
 
     debug(`wireguard/clients/${clientRef}/publicKey: Updating PublicKey for ${pubKey} - ${pubKey} -> ${publicKey}`);
     this.wireguard.assertNotReadOnly('Cannot public key in read-only mode!');
-    client.PublicKey = publicKey;
+    client.getPublicKey();
 
     res.status(200).send({});
   })
@@ -256,9 +284,9 @@ module.exports = class Server {
       res.status(404).send({});
     }
 
-    debug(`wireguard/clients/${clientRef}/presharedkey: Updating PreSharedKey for ${pubKey} - ${client.PresharedKey} -> ${preSharedKey}`);
+    debug(`wireguard/clients/${clientRef}/presharedkey: Updating PreSharedKey for ${pubKey} - ${client.getPresharedKey()} -> ${preSharedKey}`);
     this.wireguard.assertNotReadOnly('Cannot update pre-shared key in read-only mode!');
-    client.PresharedKey = preSharedKey;
+    client.setPresharedKey(preSharedKey);
 
     res.status(200).send({});
   })
@@ -293,11 +321,17 @@ module.exports = class Server {
       debug(err);
       res.status(400).send({ error: true });
     }
+  })
+  .all('/api/wireguard/server/backup', async (req, res) => {
+    res.header('Content-Disposition', 'inline');
+    res.header('Content-Type', 'text/plain');
+    res.status(200).send(this.wireguard.config.toLines().join('\n'));
   });
 
   // errors
   this.app.use((err, req, res, next) => {
     debug("An error has occurred in the Server route: " + err);
+    debug(err);
     res.status(500).send({
       error: err.message,
     });
