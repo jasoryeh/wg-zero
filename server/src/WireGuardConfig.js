@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const debug = require('debug')('wgeasy:Init');
 
 const INI_KEY_COMMENT = '_comment_';
 const INI_KEY_META = '_meta_';
@@ -223,7 +224,7 @@ class WireGuardInterface {
      * @returns {String[]}
      */
     getAddresses() {
-        return IniSection.unCommaSeparated(this.iniSection.getOne(INTERFACE_ADDRESS));
+        return IniSection.unCommaSeparated(this.iniSection.getOne(INTERFACE_ADDRESS).value);
     }
     setAddresses(...addresses) {
         this.iniSection.set(INTERFACE_ADDRESS, IniSection.commaSeparated(addresses));
@@ -233,7 +234,7 @@ class WireGuardInterface {
      * @returns {Number}
      */
     getListenPort() {
-        return parseInt(this.iniSection.getOne(INTERFACE_LISTENPORT));
+        return parseInt(this.iniSection.getOne(INTERFACE_LISTENPORT).value);
     }
     setListenPort(port) {
         this.iniSection.set(INTERFACE_LISTENPORT, port);
@@ -244,7 +245,7 @@ class WireGuardInterface {
      * @returns {String}
      */
     getPrivateKey() {
-        return this.iniSection.getOne(INTERFACE_PRIVATEKEY);
+        return this.iniSection.getOne(INTERFACE_PRIVATEKEY).value;
     }
     setPrivateKey(pk) {
         this.iniSection.set(INTERFACE_PRIVATEKEY, pk);
@@ -254,14 +255,14 @@ class WireGuardInterface {
      * @returns {String[]}
      */
     getDNS() {
-        return IniSection.unCommaSeparated(this.iniSection.getOne(INTERFACE_DNS));
+        return IniSection.unCommaSeparated(this.iniSection.getOne(INTERFACE_DNS).value);
     }
     setDNS(...dnss) {
         this.iniSection.set(INTERFACE_DNS, IniSection.commaSeparated(dnss));
     }
 
     getTable() {
-        return this.iniSection.getOne(INTERFACE_TABLE);
+        return this.iniSection.getOne(INTERFACE_TABLE).value;
     }
     setTable(table) {
         this.iniSection.set(INTERFACE_TABLE, table);
@@ -271,7 +272,7 @@ class WireGuardInterface {
      * @returns {Number}
      */
     getMTU() {
-        return parseInt(this.iniSection.getOne(INTERFACE_MTU));
+        return parseInt(this.iniSection.getOne(INTERFACE_MTU)).value;
     }
     setMTU(mtu) {
         this.iniSection.set(INTERFACE_MTU, mtu);
@@ -281,7 +282,7 @@ class WireGuardInterface {
      * @returns {String[]}
      */
     getPreUp() {
-        return this.iniSection.get(INTERFACE_PREUP);
+        return this.iniSection.get(INTERFACE_PREUP).value;
     }
     setPreUp(...cmds) {
         this.iniSection.set(INTERFACE_PREUP, ...cmds);
@@ -290,7 +291,7 @@ class WireGuardInterface {
      * @returns {String[]}
      */
     getPostUp() {
-        return this.iniSection.get(INTERFACE_POSTUP);
+        return this.iniSection.get(INTERFACE_POSTUP).map((entry) => entry.value);
     }
     setPostUp(...cmds) {
         this.iniSection.set(INTERFACE_POSTUP, ...cmds);
@@ -299,7 +300,7 @@ class WireGuardInterface {
      * @returns {String[]}
      */
     getPreDown() {
-        return this.iniSection.get(INTERFACE_PREDOWN);
+        return this.iniSection.get(INTERFACE_PREDOWN).map((entry) => entry.value);
     }
     setPreDown(...cmds) {
         this.iniSection.set(INTERFACE_PREDOWN, ...cmds);
@@ -308,7 +309,7 @@ class WireGuardInterface {
      * @returns {String[]}
      */
     getPostDown() {
-        return this.iniSection.get(INTERFACE_POSTDOWN);
+        return this.iniSection.get(INTERFACE_POSTDOWN).map((entry) => entry.value);
     }
     setPostDown(...cmds) {
         this.iniSection.set(INTERFACE_POSTDOWN, ...cmds);
@@ -318,7 +319,7 @@ class WireGuardInterface {
      * @returns {Boolean}
      */
     getSaveConfig() {
-        return this.iniSection.getOne(INTERFACE_SAVECONFIG) == 'true';
+        return this.iniSection.getOne(INTERFACE_SAVECONFIG).value == 'true';
     }
     /**
      * @param {Boolean} what 
@@ -336,7 +337,7 @@ class WireGuardInterface {
      * @returns {String}
      */
     getHostAddress() {
-        this.iniSection.getMetadata('Host')
+        this.iniSection.getOneMetadata('Host').value;
     }
     setHostAddress(host) {
         this.iniSection.setMetadata('Host', host);
@@ -377,21 +378,21 @@ class WireGuardPeer {
      */
 
     getEndpoint() {
-        return this.iniSection.getOne(PEER_ENDPOINT);
+        return this.iniSection.getOne(PEER_ENDPOINT).value;
     }
     setEndpoint(ep) {
         this.iniSection.set(PEER_ENDPOINT, ep);
     }
 
     getAllowedIPs() {
-        return IniSection.unCommaSeparated(this.iniSection.getOne(PEER_ALLOWEDIPS));
+        return IniSection.unCommaSeparated(this.iniSection.getOne(PEER_ALLOWEDIPS).value);
     }
     setAllowedIPs(...ips) {
         this.iniSection.set(PEER_ALLOWEDIPS, IniSection.commaSeparated(ips));
     }
 
     getPublicKey() {
-        return this.iniSection.getOne(this.iniSection.getOne(PEER_PUBLICKEY));
+        return this.iniSection.getOne(PEER_PUBLICKEY).value;
     }
     setPublicKey(pk) {
         this.iniSection.set(PEER_PUBLICKEY, pk);
@@ -402,7 +403,7 @@ class WireGuardPeer {
      * @returns {Number}
      */
     getPersistentKeepalive() {
-        return parseInt(this.iniSection.getOne(PEER_PERSISTENTKEEPALIVE));
+        return parseInt(this.iniSection.getOne(PEER_PERSISTENTKEEPALIVE).value);
     }
     /**
      * @param {Number} pka 
@@ -413,7 +414,7 @@ class WireGuardPeer {
 
 
     getPresharedKey() {
-        return this.iniSection.getOne(PEER_PRESHAREDKEY);
+        return this.iniSection.getOne(PEER_PRESHAREDKEY).value;
     }
     setPresharedKey(psk) {
         this.iniSection.set(PEER_PRESHAREDKEY, psk);
@@ -424,14 +425,14 @@ class WireGuardPeer {
      */
 
     getPrivateKey() {
-        return this.iniSection.getOneMetadata('privateKey');
+        return this.iniSection.getOneMetadata('privateKey').value;
     }
     setPrivateKey(key) {
         this.iniSection.setMetadata('privateKey', key);
     }
 
     getName() {
-        return this.iniSection.getOneMetadata('Name');
+        return this.iniSection.getOneMetadata('Name').value;
     }
     setName(name) {
         this.iniSection.setMetadata('Name', name);
@@ -453,10 +454,14 @@ class WireGuardConfig {
     }
 
     loadExisting() {
+        debug("Using WireGuard Configuration: " + this.getPath())
         this.sections = this.parseSections();
+        debug("Loaded " + this.sections.length + " sections");
 
         this.wgInterface = this.parseInterface();
+        debug("Loaded WireGuard Interface " + this.wgInterface.getAddresses() + " on port " + this.wgInterface.getListenPort())
         this.peers = this.parsePeers();
+        debug("Loaded " + this.peers.length + " peers: " + this.peers.map((peer) => peer.getName() ?? peer.getPublicKey()).join(', '));
     }
 
     /**
@@ -490,8 +495,7 @@ class WireGuardConfig {
 
     configExists() {
         const interfaceFile = this.getPath();
-        console.log('if');
-        console.log(interfaceFile);
+        debug("WireGuard Configuration File: " + interfaceFile);
         try {
           fs.statSync(interfaceFile);
           return true;
