@@ -19,7 +19,7 @@ module.exports = class Util {
     return true;
   }
 
-  static async exec(cmd, {
+  static exec(cmd, {
     log = true,
   } = {}) {
     if (typeof log === 'string') {
@@ -34,14 +34,11 @@ module.exports = class Util {
       return '';
     }
 
-    return new Promise((resolve, reject) => {
-      childProcess.exec(cmd, {
-        shell: 'bash',
-      }, (err, stdout) => {
-        if (err) return reject(err);
-        return resolve(String(stdout).trim());
-      });
-    });
+    let out = childProcess.execSync(cmd, {
+      shell: 'bash',
+      stdio: 'pipe',
+    }).toString('utf8').trim();
+    return out;
   }
 
 };

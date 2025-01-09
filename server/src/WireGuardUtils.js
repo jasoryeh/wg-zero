@@ -1,16 +1,16 @@
 const Util = require("./Util")
-async function generatePrivateKey(opts = {}) {
-    return await Util.exec('wg genkey', opts);
+function generatePrivateKey(opts = {}) {
+    return Util.exec('wg genkey', opts);
 }
   
-async function generatePublicKey(privateKey, opts = {}) {
-    return await Util.exec(`echo "${privateKey}" | wg pubkey`, {
+function generatePublicKey(privateKey, opts = {}) {
+    return Util.exec(`echo "${privateKey}" | wg pubkey`, {
       log: opts.log ?? 'echo ***hidden*** | wg pubkey',
     });
 }
   
-async function generatePreSharedKey(opts = {}) {
-    return await Util.exec('wg genpsk', opts);
+function generatePreSharedKey(opts = {}) {
+    return Util.exec('wg genpsk', opts);
 }
 
 module.exports = {
