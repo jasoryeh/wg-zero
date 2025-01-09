@@ -40,8 +40,8 @@ docker run --rm -it \
     --sysctl=net.ipv4.ip_forward=1 \
     --sysctl=net.ipv4.conf.all.src_valid_mark=1 \
     --sysctl net.ipv6.conf.all.disable_ipv6=0 \
-    node:19 $*
-#    wg-easy-test $*
+    wg-easy-test $*
+#    node:19 $*
 
 # explanations:
 
