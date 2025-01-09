@@ -13,6 +13,7 @@ class IniEntry {
         this.type = IniEntry.assertIsType(type);
         this.key = key;
         this.value = value;
+        this.enabled = true;
     }
 
     static assertIsType(type) {
@@ -32,6 +33,32 @@ class IniEntry {
 
     isEntry() {
         return this.type == INI_KEY_ENTRY;
+    }
+
+    toLine() {
+        if (this.isComment()) {
+            return `#${this.value}`;
+        } else {
+            var line = `${this.key} = ${this.value}`;
+
+            if (this.isMeta()) {
+                line = '!' + line;
+            } else if (this.isEntry()) {
+                // already entry
+            } else {
+                throw new Error(`Unknown Ini entry type: '` + this.type + `'`);
+            }
+
+            if (!this.enabled) {
+                line = '$' + line;
+            }
+
+            if (!this.enabled || this.isMeta()) {
+                line = '#' + line;
+            }
+
+            return line;
+        }
     }
 }
 
@@ -71,44 +98,104 @@ class IniSection {
         return this.getOne(key) != null;
     }
 
-    add(key, value) {
-        this.config.push(new IniEntry(INI_KEY_ENTRY, key, String(value)));
+    /**
+     * @returns {IniEntry}
+     */
+    addRaw(type, key, val) {
+        let entry = new IniEntry(type, key, String(val));
+        this.config.push(entry);
+        return entry;
     }
 
+    /**
+     * @returns {IniEntry}
+     */
+    add(key, value) {
+        return this.addRaw(INI_KEY_ENTRY, key, value);
+    }
+
+    /**
+     * @returns {IniEntry[]}
+     */
     set(key, ...value) {
         this.config = this.config.filter((entry) => !(entry.isEntry() && entry.key == key));
-        value.forEach((v) => this.add(key, v));
+        return value.map((v) => this.add(key, v));
     }
 
+    /**
+     * @returns {Boolean}
+     */
     hasMetadata(key) {
         return this.getOneMetadata(key) != null;
     }
 
+    /**
+     * @returns {IniEntry[]}
+     */
     getMetadata(key) {
         return this.config.filter((entry) => entry.isMeta() && entry.key == key);
     }
 
+    /**
+     * @returns {IniEntry}
+     */
     getOneMetadata(key) {
         return this.config.find((entry) => entry.isMeta() && entry.key == key);
     }
 
+    /**
+     * @returns {IniEntry}
+     */
     addMetadata(key, value) {
-        this.config.push(new IniEntry(INI_KEY_META, key, String(value)));
+        return this.addRaw(INI_KEY_META, key, value);
     }
 
+    /**
+     * @returns {IniEntry[]} 
+     */
     setMetadata(key, ...value) {
         this.config = this.config.filter((entry) => !(entry.isMeta() && entry.key == key));
-        value.forEach((val) => this.addMetadata(key, val));
+        return value.map((val) => this.addMetadata(key, val));
+    }
+
+    /**
+     * Parse the line.
+     * @param {String} line 
+     * @returns {key, value}
+     */
+    getKV(line) {
+        let eq = line.indexOf('=');
+        if (eq == -1) {
+            throw new Error('IniSection: Invalid KV line: \'' + line + '\'')
+        }
+        let key = line.slice(0, eq).trim();
+        let value = line.slice(eq + 1).trim();
+        return {key, value};
+    }
+
+    parseLine(line) {
+        let isComment = line.startsWith('#');
+        line = line.slice(isComment ? 1 : 0);
+        
+        if (isComment) {
+            this.addComment(line);
+        } else {
+            let {key, value} = this.getKV(line);
+            return this.add(key, value);
+        }
     }
 
     addComment(comment) {
-        if (comment.startsWith('!') && comment.includes('=')) {
-            let eq = comment.indexOf('=');
-            let key = comment.slice(1, eq).trim();
-            let val = comment.slice(eq + 1, comment.length).trim();
-            this.config.push(new IniEntry(INI_KEY_META, key, val));
+        if (comment.startsWith('$' && comment.includes('='))) {
+            // for helping with disabling peers
+            debug("IniSection: Detected disabled property: " + comment);
+            this.parseLine(comment.slice(1)).enabled = false;
+        } else if (comment.startsWith('!') && comment.includes('=')) {
+            let {key, value} = this.getKV(comment.slice(1));
+
+            return this.addMetadata(key, value);
         } else {
-            this.config.push(new IniEntry(INI_KEY_COMMENT, null, comment));
+            return this.addRaw(INI_KEY_COMMENT, null, comment);
         }
     }
 
@@ -125,17 +212,7 @@ class IniSection {
 
     toLines() {
         let lines = [`[${this.sectionName}]`];
-        this.config.forEach((entry) => {
-            if (entry.isComment()) {
-                lines.push(`#${entry.value}`);
-            } else if (entry.isMeta()) {
-                lines.push(`#!${entry.key} = ${entry.value}`);
-            } else if (entry.isEntry()) {
-                lines.push(`${entry.key} = ${entry.value}`);
-            } else {
-                throw new Error(`Unknown Ini entry type: '` + entry.type + `'`);
-            }
-        });
+        this.config.forEach((entry) => lines.push(entry.toLine()));
         return lines;
     }
 
@@ -510,6 +587,10 @@ class WireGuardPeer {
         return this.iniSection.hasMetadata('enabled') ? this.iniSection.getOneMetadata('enabled').value == 'true' : null;
     }
     setEnabled(enabled) {
+        this.iniSection.get(PEER_ALLOWEDIPS).forEach((entry) => {
+            debug("Updating AllowedIPs in setEnabled to: " + enabled, entry);
+            entry.enabled = enabled
+        });
         this.iniSection.setMetadata('enabled', enabled);
     }
 }
@@ -605,22 +686,20 @@ class WireGuardConfig {
             if (line.length == 0) {
                 continue;
             }
-            if (line.startsWith('#')) {
-                currentSection.addComment(line.replace('#', ''));
-            } else if (line.startsWith('[') && line.endsWith(']')) {
+            if (line.startsWith('[') && line.endsWith(']')) {
                 var sectionName = line.substring(1, line.length-1);
                 if (!currentSection.isEmpty()) {
                     configSections.push(currentSection);
                 }
                 currentSection = new IniSection(sectionName)
             } else {
-                if (!line.includes('=')) {
-                    throw new Error("Invalid configuration line (" + i + "): '" + line + "', no '='");
+                try {
+                    currentSection.parseLine(line);
+                } catch(err) {
+                    console.error("Failed to parse configuration line (" + i + "): '" + line + "', error: " + err);
+                    console.error(err);
+                    throw new Error("Failed to parse configuration line (" + i + "): '" + line + "', error: " + err);
                 }
-                var separatorIndex = line.indexOf('=');
-                var key = line.slice(0, separatorIndex).trim();
-                var value = line.slice(separatorIndex + 1, line.length).trim();
-                currentSection.add(key, value);
             }
         }
         if (!currentSection.isEmpty()) {
