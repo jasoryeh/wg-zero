@@ -27,17 +27,19 @@ import QRCode from 'qrcode';
                     (alert.color ? 'border-'+alert.color : 'border-red-500'), 
                     (alert.color ? 'bg-'+alert.color : 'bg-red-500'), 
                     (alert.textColor ? 'text-'+alert.textColor : 'text-white'),
-                    ((alert.expires && (new Date(alert.expires) > new Date())) ? '' : 'hidden')]" 
-                    v-for="alert of alerts.filter((alert) => (alert.expires && (new Date(alert.expires) > new Date())))" :key="alert.__hash">
-        <div class="flex-grow">
+                    (alertIsValid(alert) ? '' : 'hidden')]" 
+                    v-for="alert of alerts.filter((a) => alertIsValid(a))">
+        <div class="flex-shrink px-2">
           <Icon :icon="alert.icon ?? 'heroicons:bell-alert'" class="inline mr-2" />
+        </div>
+        <div class="flex-grow">
           <span class="font-medium" v-html="alert.text ?? 'An unknown error has occurred.'"></span>
         </div>
-        <div class="flex-shrink p-2" v-on:click="alert.expires = new Date()">
-          <span class="mr-1 opacity-20">
-            <small v-if="alert.expires">{{ Math.floor((new Date(alert.expires) - new Date()) / 100) / 10 }}</small>
-            <small v-else>...</small>
-          </span>
+        <div class="flex-shrink mr-1 opacity-20">
+          <small v-if="alert.expires" :key="alert.__hash">{{ Math.floor((new Date(alert.expires) - new Date()) / 100) / 10 }}</small>
+          <small v-else>...</small>
+        </div>
+        <div class="flex-shrink px-2" v-on:click="console.log('ae', alert); alert.expires = new Date()">
           <Icon :icon="'heroicons:trash'" class="inline" />
         </div>
       </div>
@@ -514,13 +516,13 @@ export default {
       /* state */
       state_settingUp: false,
       alerts: [
-        {
+        /*{
           "color": "red-500",
           "textColor": "white",
           "text": "An alert here.",
           "icon": null,
           "expires": null,
-        }
+        }*/
       ],
 
       /* unchanged */
@@ -538,29 +540,36 @@ export default {
       latestRelease: null,
 
       readonly: null,
+      status: null,
     }
   },
   methods: {
     bytes,
     setTimeout,
     setInterval,
+    alertIsValid(alert) {
+      return (alert.expires == null) || (new Date(alert.expires) > new Date())
+    },
     alertError(msg, err, ...args) {
         console.error("AlertError: " + msg + ":");
         console.error(err);
       return this.alert(msg + ": <br/><pre class=\"text-xs\">" + err + "</pre>", ...args);
     },
     alert(msg, time = 5, icon = null, color = null, textColor = null) {
-      let after = new Date();
-      after.setSeconds(after.getSeconds() + time);
+      var after = new Date();
+      if (time == null) {
+        after = null;
+      } else {
+        after.setSeconds(after.getSeconds() + time);
+      }
       var build = {
         color,
         textColor,
-        "text": msg,
+        text: msg,
         icon,
         expires: after,
       };
       this.alerts.push(build);
-      console.log(this.alerts);
       return build;
     },
     log(stuff) {
@@ -914,6 +923,11 @@ export default {
       window.wg_api.getNextIPs = this.getNextIPs;
     },
     async initAndLogin() {
+      this.status = await this.api.getStatus();
+      if (!this.status.wg) {
+        this.alert("We could not detect a WireGuard installation on this system!<br />" 
+          + "<small>Please verify that WireGuard is installed correctly and that the 'wg' command is available on the system!</small>", null, null, "yellow-500")
+      }
       this.meta = await this.api.getMeta();
       await this.login();
     }
@@ -926,7 +940,13 @@ export default {
   },
   async mounted() {
     // modify alerts so vue rerenders them
-    setInterval(() => { this.alerts.forEach((a) => a.__hash = Math.random()); }, 100);
+    setInterval(() => { 
+      this.alerts.filter((alert) => this.alertIsValid(alert)).forEach((a) => a.__hash = Math.random());
+    }, 100);
+    // trim alerts
+    setInterval(() => {
+      this.alerts = this.alerts.filter((alert) => this.alertIsValid(alert));
+    }, 5000);
 
     // get session
     await new Promise(async function(resolve, reject) {
@@ -945,14 +965,12 @@ export default {
 
 
     // start refreshing
-    setInterval(async function() {
+    (async function _refresh_task() {
       await this.refresh({
         updateCharts: true,
       });
-    }.bind(this), 1000);
-    setInterval(async function () {
-      await this.refresh();
-    }.bind(this), 1000);
+      setTimeout(_refresh_task.bind(this), 1000);
+    }.bind(this))();
 
     this.checkForUpdates().then(() => {
       console.log("Updates check done.");

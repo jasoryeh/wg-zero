@@ -72,6 +72,13 @@ class API {
     })).success;
   }
 
+  async getStatus() {
+    return (await this.call({
+      method: 'get',
+      path: '/status'
+    }));
+  }
+
   async deleteSession() {
     return this.call({
       method: 'delete',
@@ -111,6 +118,13 @@ class API {
   }
 
   async getStats() {
+    return this.call({
+      method: 'get',
+      path: '/wireguard/stats',
+    });
+  }
+
+  async get() {
     return this.call({
       method: 'get',
       path: '/wireguard/stats',
