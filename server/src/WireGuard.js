@@ -52,7 +52,7 @@ class WireGuard {
   os_hasWireGuard() {
     const WG_CHECK_EXPIRES_SEC = 1;
     if ((this.wg_check === null) || (this.wg_check !== null && (new Date() - this.wg_check_last) > (1000 * WG_CHECK_EXPIRES_SEC))) {
-      this.wg_check = commandExists.sync('wg');
+      this.wg_check = commandExists.sync('wg') && commandExists('wg-quick');
       this.wg_check_last = new Date();
     }
     return this.wg_check;
@@ -105,6 +105,12 @@ class WireGuard {
     }
     await this.up();
     debug("Rebooted.");
+  }
+
+  async sync() {
+    debug(`Synchronizing WireGuard on '${WG_INTERFACE}'...`);
+    Util.exec(`wg syncconf ${WG_INTERFACE} <(wg-quick strip ${WG_INTERFACE})`);
+    debug('\t...sync done.');
   }
 
   import() {
