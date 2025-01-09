@@ -11,7 +11,7 @@ import { Icon } from '@iconify/vue';
         :ref="'field-' + fieldID + '-name'"
         class="rounded px-1 border-2 border-gray-100 focus:border-gray-200 outline-none w-full" />
         <span v-else
-            class="inline-block border-t-2 border-b-2 border-transparent">{{fieldText}}</span>
+            class="inline-block border-t-0 border-b-2 border-transparent">{{fieldText}}</span>
 
         <!-- Edit -->
         <span v-show="!editMode"
@@ -50,7 +50,6 @@ export default {
         readonly: Boolean,
     },
     mounted() {
-        console.log(">.", this.fieldID, this.fieldText);
         this.textField = this.fieldText;
     },
 };

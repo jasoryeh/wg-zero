@@ -50,12 +50,12 @@ import EditableText from './components/EditableText.vue'
     <div v-if="authenticated === true">
       <!-- Logout button -->
       <span v-if="meta && meta.auth"
-        class="text-sm text-gray-400 mb-10 mr-2 mt-3 cursor-pointer hover:underline float-right" @click="logout">
+        class="text-sm text-gray-400 dark:text-white mb-10 mr-2 mt-3 cursor-pointer hover:underline float-right" @click="logout">
         Logout
         <Icon icon="heroicons:arrow-right-on-rectangle-20-solid" class="h-3 inline" />
       </span>
       <!-- Title and Icon -->
-      <h1 class="text-4xl font-medium mt-10 mb-2">
+      <h1 class="text-4xl font-medium mt-10 mb-2 dark:text-white">
         <img src="/img/logo.png" width="32" class="inline align-middle" />
         <span class="align-middle">WireGuard</span>
       </h1>
@@ -65,28 +65,28 @@ import EditableText from './components/EditableText.vue'
       <Update v-if="latestRelease" :currentRelease="currentRelease" :latestRelease="latestRelease.version" :changelog="latestRelease.changelog" />
 
       <!-- Server -->
-      <div class="shadow-md rounded-lg bg-white overflow-hidden mb-8">
+      <div class="shadow-md rounded-lg bg-white dark:bg-neutral-800 dark:text-white overflow-hidden mb-8">
         <!-- Server card header -->
-        <div class="flex flex-row flex-auto items-center p-3 px-5 border border-b-2 border-gray-100">
+        <div class="flex flex-row flex-auto items-center p-3 px-5 border border-b-2 border-gray-100 dark:border-neutral-700">
           <div class="flex-grow">
             <p class="text-2xl font-medium">Server</p>
-            <p class="text-sm text-gray-500"><span class="text-[8px] bg-amber-300 p-1 rounded font-light mr-1" v-if="readonly">READ ONLY</span>Server details and controls.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-300"><span class="text-[8px] bg-amber-300 p-1 rounded font-light mr-1" v-if="readonly">READ ONLY</span>Server details and controls.</p>
           </div>
           <div class="flex-shrink-0" v-if="isServerConfigured()">
             <button @click="serverUp()" v-if="!isServerUp()" 
               :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
-              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
+              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 dark:text-gray-300 border-2 border-gray-100 dark:border-neutral-700 py-2 px-4 rounded inline-flex items-center transition">
               <Icon icon="heroicons:play" class="w-4 mr-2" />
               <span class="text-sm">Start</span>
             </button>
             <button @click="serverDown()" v-else
               :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
-              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
+              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 dark:text-gray-300 border-2 border-gray-100 dark:border-neutral-700 py-2 px-4 rounded inline-flex items-center transition">
               <Icon icon="heroicons:stop" class="w-4 mr-2" />
               <span class="text-sm">Stop</span>
             </button>
             <button @click="reloadServer()"
-              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
+              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 dark:text-gray-300 border-2 border-gray-100 dark:border-neutral-700 py-2 px-4 rounded inline-flex items-center transition">
               <Icon icon="material-symbols:refresh-rounded" class="w-4 mr-2" />
               <span class="text-sm">Reload</span>
             </button>
@@ -97,20 +97,20 @@ import EditableText from './components/EditableText.vue'
         <div>
           <!-- Server -->
           <div v-if="server"
-            class="relative overflow-hidden border-b border-gray-100 border-solid">
+            class="relative overflow-hidden border-b border-gray-100 dark:border-neutral-700 border-solid">
 
             <!-- Information -->
             <div class="relative p-5 z-10 flex flex-row">
               <!-- Icon -->
-              <div class="h-10 w-10 mr-5 rounded-full bg-gray-50 relative">
-                <Icon icon="heroicons:server-stack" class="w-6 h-6 m-2 text-gray-300" />
+              <div class="h-10 w-10 mr-5 mt-1 rounded-full bg-gray-50 dark:bg-gray-950 relative">
+                <Icon icon="heroicons:server-stack" class="w-6 h-6 m-2 text-gray-300 dark:text-gray-100" />
                 <div>
                   <div v-if="server && server._meta && server._meta.___unsaved && server._meta.___unsaved === true">
                     <!-- New (server) -->
                     <div class="text-[6px] translate-x-1 text-white px-1 rounded-full bg-yellow-300 absolute top-0 right-0">NEW</div>
                   </div>
                   <!-- Ping radar animation -->
-                  <div v-if="isServerUp()" class="animate-ping w-4 h-4 p-1 bg-green-100 rounded-full absolute -bottom-1 -right-1"></div>
+                  <div v-if="isServerUp()" class="animate-ping w-4 h-4 p-1 bg-green-100 dark:bg-green-900 rounded-full absolute -bottom-1 -right-1"></div>
                   <!-- Active dot -->
                   <div v-if="isServerUp()" class="w-2 h-2 bg-green-500 rounded-full absolute bottom-0 right-0"></div>
                   <div v-else>
@@ -123,12 +123,12 @@ import EditableText from './components/EditableText.vue'
               <!-- Left side -->
               <div class="flex-grow">
                 <!-- Name -->
-                <div class="text-gray-700 group" :title="`Interface ${server.metadata.Interface}`">
-                  <span class="inline-block border-t-2 border-b-2 border-transparent">Server</span>
+                <div class="text-gray-700 dark:text-gray-200 group" :title="`Interface ${server.metadata.Interface}`">
+                  <span class="inline-block border-t-0 border-b-2 border-transparent">Server</span>
                 </div>
 
                 <!-- Info -->
-                <div class="text-gray-400 text-xs">
+                <div class="text-gray-400 dark:text-gray-300 text-xs">
                   
                   <!-- Host -->
                   <span :title="`Host: ${server.metadata.Host}`" style="cursor: default;">
@@ -174,7 +174,7 @@ import EditableText from './components/EditableText.vue'
 
               <!-- Right side -->
               <div class="text-right">
-                <div class="text-gray-400">
+                <div class="text-gray-400 dark:text-gray-200">
                 </div>
               </div>
 
@@ -189,7 +189,7 @@ import EditableText from './components/EditableText.vue'
 
           <!-- Needs setup -->
           <div v-if="!isServerConfigured()">
-            <p class="text-center m-10 text-gray-400 text-sm">
+            <p class="text-center m-10 text-gray-400 dark:bg-neutral-800 dark:text-white text-sm">
               <span v-if="!readonly">This server is not set up yet, click initialize to get started.</span>
               <span v-else>This server is in Read-Only mode, an existing server may be monitored in this mode, however, the creation of a server is not allowed.</span>
               <br /><br />
@@ -211,23 +211,23 @@ import EditableText from './components/EditableText.vue'
       </div>
 
       <!-- Clients -->
-      <div v-if="isServerConfigured()" class="shadow-md rounded-lg bg-white overflow-hidden">
+      <div v-if="isServerConfigured()" class="shadow-md rounded-lg bg-white dark:bg-neutral-800 dark:text-white overflow-hidden">
         <!-- Clients card header -->
-        <div class="flex flex-row flex-auto items-center p-3 px-5 border border-b-2 border-gray-100">
+        <div class="flex flex-row flex-auto items-center p-3 px-5 border border-b-2 border-gray-100 dark:border-neutral-700">
           <div class="flex-grow">
             <p class="text-2xl font-medium">Clients</p>
-            <p class="text-sm text-gray-500">Changes made here do not persist until saved.</p>
+            <p class="text-sm text-gray-500 dark:text-gray-300">Changes made here do not persist until saved.</p>
           </div>
           <div class="flex-shrink-0">
             <button @click="commitServer()"
               :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
-              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
+              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 dark:text-gray-300 border-2 border-gray-100 dark:border-neutral-700 py-2 px-4 rounded inline-flex items-center transition">
               <Icon icon="material-symbols:save" class="w-4 mr-2" />
               <span class="text-sm">Save</span>
             </button>
             <button @click="clientCreate = true; clientCreateName = '';"
               :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
-              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 border-2 border-gray-100 py-2 px-4 rounded inline-flex items-center transition">
+              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 dark:text-gray-300 border-2 border-gray-100 dark:border-neutral-700 py-2 px-4 rounded inline-flex items-center transition">
               <Icon icon="material-symbols:add" class="w-4 mr-2" />
               <span class="text-sm">New</span>
             </button>
@@ -238,7 +238,7 @@ import EditableText from './components/EditableText.vue'
         <div class="clients-list">
           <!-- Client if there are any -->
           <div v-if="clients && clients.length > 0" v-for="client in clients" :key="client.entries.PublicKey[0]"
-            class="relative overflow-hidden border-b border-gray-100 border-solid" :id="['client-' + btoa(client.entries.PublicKey[0])]">
+            class="relative overflow-hidden border-b border-gray-100 dark:border-neutral-700 border-solid" :id="['client-' + btoa(client.entries.PublicKey[0])]">
 
             <!-- Chart -->
             <div v-if="isServerUp()" class="absolute z-0 bottom-0 left-0 right-0" style="width: 100%; height: 20%;">
@@ -286,9 +286,9 @@ import EditableText from './components/EditableText.vue'
             <!-- Information -->
             <div class="relative p-5 z-10 flex flex-row">
               <!-- Icon -->
-              <div class="flex-shrink h-10 w-10 mr-5 rounded-full bg-gray-50 relative">
+              <div class="flex-shrink h-10 w-10 mr-5 mt-0 rounded-full bg-gray-50 dark:bg-gray-950 relative">
                 <img class="w-full h-full rounded-full absolute top-0 left-0" v-if="client.metadata.Name[0] && client.metadata.Name[0].includes('@')" :src="`https://www.gravatar.com/avatar/${sha256(client.metadata.Name[0])}`" />
-                <Icon icon="heroicons-solid:user" class="w-6 h-6 m-2 text-gray-300" v-else />
+                <Icon icon="heroicons-solid:user" class="w-6 h-6 m-2 text-gray-300 dark:text-gray-200" v-else />
 
                 <div>
                   <div v-show="clientsPersist && clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].isNew">
@@ -316,12 +316,12 @@ import EditableText from './components/EditableText.vue'
               <div class="flex-grow">
 
                 <!-- Name -->
-                <div class="text-gray-700 group" :title="`Public Key: ${client.entries.PublicKey[0]}`">
+                <div class="text-gray-700 dark:text-gray-200 group" :title="`Public Key: ${client.entries.PublicKey[0]}`">
                   <EditableText :fieldID="'name-' + client.Reference" :fieldText="client.metadata.Name[0]" :readonly="readonly" @cancel="" @submit="({_, text}) => updateClientName(client, text)" />
                 </div>
 
                 <!-- Info -->
-                <div class="text-gray-400 text-xs">
+                <div class="text-gray-400 dark:text-gray-300 text-xs">
 
                   <!-- Address -->
                   <span class="group">
@@ -370,46 +370,48 @@ import EditableText from './components/EditableText.vue'
                   <div @click="disableClient(client)" v-if="client.metadata.enabled[0] == 'true'" title="Disable Client"
                     :aclass="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
                     class="inline-block align-middle rounded-full w-10 h-6 mr-1 bg-red-800 cursor-pointer hover:bg-red-700 transition-all mx-1">
-                    <div class="rounded-full w-4 h-4 m-1 ml-5 bg-white"></div>
+                    <div class="rounded-full w-4 h-4 m-1 ml-5 bg-white dark:bg-neutral-300"></div>
                   </div>
                   <div @click="enableClient(client)" v-if="client.metadata.enabled[0] == 'false'" title="Enable Client"
                     :aclass="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
-                    class="inline-block align-middle rounded-full w-10 h-6 mr-1 bg-gray-200 cursor-pointer hover:bg-gray-300 transition-all mx-1">
+                    class="inline-block align-middle rounded-full w-10 h-6 mr-1 bg-gray-200 dark:bg-gray-400 cursor-pointer hover:bg-gray-300 transition-all mx-1">
                     <div class="rounded-full w-4 h-4 m-1 bg-white"></div>
                   </div>
 
+                  <!-- Delete -->
+                  <button 
+                    :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
+                    class="align-middle bg-gray-100 dark:bg-neutral-600 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
+                    title="Delete Client" @click="clientDelete = client">
+                    <Icon icon="heroicons:trash" class="w-5 h-5" />
+                  </button>
+
+                  <div class="mb-1"></div>
+
                   <!-- Show QR -->
-                  <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
+                  <button class="align-middle bg-gray-100 dark:bg-neutral-600 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
                     title="Show QR Code" @click="showQR(client)" v-show="clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey">
                     <Icon icon="heroicons-outline:qrcode" class="w-5 h-5" />
                   </button>
 
                   <!-- View Config -->
-                  <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
+                  <button class="align-middle bg-gray-100 dark:bg-neutral-600 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
                     title="Show Client Config" @click="showClientConfig(client)" v-show="clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey">
                     <Icon icon="heroicons-outline:code-bracket-square" class="w-5 h-5" />
                   </button>
 
                   <!-- Download Config -->
-                  <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
+                  <button class="align-middle bg-gray-100 dark:bg-neutral-600 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
                     title="Download Configuration" @click="downloadConfig(client)" v-show="clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey">
                     <Icon icon="heroicons:arrow-down-tray" class="w-5 h-5" />
                   </button>
 
                   <!-- Info for no configuration -->
-                  <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
+                  <button class="align-middle bg-gray-100 dark:bg-neutral-600 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
                     title="Configuration download/viewing is unavailable because the private key was not saved at creation."
                     v-if="!(clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey)" 
                     @click="alert('Configuration download/viewing is unavailable because the private key was not saved at creation.', 15, 'heroicons:information-circle', 'blue-500')">
                     <Icon icon="heroicons:no-symbol" class="w-5 h-5" />
-                  </button>
-
-                  <!-- Delete -->
-                  <button 
-                    :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
-                    class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Delete Client" @click="clientDelete = client">
-                    <Icon icon="heroicons:trash" class="w-5 h-5" />
                   </button>
                 </div>
               </div>
