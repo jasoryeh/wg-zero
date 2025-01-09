@@ -16,6 +16,7 @@ import CryptoJS from 'crypto-js';
 import { format as timeagoFormat } from 'timeago.js';
 import { Buffer } from 'buffer/';
 import QRCode from 'qrcode';
+import EditableText from './components/EditableText.vue'
 </script>
 
 <template>
@@ -286,8 +287,8 @@ import QRCode from 'qrcode';
             <div class="relative p-5 z-10 flex flex-row">
               <!-- Icon -->
               <div class="flex-shrink h-10 w-10 mr-5 rounded-full bg-gray-50 relative">
-                <Icon icon="heroicons-solid:user" class="w-6 h-6 m-2 text-gray-300" />
-                <!--<img v-if="client.metadata.Name[0] && client.metadata.Name[0].includes('@')" :src="`https://www.gravatar.com/avatar/${CryptoJS.MD5(client.metadata.Name[0])}?d=404`" class="w-10 rounded-full absolute top-0 left-0" />-->
+                <img class="w-full h-full rounded-full absolute top-0 left-0" v-if="client.metadata.Name[0] && client.metadata.Name[0].includes('@')" :src="`https://www.gravatar.com/avatar/${sha256(client.metadata.Name[0])}`" />
+                <Icon icon="heroicons-solid:user" class="w-6 h-6 m-2 text-gray-300" v-else />
 
                 <div>
                   <div v-show="clientsPersist && clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].isNew">
@@ -316,23 +317,7 @@ import QRCode from 'qrcode';
 
                 <!-- Name -->
                 <div class="text-gray-700 group" :title="`Public Key: ${client.entries.PublicKey[0]}`">
-
-                  <!-- Show -->
-                  <input v-show="clientEditNameId === client.Reference" v-model="clientEditName"
-                    v-on:keyup.enter="updateClientName(client, clientEditName); clientEditName = null; clientEditNameId = null;"
-                    v-on:keyup.escape="clientEditName = null; clientEditNameId = null;"
-                    :ref="'client-' + client.Reference + '-name'"
-                    class="rounded px-1 border-2 border-gray-100 focus:border-gray-200 outline-none w-30" />
-                    <span v-show="clientEditNameId !== client.Reference"
-                      class="inline-block border-t-2 border-b-2 border-transparent">{{client.metadata.Name[0]}}</span>
-
-                  <!-- Edit -->
-                  <span v-show="clientEditNameId !== client.Reference"
-                    @click="clientEditName = client.metadata.Name[0]; clientEditNameId = client.Reference;"
-                    class="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                    :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null">
-                    <Icon icon="heroicons:pencil-square" class="h-4 w-4 ml-1 inline align-middle opacity-25 hover:opacity-100" />
-                  </span>
+                  <EditableText :fieldID="'name-' + client.Reference" :fieldText="client.metadata.Name[0]" :readonly="readonly" @cancel="" @submit="({_, text}) => updateClientName(client, text)" />
                 </div>
 
                 <!-- Info -->
@@ -340,27 +325,8 @@ import QRCode from 'qrcode';
 
                   <!-- Address -->
                   <span class="group">
-
-                    <!-- Show -->
-                    <input v-show="clientEditAddressId === client.Reference" v-model="clientEditAddress"
-                      v-on:keyup.enter="updateClientAddress(client, clientEditAddress); clientEditAddress = null; clientEditAddressId = null;"
-                      v-on:keyup.escape="clientEditAddress = null; clientEditAddressId = null;"
-                      :ref="'client-' + client.Reference + '-address'"
-                      class="rounded border-2 border-gray-100 focus:border-gray-200 outline-none w-fit text-black" />
-                    <span v-show="clientEditAddressId !== client.Reference"
-                      class="inline-block border-t-2 border-b-2 border-transparent"
-                      v-for="address in client.entries.AllowedIPs">
-                      <Icon icon="heroicons-solid:funnel" class="align-middle h-3 inline" />
-                      {{`${address}`}}&nbsp;
-                    </span>
-
-                    <!-- Edit -->
-                    <span v-show="clientEditAddressId !== client.Reference"
-                      @click="clientEditAddress = client.entries.AllowedIPs.join(','); clientEditAddressId = client.Reference;"
-                      class="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                    :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null">
-                      <Icon icon="heroicons:pencil-square" class="h-4 w-4 ml-1 inline align-middle opacity-25 hover:opacity-100" />
-                    </span>
+                    <Icon icon="heroicons-solid:funnel" class="align-middle h-3 inline mr-1" />
+                    <EditableText :fieldID="'address-' + client.Reference" :fieldText="client.entries.AllowedIPs.join(',')" :readonly="readonly" @cancel="" @submit="({_, text}) => updateClientAddress(client, text)" />
                   </span>
 
                   <!-- Transfer TX -->
@@ -931,6 +897,9 @@ export default {
     },
     btoa(t) {
       return window.btoa(t);
+    },
+    sha256(msg) {
+      return CryptoJS.SHA256(msg);
     },
     async checkStatus(time = 1) {
       this.status = await this.api.getStatus();
