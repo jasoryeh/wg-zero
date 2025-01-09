@@ -19,11 +19,11 @@ import QRCode from 'qrcode';
 </script>
 
 <template>
-  <div v-cloak class="container mx-auto max-w-3xl">
+  <div v-cloak class="container mx-auto max-w-3xl overflow-hidden">
     <!-- Alerts -->
-    <div class="shadow-md rounded-lg mb-8 mt-8">
+    <div class="alerts rounded-lg mb-8 mt-8">
       <!-- Server card header -->
-      <div :class="['flex flex-row flex-auto items-center p-3 px-5 mb-1 overflow-x-scroll text-wrap', 
+      <div :class="['flex flex-row flex-auto items-center p-3 px-5 mb-1 rounded-lg shadow-xl', 
                     (alert.color ? 'border-'+alert.color : 'border-red-500'), 
                     (alert.color ? 'bg-'+alert.color : 'bg-red-500'), 
                     (alert.textColor ? 'text-'+alert.textColor : 'text-white'),
@@ -529,9 +529,9 @@ export default {
         /*{
           "color": "red-500",
           "textColor": "white",
-          "text": "An alert here.",
+          "text": "An alert here. Lots of messages blah blah blah.<br />Test<br/><pre>asdfasdf lorem ipsum somethin  somethias jsadjfsidfja j aos jo ijoii iijaosdfjoasdfjoasdjfdsiojjaj  jas ijdoifjsojoo jeiorj2r32j039r0 089 j*((JJ()))</pre>",
           "icon": null,
-          "expires": null,
+          "expires": (function() { let n = new Date(); n.setSeconds(n.getSeconds() + 9999); return n; })(),
         }*/
       ],
 
@@ -1000,4 +1000,37 @@ export default {
 </script>
 
 <style scoped>
+.alerts {
+  /* Width of the scrollbar */
+  ::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+
+  /* Track of the scrollbar */
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  /* Handle of the scrollbar */
+  ::-webkit-scrollbar-thumb {
+    background: #888;
+  }
+
+  /* Handle on hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+
+}
+</style>
+
+<style>
+pre {
+  white-space: pre-wrap;       /* Since CSS 2.1 */
+  white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+  white-space: -pre-wrap;      /* Opera 4-6 */
+  white-space: -o-pre-wrap;    /* Opera 7 */
+  word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
 </style>
