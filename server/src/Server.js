@@ -83,6 +83,7 @@ module.exports = class Server {
   .get('/api/status', (req, res) => {
     res.status(200).send({
       wg: this.wireguard.os_hasWireGuard(),
+      readonly: WG_READONLY,
     });
   });
 
@@ -101,23 +102,7 @@ module.exports = class Server {
     });
   })
   .get('/api/wireguard/clients', (req, res) => {
-    let json_res = [];
-    let clients = this.wireguard.getClients();
-    for (let client of clients) {
-      let jsoned = client.toJson();
-      let json = {};
-      Object.assign(json, jsoned.entries);
-      Object.keys(jsoned.entries).forEach((k) => json[k] = json[k][0] ? json[k][0].value : null);
-      json._meta = jsoned.metadata;
-      Object.keys(json._meta).forEach((k) => json._meta[k] = json._meta[k][0] ? json._meta[k][0].value : null);
-
-      // formatting
-      json['AllowedIPs'] = IniSection.unCommaSeparated(json['AllowedIPs']);
-      
-      json_res.push(json);
-    }
-
-    res.status(200).send(json_res);
+    res.status(200).send([...this.wireguard.getClients().map((peer) => peer.toJson())]);
   })
   .get('/api/wireguard/stats', async (req, res) => {
     try {
@@ -129,26 +114,7 @@ module.exports = class Server {
     }
   })
   .get('/api/wireguard/server', async (req, res) => {
-    let jsoned = this.wireguard.config.getInterface().toJson();
-    let json = {};
-    Object.assign(json, jsoned.entries);
-    Object.keys(jsoned.entries).forEach((k) => json[k] = json[k][0] ? json[k][0].value : null);
-    json._meta = jsoned.metadata;
-    Object.keys(json._meta).forEach((k) => json._meta[k] = json._meta[k][0] ? json._meta[k][0].value : null);
-
-    let intf = json;
-    // formatting
-    intf['Address'] = IniSection.unCommaSeparated(intf['Address']);
-    intf['DNS'] = IniSection.unCommaSeparated(intf['DNS']);
-    // information, but should not be stored i guess
-    intf.PublicKey = intf['PrivateKey'] ? await generatePublicKey(intf['PrivateKey'], {log: false}) : null;
-    intf.Interface = this.wireguard.getInterfaceName();
-    // hide sensitive?
-    intf['PrivateKey'] = undefined;
-    intf['PreUp'] = undefined;
-    intf['PostUp'] = undefined;
-    intf['PreDown'] = undefined;
-    intf['PostDown'] = undefined;
+    let intf = this.wireguard.config.getInterface().iniSection.toJson();
     // append data
     intf._stats = {};
     intf._stats.up = await this.wireguard.isUp();
@@ -160,7 +126,12 @@ module.exports = class Server {
       // back up
       await this.wireguard.backup();
       await this.wireguard.export();
-      await this.wireguard.reboot();
+      if (this.wireguard.isUp()) {
+        debug("Rebooting: WireGuard was running when a save was executed.")
+        await this.wireguard.reboot();
+      } else {
+        debug("Not rebooting: WireGuard was not running.")
+      }
       res.status(200).send({});
     } catch(err) {
       debug("wireguard/save: Failed to save configuration in: ");
@@ -188,11 +159,6 @@ module.exports = class Server {
   .post('/api/wireguard/up', async (req, res) => {
     await this.wireguard.up();
     res.status(200).send({});
-  })
-  .get('/api/readonly', async (req, res) => {
-    res.status(200).send({
-      readonly: WG_READONLY,
-    });
   })
   .post('/api/wireguard/server/regenerate', async (req, res) => {
     this.wireguard.
@@ -228,21 +194,20 @@ module.exports = class Server {
   })
   .put('/api/wireguard/clients/new', async (req, res) => {
     const { privateKey, publicKey, addresses, presharedKey, persistPrivateKey } = req.body;
-    res.status(200).send({
-      client: await this.wireguard.addClient(publicKey, addresses, presharedKey, privateKey, persistPrivateKey),
-    });
+    res.status(200).send(await this.wireguard.addClient(publicKey, addresses, presharedKey, privateKey, persistPrivateKey).iniSection.toJson());
   })
   .put('/api/wireguard/clients/:clientRef/name', async (req, res) => {
     const { clientRef } = req.params;
     const { name } = req.body;
     const pubKey = Buffer.from(clientRef, 'hex').toString('utf8');
-
+    console.log("pubKey");
+    console.log(pubKey);
     let client = this.wireguard.getClient(pubKey);
     if (!client) {
       res.status(404).send({});
     }
-
-    debug(`wireguard/clients/${clientRef}/name: Updating name for ${pubKey} - ${client._meta.Name} -> ${name}`);
+    
+    debug(`wireguard/clients/${clientRef}/name: Updating name for ${pubKey} - ${client.getName()} -> ${name}`);
     this.wireguard.assertNotReadOnly('Cannot update name in read-only mode!');
     client.setName(name);
 

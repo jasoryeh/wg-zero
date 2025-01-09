@@ -226,10 +226,7 @@ class API {
   }
 
   async isReadonly() {
-    return this.call({
-      method: 'get',
-      path: '/readonly',
-    });
+    return await this.getStatus().readonly;
   }
 
 }

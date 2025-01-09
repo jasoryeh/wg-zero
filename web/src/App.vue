@@ -29,7 +29,7 @@ import QRCode from 'qrcode';
                     (alert.textColor ? 'text-'+alert.textColor : 'text-white'),
                     (alertIsValid(alert) ? '' : 'hidden')]" 
                     v-for="alert of alerts.filter((a) => alertIsValid(a))">
-        <div class="flex-shrink px-2">
+        <div class="flex-shrink pr-2">
           <Icon :icon="alert.icon ?? 'heroicons:bell-alert'" class="inline mr-2" />
         </div>
         <div class="flex-grow">
@@ -122,7 +122,7 @@ import QRCode from 'qrcode';
               <!-- Left side -->
               <div class="flex-grow">
                 <!-- Name -->
-                <div class="text-gray-700 group" :title="`Interface ${server.Interface}`">
+                <div class="text-gray-700 group" :title="`Interface ${server.metadata.Interface}`">
                   <span class="inline-block border-t-2 border-b-2 border-transparent">Server</span>
                 </div>
 
@@ -130,16 +130,16 @@ import QRCode from 'qrcode';
                 <div class="text-gray-400 text-xs">
                   
                   <!-- Host -->
-                  <span :title="`Host: ${server._meta.Host}`" style="cursor: default;">
+                  <span :title="`Host: ${server.metadata.Host}`" style="cursor: default;">
                     <Icon icon="heroicons-solid:globe-alt" class="align-middle h-3 inline" />
-                    {{server._meta.Host}}
+                    {{server.metadata.Host.join(", ")}}
                   </span>
 
                   <!-- Port -->
-                  <span :title="`Port: ${server.ListenPort}`" style="cursor: default;">
+                  <span :title="`Port: ${server.entries.ListenPort[0]}`" style="cursor: default;">
                     ·
                     <Icon icon="heroicons-solid:map-pin" class="align-middle h-3 inline" />
-                    {{server.ListenPort}}
+                    {{server.entries.ListenPort[0]}}
                   </span>
 
                   <br />
@@ -148,25 +148,25 @@ import QRCode from 'qrcode';
                   <span class="group">
                     <span 
                       class="inline-block border-t-2 border-b-2 border-transparent"
-                      v-for="address in server.Address">
+                      v-for="address in server.entries.Address">
                       <Icon icon="heroicons-solid:funnel" class="align-middle h-3 inline" />
                       {{`${address}`}}&nbsp;
                     </span>
                   </span>
 
                   <!-- Interface -->
-                  <span :title="`Interface: ${server.Interface}`" style="cursor: default;">
+                  <span :title="`Interface: ${server.metadata.Interface[0]}`" style="cursor: default;">
                     ·
                     <Icon icon="heroicons-solid:arrow-right-circle" class="align-middle h-3 inline" />
-                    {{server.Interface}}
+                    {{server.metadata.Interface[0]}}
                   </span>
 
                   <br />
                   
                   <!-- Public Key -->
-                  <span :title="`Public Key: ${server.PublicKey}`" style="cursor: default;">
+                  <span :title="`Public Key: ${server.metadata.PublicKey[0]}`" style="cursor: default;">
                     <Icon icon="heroicons-solid:key" class="align-middle h-3 inline" />
-                    {{server.PublicKey}}
+                    {{server.metadata.PublicKey[0]}}
                   </span>
                 </div>
               </div>
@@ -236,8 +236,8 @@ import QRCode from 'qrcode';
         <!-- Clients list -->
         <div class="clients-list">
           <!-- Client if there are any -->
-          <div v-if="clients && clients.length > 0" v-for="client in clients" :key="client.PublicKey"
-            class="relative overflow-hidden border-b border-gray-100 border-solid" :id="['client-' + btoa(client.PublicKey)]">
+          <div v-if="clients && clients.length > 0" v-for="client in clients" :key="client.entries.PublicKey[0]"
+            class="relative overflow-hidden border-b border-gray-100 border-solid" :id="['client-' + btoa(client.entries.PublicKey[0])]">
 
             <!-- Chart -->
             <div v-if="isServerUp()" class="absolute z-0 bottom-0 left-0 right-0" style="width: 100%; height: 20%;">
@@ -285,12 +285,12 @@ import QRCode from 'qrcode';
             <!-- Information -->
             <div class="relative p-5 z-10 flex flex-row">
               <!-- Icon -->
-              <div class="h-10 w-10 mr-5 rounded-full bg-gray-50 relative">
+              <div class="flex-shrink h-10 w-10 mr-5 rounded-full bg-gray-50 relative">
                 <Icon icon="heroicons-solid:user" class="w-6 h-6 m-2 text-gray-300" />
-                <!--<img v-if="client._meta.Name && client._meta.Name.includes('@')" :src="`https://www.gravatar.com/avatar/${CryptoJS.MD5(client._meta.Name)}?d=404`" class="w-10 rounded-full absolute top-0 left-0" />-->
+                <!--<img v-if="client.metadata.Name && client.metadata.Name.includes('@')" :src="`https://www.gravatar.com/avatar/${CryptoJS.MD5(client.metadata.Name)}?d=404`" class="w-10 rounded-full absolute top-0 left-0" />-->
 
                 <div>
-                  <div v-show="clientsPersist && clientsPersist[client.PublicKey] && clientsPersist[client.PublicKey].isNew">
+                  <div v-show="clientsPersist && clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].isNew">
                     <!-- New (this session) -->
                     <div class="text-[6px] translate-x-1 text-white px-1 rounded-full bg-blue-300 absolute top-0 right-0">NEW</div>
                   </div>
@@ -323,12 +323,12 @@ import QRCode from 'qrcode';
                     v-on:keyup.escape="clientEditName = null; clientEditNameId = null;"
                     :ref="'client-' + client.Reference + '-name'"
                     class="rounded px-1 border-2 border-gray-100 focus:border-gray-200 outline-none w-30" />
-                  <span v-show="clientEditNameId !== client.Reference"
-                    class="inline-block border-t-2 border-b-2 border-transparent">{{client.name}}</span>
+                    <span v-show="clientEditNameId !== client.Reference"
+                      class="inline-block border-t-2 border-b-2 border-transparent">{{client.metadata.Name[0]}}</span>
 
                   <!-- Edit -->
                   <span v-show="clientEditNameId !== client.Reference"
-                    @click="clientEditName = client.name; clientEditNameId = client.Reference;"
+                    @click="clientEditName = client.metadata.Name[0]; clientEditNameId = client.Reference;"
                     class="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
                     :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null">
                     <Icon icon="heroicons:pencil-square" class="h-4 w-4 ml-1 inline align-middle opacity-25 hover:opacity-100" />
@@ -349,14 +349,14 @@ import QRCode from 'qrcode';
                       class="rounded border-2 border-gray-100 focus:border-gray-200 outline-none w-fit text-black" />
                     <span v-show="clientEditAddressId !== client.Reference"
                       class="inline-block border-t-2 border-b-2 border-transparent"
-                      v-for="address in client.addresses">
+                      v-for="address in client.entries.AllowedIPs">
                       <Icon icon="heroicons-solid:funnel" class="align-middle h-3 inline" />
                       {{`${address}`}}&nbsp;
                     </span>
 
                     <!-- Edit -->
                     <span v-show="clientEditAddressId !== client.Reference"
-                      @click="clientEditAddress = client.addresses.join(','); clientEditAddressId = client.Reference; setTimeout(() => $refs['client-' + client.Reference + '-address'][0].select(), 1);"
+                      @click="clientEditAddress = client.entries.AllowedIPs.join(','); clientEditAddressId = client.Reference;"
                       class="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
                     :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null">
                       <Icon icon="heroicons:pencil-square" class="h-4 w-4 ml-1 inline align-middle opacity-25 hover:opacity-100" />
@@ -365,8 +365,8 @@ import QRCode from 'qrcode';
 
                   <!-- Transfer TX -->
                   <span v-if="isServerUp() && client.stats.tx" :title="'Total Download: ' + bytes(client.stats.tx)"
-                    @mouseover="client.hoverTx = clientsPersist[client.PublicKey].hoverTx = true;"
-                    @mouseleave="client.hoverTx = clientsPersist[client.PublicKey].hoverTx = false;" style="cursor: default;">
+                    @mouseover="client.hoverTx = clientsPersist[client.entries.PublicKey[0]].hoverTx = true;"
+                    @mouseleave="client.hoverTx = clientsPersist[client.entries.PublicKey[0]].hoverTx = false;" style="cursor: default;">
                     ·
                     <Icon icon="heroicons-solid:arrow-down" class="align-middle h-3 inline" />
                     {{bytes(client.transferTxCurrent)}}/s
@@ -374,8 +374,8 @@ import QRCode from 'qrcode';
 
                   <!-- Transfer RX -->
                   <span v-if="isServerUp() && client.stats.rx" :title="'Total Upload: ' + bytes(client.stats.rx)"
-                    @mouseover="client.hoverRx = clientsPersist[client.PublicKey].hoverRx = true;"
-                    @mouseleave="client.hoverRx = clientsPersist[client.PublicKey].hoverRx = false;" style="cursor: default;">
+                    @mouseover="client.hoverRx = clientsPersist[client.entries.PublicKey[0]].hoverRx = true;"
+                    @mouseleave="client.hoverRx = clientsPersist[client.entries.PublicKey[0]].hoverRx = false;" style="cursor: default;">
                     ·
                     <Icon icon="heroicons-solid:arrow-up" class="align-middle h-3 inline" />
                     {{bytes(client.transferRxCurrent)}}/s
@@ -386,44 +386,52 @@ import QRCode from 'qrcode';
                     :title="'Last seen on ' + dateTime(new Date(client.stats.lastHandshake))">
                     · {{timeFormat(new Date(client.stats.lastHandshake))}}
                   </span>
+
+                  <br />
+
+                  <span
+                      class="inline-block border-t-2 border-b-2 border-transparent">
+                      <Icon icon="heroicons-solid:key" class="align-middle h-3 inline" />
+                      {{ client.entries.PublicKey[0] }}&nbsp;
+                    </span>
                 </div>
               </div>
 
               <!-- Right side -->
-              <div class="text-right min-w-fit">
+              <div class="flex-grow text-right min-w-fit">
                 <div class="text-gray-400">
                   <!-- Enable/Disable -->
-                  <div @click="disableClient(client)" v-if="client._meta.enabled === true" title="Disable Client"
+                  <div @click="disableClient(client)" v-if="client.metadata.enabled[0] == 'true'" title="Disable Client"
                     class="inline-block align-middle rounded-full w-10 h-6 mr-1 bg-red-800 cursor-pointer hover:bg-red-700 transition-all mx-1">
                     <div class="rounded-full w-4 h-4 m-1 ml-5 bg-white"></div>
                   </div>
-                  <div @click="enableClient(client)" v-if="client._meta.enabled === false" title="Enable Client"
+                  <div @click="enableClient(client)" v-if="client.metadata.enabled[0] == 'false'" title="Enable Client"
                     class="inline-block align-middle rounded-full w-10 h-6 mr-1 bg-gray-200 cursor-pointer hover:bg-gray-300 transition-all mx-1">
                     <div class="rounded-full w-4 h-4 m-1 bg-white"></div>
                   </div>
 
                   <!-- Show QR -->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Show QR Code" @click="showQR(client)" v-show="clientsPersist[client.PublicKey] && clientsPersist[client.PublicKey].PrivateKey">
+                    title="Show QR Code" @click="showQR(client)" v-show="clientsPersist[client.entries.PublicKey] && clientsPersist[client.entries.PublicKey].PrivateKey">
                     <Icon icon="heroicons-outline:qrcode" class="w-5 h-5" />
                   </button>
 
                   <!-- View Config -->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Show Client Config" @click="showClientConfig(client)" v-show="clientsPersist[client.PublicKey] && clientsPersist[client.PublicKey].PrivateKey">
+                    title="Show Client Config" @click="showClientConfig(client)" v-show="clientsPersist[client.entries.PublicKey] && clientsPersist[client.entries.PublicKey].PrivateKey">
                     <Icon icon="heroicons-outline:code-bracket-square" class="w-5 h-5" />
                   </button>
 
                   <!-- Download Config -->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Download Configuration" @click="downloadConfig(client)" v-show="clientsPersist[client.PublicKey] && clientsPersist[client.PublicKey].PrivateKey">
+                    title="Download Configuration" @click="downloadConfig(client)" v-show="clientsPersist[client.entries.PublicKey] && clientsPersist[client.entries.PublicKey].PrivateKey">
                     <Icon icon="heroicons:arrow-down-tray" class="w-5 h-5" />
                   </button>
 
                   <!-- Info for no configuration -->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
                     title="Configuration download/viewing is unavailable because the private key was not saved at creation."
-                    v-if="!(clientsPersist[client.PublicKey] && clientsPersist[client.PublicKey].PrivateKey)" 
+                    v-if="!(clientsPersist[client.entries.PublicKey] && clientsPersist[client.entries.PublicKey].PrivateKey)" 
                     @click="alert('Configuration download/viewing is unavailable because the private key was not saved at creation.', 15, 'heroicons:information-circle', 'blue-500')">
                     <Icon icon="heroicons:no-symbol" class="w-5 h-5" />
                   </button>
@@ -470,7 +478,7 @@ import QRCode from 'qrcode';
       <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="({name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey }) => { newClient(name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey); clientCreate = null; scrollToClient(publicKey); }" />
 
       <!-- Delete Dialog -->
-      <DeleteClient v-if="clientDelete" :name="clientDelete.name" @cancel="clientDelete = null" @confirm="console.log(clientDelete); deleteClient(clientDelete.PublicKey); clientDelete = null" />
+      <DeleteClient v-if="clientDelete" :name="clientDelete.metadata.Name[0]" @cancel="clientDelete = null" @confirm="console.log(clientDelete); deleteClient(clientDelete.entries.PublicKey); clientDelete = null" />
     </div>
 
     <!-- Authentication -->
@@ -631,7 +639,7 @@ export default {
       if (!this.authenticated) return;
 
       // readonly?
-      this.readonly = (await this.api.isReadonly()).readonly;
+      await this.checkStatus();
 
       // request, and format data
       this.meta = await this.api.getMeta();
@@ -645,7 +653,7 @@ export default {
       // handle data history
       // stats are only available when the interface is up
       for (let client of clients) {
-        let cid = client.PublicKey;
+        let cid = client.entries.PublicKey[0];
 
         // persistent data
         /// initialize client data persistence if we dont have any historical data yet
@@ -655,8 +663,8 @@ export default {
         var cpersist = this.clientsPersist[cid];
         
         // in case of saved private keys, repopulate the private key
-        if (client._meta.privateKey) {
-          cpersist.PrivateKey = client._meta.privateKey;
+        if (client.metadata.privateKey) {
+          cpersist.PrivateKey = client.metadata.privateKey[0];
         }
 
         if (this.isServerUp()) {
@@ -709,14 +717,14 @@ export default {
         }
 
         // until replaced
-        client._meta = client._meta ?? {};
+        client._meta = client._meta ?? {}; // for ui metadata
         client.Reference = Buffer.from(cid).toString('hex');
-        client.name = client._meta.Name || cid;
-        client.addresses = client.AllowedIPs;
+        client.name = client.metadata.Name || cid;
+        client.addresses = client.entries.AllowedIPs;
         
         // if private key is saved
-        if (client._meta.PrivateKey) {
-          client.PrivateKey = client._meta.PrivateKey;
+        if (client.metadata.PrivateKey) {
+          client.PrivateKey = client.metadata.PrivateKey;
         }
       }
 
@@ -756,10 +764,10 @@ export default {
     async newClient(name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey) {
       try {
         let res = await this.api.createClient(publicKey, addresses, presharedKey, privateKey, persistPrivateKey);
-        let client = res.client;
-        // todo: if not res.client fail
-        // ?? await this.refresh();
-        await this.api.updateName(Buffer.from(client.PublicKey).toString('hex'), name);
+        let client = res;
+        client.Reference = Buffer.from(client.entries.PublicKey[0]).toString('hex');
+
+        await this.api.updateName(client.Reference, name);
         if (!this.clientsPersist[publicKey]) {
           this.clientsPersist[publicKey] = {};
         }
@@ -770,10 +778,15 @@ export default {
         this.alertError("An error occurred while creating the new client", err);
       }
     },
+    async updateClientAddress() {
+      this.alert("Address updates are not yet supported.", 5, null, "yellow-400");
+    },
     async updateClientName(client, name) {
       try {
+        console.log(client);
+        console.log(JSON.stringify(client, null, 4));
         await this.api.updateName(client.Reference, name);
-        this.alert('The client name was updated!', 5, null, 'green-600');
+        this.alert('The client name was updated to \'' + name + '\'!', 5, null, 'green-600');
       } catch(err) {
         this.alertError("An error occurred while updating the client name", err);
       }
@@ -821,8 +834,8 @@ export default {
     async disableClient(client) {
       try {
         await this.api.disable(client.Reference);
-        client._meta.enabled = false;
-        this.alert("Disabled Peer '" + client._meta.Name + "''", 5, null, "blue-400");
+        client.metadata.enabled = ['false'];
+        this.alert("Disabled Peer '" + client.metadata.Name + "''", 5, null, "blue-400");
       } catch(err) {
         this.alertError("An error occurred while disabling the client '" + client.PublicKey + "''", err);
       }
@@ -830,8 +843,8 @@ export default {
     async enableClient(client) {
       try {
         await this.api.enable(client.Reference);
-        client._meta.enabled = true;
-        this.alert("Enabled Peer '" + client._meta.Name + "''", 5, null, "blue-400");
+        client.metadata.enabled = ['true'];
+        this.alert("Enabled Peer '" + client.metadata.Name + "''", 5, null, "blue-400");
       } catch(err) {
         this.alertError("An error occurred while enabling the client '" + client.PublicKey + "''", err);
       }
@@ -855,9 +868,9 @@ export default {
         `DNS = 1.1.1.1,1.0.0.1`,
         '',
         `[Peer]`,
-        `PublicKey = ${server.PublicKey}`,
+        `PublicKey = ${server.metadata.PublicKey}`,
         `AllowedIPs = 0.0.0.0/0, ::/0`,
-        `Endpoint = ${server._meta.Host}:${server.ListenPort}`,
+        `Endpoint = ${server.metadata.Host}:${server.entries.ListenPort}`,
       ];
       if (presharedKey) {
         config.push(`PresharedKey = ${presharedKey}`);
@@ -865,14 +878,14 @@ export default {
       return config.join('\n');
     },
     clientConfig(client) {
-      if (!this.clientsPersist[client.PublicKey]) {
+      if (!this.clientsPersist[client.entries.PublicKey]) {
         throw Error("Client config can only be created when the client was created recently!");
       }
       return this.generateClientConfig(
-        this.clientsPersist[client.PublicKey].PrivateKey, 
-        client.AllowedIPs, 
+        this.clientsPersist[client.entries.PublicKey].PrivateKey, 
+        client.entries.AllowedIPs, 
         this.server, 
-        client.PresharedKey);
+        client.entries.PresharedKey);
     },
     async showQR(client) {
       let config = this.clientConfig(client);
@@ -885,21 +898,21 @@ export default {
       let blob = new Blob([this.clientConfig(client)], { type: 'text/plain' });
       let dummy = document.createElement('a');
       dummy.href = URL.createObjectURL(blob);
-      dummy.download = `${client._meta.Name || client.PublicKey}.conf`;
+      dummy.download = `${client.metadata.Name || client.entries.PublicKey}.conf`;
       document.body.appendChild(dummy);
       dummy.click();
       document.body.removeChild(dummy);
-      this.alert(`Downloaded configuration for client '<b>${client._meta.Name || client.PublicKey}</b>'`, 15, null, 'purple-700');
+      this.alert(`Downloaded configuration for client '<b>${client.metadata.Name || client.entries.PublicKey}</b>'`, 15, null, 'purple-700');
     },
     getNextIPs() {
       let taken = [];
       for (let client of this.clients) {
-        for (let addr of client.AllowedIPs) {
+        for (let addr of client.entries.AllowedIPs) {
           taken.push(addr.split("/")[0]);
         }
       }
       let addrs = [];
-      for (let space of this.server.Address) {
+      for (let space of this.server.entries.Address) {
         let spaceStartAddress = space.split("/")[0];
         let spaceStart = ofIPString(spaceStartAddress);
         let pool = new IPPool(spaceStart);
@@ -912,10 +925,19 @@ export default {
       return addrs;
     },
     scrollToClient(pubKey) {
-      document.getElementById(`client-${btoa(pubKey)}`).scrollIntoView();
+      var client = document.getElementById(`client-${btoa(pubKey)}`);
+      if (client) client.scrollIntoView();
     },
     btoa(t) {
       return window.btoa(t);
+    },
+    async checkStatus() {
+      this.status = await this.api.getStatus();
+      if (!this.status.wg) {
+        this.alert("We could not detect a WireGuard installation on this system!<br />" 
+          + "<small>Please verify that WireGuard is installed correctly and that the 'wg' command is available on the system!</small>", null, null, "yellow-500")
+      }
+      this.readonly = this.status.readonly;
     },
     initAPI() {
       this.api = new API();
@@ -923,11 +945,6 @@ export default {
       window.wg_api.getNextIPs = this.getNextIPs;
     },
     async initAndLogin() {
-      this.status = await this.api.getStatus();
-      if (!this.status.wg) {
-        this.alert("We could not detect a WireGuard installation on this system!<br />" 
-          + "<small>Please verify that WireGuard is installed correctly and that the 'wg' command is available on the system!</small>", null, null, "yellow-500")
-      }
       this.meta = await this.api.getMeta();
       await this.login();
     }
@@ -953,6 +970,7 @@ export default {
       (async function init() {
         try {
           await this.initAPI();
+          await this.checkStatus();
           await this.initAndLogin();
           resolve();
         } catch(err) {
