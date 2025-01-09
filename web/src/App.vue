@@ -931,11 +931,11 @@ export default {
     btoa(t) {
       return window.btoa(t);
     },
-    async checkStatus() {
+    async checkStatus(time = 1) {
       this.status = await this.api.getStatus();
       if (!this.status.wg) {
         this.alert("We could not detect a WireGuard installation on this system!<br />" 
-          + "<small>Please verify that WireGuard is installed correctly and that the 'wg' command is available on the system!</small>", null, null, "yellow-500")
+          + "<small>Please verify that WireGuard is installed correctly and that the 'wg' command is available on the system!</small>", time, null, "yellow-500")
       }
       this.readonly = this.status.readonly;
     },
@@ -970,7 +970,7 @@ export default {
       (async function init() {
         try {
           await this.initAPI();
-          await this.checkStatus();
+          await this.checkStatus(5);
           await this.initAndLogin();
           resolve();
         } catch(err) {
