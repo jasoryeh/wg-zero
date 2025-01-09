@@ -42,7 +42,7 @@ class IniEntry {
             var line = `${this.key} = ${this.value}`;
 
             if (this.isMeta()) {
-                line = '!' + line;
+                line = '#!' + line;
             } else if (this.isEntry()) {
                 // already entry
             } else {
@@ -50,11 +50,7 @@ class IniEntry {
             }
 
             if (!this.enabled) {
-                line = '$' + line;
-            }
-
-            if (!this.enabled || this.isMeta()) {
-                line = '#' + line;
+                line = '#$' + line;
             }
 
             return line;
@@ -175,10 +171,9 @@ class IniSection {
 
     parseLine(line) {
         let isComment = line.startsWith('#');
-        line = line.slice(isComment ? 1 : 0);
         
         if (isComment) {
-            this.addComment(line);
+            this.addComment(line.slice(1));
         } else {
             let {key, value} = this.getKV(line);
             return this.add(key, value);
@@ -186,13 +181,12 @@ class IniSection {
     }
 
     addComment(comment) {
-        if (comment.startsWith('$' && comment.includes('='))) {
+        if (comment.startsWith('$') && comment.includes('=')) {
             // for helping with disabling peers
             debug("IniSection: Detected disabled property: " + comment);
             this.parseLine(comment.slice(1)).enabled = false;
         } else if (comment.startsWith('!') && comment.includes('=')) {
             let {key, value} = this.getKV(comment.slice(1));
-
             return this.addMetadata(key, value);
         } else {
             return this.addRaw(INI_KEY_COMMENT, null, comment);
