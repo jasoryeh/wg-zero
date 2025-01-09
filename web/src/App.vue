@@ -867,7 +867,6 @@ export default {
         `[Interface]`,
         `PrivateKey = ${privateKey}`,
         `Address = ${addresses.join(',')}`,
-        `DNS = 1.1.1.1,1.0.0.1`,
         '',
         `[Peer]`,
         `PublicKey = ${server.metadata.PublicKey}`,
@@ -887,7 +886,7 @@ export default {
         this.clientsPersist[client.entries.PublicKey[0]].PrivateKey, 
         client.entries.AllowedIPs, 
         this.server, 
-        client.entries.PresharedKey[0]);
+        client.entries.PresharedKey ? client.entries.PresharedKey[0] : null);
     },
     async showQR(client) {
       let config = this.clientConfig(client);
