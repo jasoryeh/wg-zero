@@ -316,7 +316,9 @@ class WireGuardInterface {
 
     enforceFields() {
         this.setInterface(WG_INTERFACE);
-        this.setHostAddress(WG_HOST);
+        if (!this.getHostAddress()) {
+            this.setHostAddress(WG_HOST);
+        }
         this.setPublicKey(generatePublicKey(this.getPrivateKey()));
     }
 
