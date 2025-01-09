@@ -175,7 +175,6 @@ export default {
             this.$emit('cancel');
         },
         genAddress() {
-            //console.log(this.$parent);
             this.clientAddress = window.wg_api.getNextIPs().join(',');
         },
     },
