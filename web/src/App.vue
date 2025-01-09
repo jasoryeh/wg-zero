@@ -23,7 +23,7 @@ import QRCode from 'qrcode';
     <!-- Alerts -->
     <div class="shadow-md rounded-lg mb-8 mt-8">
       <!-- Server card header -->
-      <div :class="['flex flex-row flex-auto items-center p-3 px-5 mb-1', 
+      <div :class="['flex flex-row flex-auto items-center p-3 px-5 mb-1 overflow-x-scroll text-wrap', 
                     (alert.color ? 'border-'+alert.color : 'border-red-500'), 
                     (alert.color ? 'bg-'+alert.color : 'bg-red-500'), 
                     (alert.textColor ? 'text-'+alert.textColor : 'text-white'),
@@ -287,7 +287,7 @@ import QRCode from 'qrcode';
               <!-- Icon -->
               <div class="flex-shrink h-10 w-10 mr-5 rounded-full bg-gray-50 relative">
                 <Icon icon="heroicons-solid:user" class="w-6 h-6 m-2 text-gray-300" />
-                <!--<img v-if="client.metadata.Name && client.metadata.Name.includes('@')" :src="`https://www.gravatar.com/avatar/${CryptoJS.MD5(client.metadata.Name)}?d=404`" class="w-10 rounded-full absolute top-0 left-0" />-->
+                <!--<img v-if="client.metadata.Name[0] && client.metadata.Name[0].includes('@')" :src="`https://www.gravatar.com/avatar/${CryptoJS.MD5(client.metadata.Name[0])}?d=404`" class="w-10 rounded-full absolute top-0 left-0" />-->
 
                 <div>
                   <div v-show="clientsPersist && clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].isNew">
@@ -315,7 +315,7 @@ import QRCode from 'qrcode';
               <div class="flex-grow">
 
                 <!-- Name -->
-                <div class="text-gray-700 group" :title="`Public Key: ${client.PublicKey}`">
+                <div class="text-gray-700 group" :title="`Public Key: ${client.entries.PublicKey[0]}`">
 
                   <!-- Show -->
                   <input v-show="clientEditNameId === client.Reference" v-model="clientEditName"
@@ -402,36 +402,38 @@ import QRCode from 'qrcode';
                 <div class="text-gray-400">
                   <!-- Enable/Disable -->
                   <div @click="disableClient(client)" v-if="client.metadata.enabled[0] == 'true'" title="Disable Client"
+                    :aclass="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
                     class="inline-block align-middle rounded-full w-10 h-6 mr-1 bg-red-800 cursor-pointer hover:bg-red-700 transition-all mx-1">
                     <div class="rounded-full w-4 h-4 m-1 ml-5 bg-white"></div>
                   </div>
                   <div @click="enableClient(client)" v-if="client.metadata.enabled[0] == 'false'" title="Enable Client"
+                    :aclass="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
                     class="inline-block align-middle rounded-full w-10 h-6 mr-1 bg-gray-200 cursor-pointer hover:bg-gray-300 transition-all mx-1">
                     <div class="rounded-full w-4 h-4 m-1 bg-white"></div>
                   </div>
 
                   <!-- Show QR -->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Show QR Code" @click="showQR(client)" v-show="clientsPersist[client.entries.PublicKey] && clientsPersist[client.entries.PublicKey].PrivateKey">
+                    title="Show QR Code" @click="showQR(client)" v-show="clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey">
                     <Icon icon="heroicons-outline:qrcode" class="w-5 h-5" />
                   </button>
 
                   <!-- View Config -->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Show Client Config" @click="showClientConfig(client)" v-show="clientsPersist[client.entries.PublicKey] && clientsPersist[client.entries.PublicKey].PrivateKey">
+                    title="Show Client Config" @click="showClientConfig(client)" v-show="clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey">
                     <Icon icon="heroicons-outline:code-bracket-square" class="w-5 h-5" />
                   </button>
 
                   <!-- Download Config -->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Download Configuration" @click="downloadConfig(client)" v-show="clientsPersist[client.entries.PublicKey] && clientsPersist[client.entries.PublicKey].PrivateKey">
+                    title="Download Configuration" @click="downloadConfig(client)" v-show="clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey">
                     <Icon icon="heroicons:arrow-down-tray" class="w-5 h-5" />
                   </button>
 
                   <!-- Info for no configuration -->
                   <button class="align-middle bg-gray-100 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
                     title="Configuration download/viewing is unavailable because the private key was not saved at creation."
-                    v-if="!(clientsPersist[client.entries.PublicKey] && clientsPersist[client.entries.PublicKey].PrivateKey)" 
+                    v-if="!(clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey)" 
                     @click="alert('Configuration download/viewing is unavailable because the private key was not saved at creation.', 15, 'heroicons:information-circle', 'blue-500')">
                     <Icon icon="heroicons:no-symbol" class="w-5 h-5" />
                   </button>
@@ -719,12 +721,12 @@ export default {
         // until replaced
         client._meta = client._meta ?? {}; // for ui metadata
         client.Reference = Buffer.from(cid).toString('hex');
-        client.name = client.metadata.Name || cid;
+        client.name = client.metadata.Name[0] || cid;
         client.addresses = client.entries.AllowedIPs;
         
         // if private key is saved
         if (client.metadata.PrivateKey) {
-          client.PrivateKey = client.metadata.PrivateKey;
+          client.PrivateKey = client.metadata.PrivateKey[0];
         }
       }
 
@@ -835,18 +837,18 @@ export default {
       try {
         await this.api.disable(client.Reference);
         client.metadata.enabled = ['false'];
-        this.alert("Disabled Peer '" + client.metadata.Name + "''", 5, null, "blue-400");
+        this.alert("Disabled Peer '" + client.metadata.Name[0] + "''", 5, null, "blue-400");
       } catch(err) {
-        this.alertError("An error occurred while disabling the client '" + client.PublicKey + "''", err);
+        this.alertError("An error occurred while disabling the client '" + client.entries.PublicKey[0] + "''", err);
       }
     },
     async enableClient(client) {
       try {
         await this.api.enable(client.Reference);
         client.metadata.enabled = ['true'];
-        this.alert("Enabled Peer '" + client.metadata.Name + "''", 5, null, "blue-400");
+        this.alert("Enabled Peer '" + client.metadata.Name[0] + "''", 5, null, "blue-400");
       } catch(err) {
-        this.alertError("An error occurred while enabling the client '" + client.PublicKey + "''", err);
+        this.alertError("An error occurred while enabling the client '" + client.entries.PublicKey[0] + "''", err);
       }
     },
     async initializeServer() {
@@ -878,14 +880,14 @@ export default {
       return config.join('\n');
     },
     clientConfig(client) {
-      if (!this.clientsPersist[client.entries.PublicKey]) {
+      if (!this.clientsPersist[client.entries.PublicKey[0]]) {
         throw Error("Client config can only be created when the client was created recently!");
       }
       return this.generateClientConfig(
-        this.clientsPersist[client.entries.PublicKey].PrivateKey, 
+        this.clientsPersist[client.entries.PublicKey[0]].PrivateKey, 
         client.entries.AllowedIPs, 
         this.server, 
-        client.entries.PresharedKey);
+        client.entries.PresharedKey[0]);
     },
     async showQR(client) {
       let config = this.clientConfig(client);
@@ -898,11 +900,11 @@ export default {
       let blob = new Blob([this.clientConfig(client)], { type: 'text/plain' });
       let dummy = document.createElement('a');
       dummy.href = URL.createObjectURL(blob);
-      dummy.download = `${client.metadata.Name || client.entries.PublicKey}.conf`;
+      dummy.download = `${client.metadata.Name[0] || client.entries.PublicKey[0]}.conf`;
       document.body.appendChild(dummy);
       dummy.click();
       document.body.removeChild(dummy);
-      this.alert(`Downloaded configuration for client '<b>${client.metadata.Name || client.entries.PublicKey}</b>'`, 15, null, 'purple-700');
+      this.alert(`Downloaded configuration for client '<b>${client.metadata.Name[0] || client.entries.PublicKey[0]}</b>'`, 15, null, 'purple-700');
     },
     getNextIPs() {
       let taken = [];
