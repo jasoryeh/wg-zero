@@ -505,10 +505,6 @@ export default {
       clientDelete: null,
       clientCreate: null,
       clientCreateName: '',
-      clientEditName: null,
-      clientEditNameId: null,
-      clientEditAddress: null,
-      clientEditAddressId: null,
       qrcode: null,
       viewClientConfig: null,
 
