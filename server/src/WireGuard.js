@@ -52,12 +52,9 @@ class WireGuard {
   os_hasWireGuard() {
     const WG_CHECK_EXPIRES_SEC = 1;
     if ((this.wg_check === null) || (this.wg_check !== null && (new Date() - this.wg_check_last) > (1000 * WG_CHECK_EXPIRES_SEC))) {
-      console.log('wg refresh');
       this.wg_check = commandExists.sync('wg');
       this.wg_check_last = new Date();
-      console.log('wg refresh: ', this.wg_check, this.wg_check_last);
     }
-    console.log('wg done');
     return this.wg_check;
   }
 
