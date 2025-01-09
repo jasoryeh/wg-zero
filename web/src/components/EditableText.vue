@@ -9,7 +9,7 @@ import { Icon } from '@iconify/vue';
         v-on:keyup.enter="submit(); editMode = false;"
         v-on:keyup.escape="editMode = false;"
         :ref="'field-' + fieldID + '-name'"
-        class="rounded px-1 border-2 border-gray-100 focus:border-gray-200 outline-none w-full" />
+        class="rounded px-1 border-2 dark:bg-neutral-700 border-gray-100 dark:border-neutral-900 focus:border-gray-200 outline-none w-full" />
         <span v-else
             class="inline-block border-t-0 border-b-2 border-transparent">{{fieldText}}</span>
 
