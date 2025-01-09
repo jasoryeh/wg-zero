@@ -64,11 +64,11 @@ class WireGuard {
     newInterface.setListenPort(WG_PORT);
     newInterface.setAddresses(...WG_ADDRESS_SPACE.split(','))
     newInterface.setPrivateKey(await generatePrivateKey());
-    if (WG_PRE_UP) newInterface.setPreUp(...WG_PRE_UP.split('\n').map((line) => line.trim()).filter((line) => line.length > 0));
-    if (WG_POST_UP) newInterface.setPostUp(...WG_POST_UP.split('\n').map((line) => line.trim()).filter((line) => line.length > 0));
-    if (WG_PRE_DOWN) newInterface.setPreDown(...WG_PRE_DOWN.split('\n').map((line) => line.trim()).filter((line) => line.length > 0));
-    if (WG_POST_DOWN) newInterface.setPostdown(...WG_POST_DOWN.split('\n').map((line) => line.trim()).filter((line) => line.length > 0));
-    this.export();
+    if (WG_PRE_UP) newInterface.setPreUp(...WG_PRE_UP.filter((l) => l.trim().length > 0));
+    if (WG_POST_UP) newInterface.setPostUp(...WG_POST_UP.filter((l) => l.trim().length > 0));
+    if (WG_PRE_DOWN) newInterface.setPreDown(...WG_PRE_DOWN.filter((l) => l.trim().length > 0));
+    if (WG_POST_DOWN) newInterface.setPostDown(...WG_POST_DOWN.filter((l) => l.trim().length > 0));
+    this.export(false);
   }
 
   async backup() {
@@ -100,7 +100,7 @@ class WireGuard {
     try {
       await this.down();
     } catch(ex) {
-      debug("A problem occurred while pulling the interface down: ");
+      debug("A problem occurred while pulling the interface down, not necessarily an error: ");
       debug(ex);
     }
     await this.up();
@@ -113,16 +113,18 @@ class WireGuard {
     debug("Import complete.");
   }
   
-  async export() {
+  async export(backup = true) {
     debug("Exporting...");
     var configLines = this.config.toLines();
 
-    console.error("Export results: ");
-    console.error(configLines.join("\n"));
+    debug("Export results: ");
+    debug(configLines.join("\n"));
 
     assertNotReadOnly("No exports allowed in read only mode!");
 
-    this.backup();
+    if (backup) {
+      this.backup();
+    } else { debug("Skipping backup!"); }
     this.config.save();
     debug("Export complete.");
   }
