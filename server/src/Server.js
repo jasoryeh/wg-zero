@@ -63,22 +63,28 @@ module.exports = class Server {
  }
 
  routes() {
+  // unauthorized routes
   this.app.get('/api/release', (req, res) => {
     res.status(200).send({
       release: RELEASE
     });
-  });
-  this.app.get('/api/meta', (req, res) => {
+  })
+  .get('/api/meta', (req, res) => {
     res.status(200).send({
       auth: !!PASSWORD,
       needsSetup: !this.wireguard.config || !this.wireguard.config.wgInterface,
     })
-  });
-  this.app.get('/api/auth', (req, res) => {
+  })
+  .get('/api/auth', (req, res) => {
     res.status(200).send({
       success: (!PASSWORD || PASSWORD == req.query.key)
     });
   })
+  .get('/api/status', (req, res) => {
+    res.status(200).send({
+      wg: this.wireguard.os_hasWireGuard(),
+    });
+  });
 
   // WireGuard
   this.app.use((req, res, next) => {

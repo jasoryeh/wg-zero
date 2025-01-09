@@ -9,6 +9,15 @@ debug('Starting...');
 (async function() {
   try {
     const wg = new WireGuard();
+    if (!wg.os_hasWireGuard()) {
+      debug(`Warning: This system does not appear to have WireGuard installed!`)
+      debug(`\tPlease ensure you properly installed WireGuard and that the 'wg' command exists!!`)
+
+      if (!process.env.WG_BYPASS_WIREGUARD_CHECK) {
+        throw new Error("'wg' is not found! If you believe this is an error, set the environment variable 'WG_BYPASS_WIREGUARD_CHECK'");
+      }
+    }
+
     if (!wg.config.configExists()) {
       debug(`Info: This looks like a new installation! A configuration will not be loaded.`);
     } else {

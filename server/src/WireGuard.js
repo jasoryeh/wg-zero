@@ -30,6 +30,7 @@ const {
   generatePreSharedKey
 } = require('./WireGuardUtils');
 const { WireGuardConfig, WireGuardInterface, IniSection, WireGuardPeer } = require('./WireGuardConfig');
+const commandExists = require('command-exists');
 
 const DUMP_COLUMNS = ['public', 'preshared', 'lastEndpoint', 'allowedIPs', 'lastHandshake', 'rx', 'tx', 'persistentKeepalive'];
 
@@ -41,8 +42,23 @@ function assertNotReadOnly(msg) {
 
 class WireGuard {
   constructor() {
+    this.wg_check = null;
+    this.wg_check_last = null;
+
     this.config = new WireGuardConfig(WG_INTERFACE + ".conf"); // use defaults
     debug('Read Only: ' + WG_READONLY);
+  }
+
+  os_hasWireGuard() {
+    const WG_CHECK_EXPIRES_SEC = 1;
+    if ((this.wg_check === null) || (this.wg_check !== null && (new Date() - this.wg_check_last) > (1000 * WG_CHECK_EXPIRES_SEC))) {
+      console.log('wg refresh');
+      this.wg_check = commandExists.sync('wg');
+      this.wg_check_last = new Date();
+      console.log('wg refresh: ', this.wg_check, this.wg_check_last);
+    }
+    console.log('wg done');
+    return this.wg_check;
   }
 
   async init() {
