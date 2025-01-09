@@ -50,10 +50,18 @@ import EditableText from './components/EditableText.vue'
     <div v-if="authenticated === true">
       <!-- Logout button -->
       <span v-if="meta && meta.auth"
-        class="text-sm text-gray-400 dark:text-white mb-10 mr-2 mt-3 cursor-pointer hover:underline float-right" @click="logout">
-        Logout
+        class="text-sm text-gray-400 dark:text-white mb-10 mr-2 mt-3 cursor-pointer float-right" @click="logout">
+        <span class="hover:underline">Logout</span>&nbsp;
         <Icon icon="heroicons:arrow-right-on-rectangle-20-solid" class="h-3 inline" />
       </span>
+      <!-- Theme -->
+      <span
+        class="text-sm text-gray-400 dark:text-white mb-10 mr-2 mt-3 cursor-pointer float-right" @click="toggleTheme()">
+        <span class="hover:underline">Theme</span>&nbsp;
+        <Icon v-if="getTheme() == 'light'" icon="heroicons:sun" class="inline" />
+        <Icon v-else icon="heroicons:moon" class="inline" />
+      </span>
+      
       <!-- Title and Icon -->
       <h1 class="text-4xl font-medium mt-10 mb-2 dark:text-white">
         <img src="/img/logo.png" width="32" class="inline align-middle" />
@@ -915,6 +923,12 @@ export default {
     async initAndLogin() {
       this.meta = await this.api.getMeta();
       await this.login();
+    },
+    getTheme() {
+      return window.getTheme();
+    },
+    toggleTheme() {
+      return window.toggleTheme();
     }
   },
   filters: {
