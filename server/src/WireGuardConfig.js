@@ -1,5 +1,7 @@
 const path = require('path');
 const fs = require('fs');
+const { WG_INTERFACE, WG_HOST } = require('../config');
+const { generatePublicKey } = require('./WireGuardUtils');
 const debug = require('debug')('wgeasy:Init');
 
 const INI_KEY_COMMENT = '_comment_';
@@ -70,7 +72,7 @@ class IniSection {
     }
 
     add(key, value) {
-        this.config.push(new IniEntry(INI_KEY_ENTRY, key, value));
+        this.config.push(new IniEntry(INI_KEY_ENTRY, key, String(value)));
     }
 
     set(key, ...value) {
@@ -91,7 +93,7 @@ class IniSection {
     }
 
     addMetadata(key, value) {
-        this.config.push(new IniEntry(INI_KEY_META, key, value));
+        this.config.push(new IniEntry(INI_KEY_META, key, String(value)));
     }
 
     setMetadata(key, ...value) {
@@ -143,7 +145,7 @@ class IniSection {
             for (let item of collection) {
                 let key = keyFN(item);
                 res[key] = res[key] ?? [];
-                res[key].push(item);
+                res[key].push(item.value);
             }
             return res;
         }
@@ -152,6 +154,22 @@ class IniSection {
             comments: this.config.filter((entry) => entry.isComment()),
             metadata: group(this.config.filter((entry) => entry.isMeta()), (entry) => entry.key),
         };
+    }
+
+    toOldJson() {
+        let res = {_meta: {}};
+        for (let entry of this.config) {
+            let key = (entry.isEntry() ? '' : (entry.isMeta() ? '!' : (entry.isComment() ? '#' : '?'))) + (entry.key ?? 'comment');
+            
+            res[key] = res[key] ?? [];
+            res[key].push(entry.value);
+
+            if (entry.isMeta()) {
+                res._meta[key] = res._meta[key] ?? [];
+                res._meta[key].push(entry.value);
+            }
+        }
+        return res;
     }
 
     /**
@@ -208,21 +226,27 @@ class WireGuardInterface {
     /**
      * @param {IniSection} iniSection 
      */
-    constructor(iniSection) {
+    constructor(iniSection, enforce = true) {
         this.iniSection = iniSection;
-        this.enforceFields();
+        enforce && this.enforceFields();
     }
 
     static create() {
-        return new WireGuardInterface(new IniSection(INTERFACE_SECTION));
+        return new WireGuardInterface(new IniSection(INTERFACE_SECTION), false);
     }
 
     toJson() {
         return this.iniSection.toJson();
     }
 
-    enforceFields() {
+    toOldJson() {
+        return this.iniSection.toOldJson();
+    }
 
+    enforceFields() {
+        this.setInterface(WG_INTERFACE);
+        this.setHostAddress(WG_HOST);
+        this.setPublicKey(generatePublicKey(this.getPrivateKey()));
     }
 
     /**
@@ -351,6 +375,20 @@ class WireGuardInterface {
     setHostAddress(host) {
         this.iniSection.setMetadata('Host', host);
     }
+
+    getInterface() {
+        return this.iniSection.hasMetadata('Interface') ? this.iniSection.getOneMetadata('Interface').value : null;
+    }
+    setInterface(val) {
+        this.iniSection.setMetadata('Interface', val);
+    }
+
+    getPublicKey() {
+        return this.iniSection.hasMetadata('PublicKey') ? this.iniSection.getOneMetadata('PublicKey').value : null;
+    }
+    setPublicKey(val) {
+        this.iniSection.setMetadata('PublicKey', val);
+    }
 }
 
 const PEER_ENDPOINT = 'Endpoint';
@@ -370,9 +408,9 @@ const PEER_SECTION = 'Peer';
  * 
  */
 class WireGuardPeer {
-    constructor(iniSection) {
+    constructor(iniSection, enforce = true) {
         this.iniSection = iniSection;
-        this.enforceFields();
+        enforce && this.enforceFields();
     }
 
     static create() {
@@ -383,17 +421,22 @@ class WireGuardPeer {
         return this.iniSection.toJson();
     }
 
+    toOldJson() {
+        return this.iniSection.toOldJson();
+    }
+
+
     enforceFields() {
         let pubKey = this.getPublicKey();
-        var name = this.getName();
-        if (name != null) {
+        let name = this.getName();
+        if (!this.iniSection.hasMetadata('Name')) {
             debug("Enforcing name property to public key on peer: " + pubKey);
             this.setName("Unnamed Peer: '" + pubKey + "'");
             name = this.getName();
             debug("\t name set to: '" + name + "'")
         }
         if (this.getEnabled() === null) {
-            debug("Enforcing enabled property on peer: " + name)
+            debug("Enforcing enabled property presence on peer: " + name)
             this.setEnabled(true);
         }
     }
@@ -628,8 +671,10 @@ class WireGuardConfig {
      */
     toLines() {
         let lines = [];
-        this.sections.forEach((section) => {
-            section.toLines().forEach((line) => lines.push(line));
+        this.wgInterface.iniSection.toLines().forEach((line) => lines.push(line));
+        lines.push('');
+        this.peers.forEach((peer) => {
+            peer.iniSection.toLines().forEach((line) => lines.push(line));
             lines.push('');
         });
         lines.push('');
@@ -664,6 +709,7 @@ class WireGuardConfig {
      * @returns {String} File path
      */
     backupFSCopy() {
+        this.enforceFields();
         let currentFileOnFilesystem = this.readFile();
         fs.mkdirSync(this.getBackupPath(), {
             recursive: true,
@@ -683,6 +729,11 @@ class WireGuardConfig {
     revert() {
         let lastContents = this.readLatestBackup();
         fs.writeFileSync(this.getPath(), latestBackupContents, 'utf8');
+    }
+
+    enforceFields() {
+        this.wgInterface.enforceFields();
+        this.peers.forEach((peer) => peer.enforceFields());
     }
 }
 
