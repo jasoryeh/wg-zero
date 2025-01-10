@@ -16,7 +16,7 @@ import { Icon } from '@iconify/vue';
         <!-- Edit -->
         <span v-show="!editMode"
         @click="textField = fieldText; editMode = true;"
-        class="cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
+        class="cursor-pointer group-hover:opacity-100 transition-opacity"
         :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null">
         <Icon icon="heroicons:pencil-square" class="h-4 w-4 ml-1 inline align-middle opacity-25 hover:opacity-100" />
         </span>
@@ -34,7 +34,6 @@ export default {
     },
     methods: {
         submit() {
-            console.log('emit submitted: ', this.textField, this.fieldID);
             this.$emit('submit', {
                 text: this.textField,
                 id: this.fieldID,
