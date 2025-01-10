@@ -101,7 +101,7 @@ These options can be configured by setting environment variables using `-e KEY="
 | `WG_PORT` | `51820` | `12345` | The UDP port the actual Wireguard VPN server will listen to. |
 | `PORT` | `51821` | `12345` | The port on which the Wireguard GUI will listen to. |
 | `WG_INTERFACE` | `wg0` | `wg0` | Manually specify the interface name for the Wireguard server. |
-| `WG_INTERNET_INTERFACE` | `wg0` | `wg0` | Manually specify the network interface that this application will attempt to configure for use with the Wireguard VPN server. |
+| `WG_INTERNET_INTERFACE` | `eth0` | `eth0` | Manually specify the network interface that this application will attempt to configure for use with the Wireguard VPN server. This may be needed if you use a different network mode that just forwarding the port, such as `host`. |
 | `WG_ADDRESS_SPACE` | `10.1.3.1/24` | `10.1.1.1/24` | Specify the address space that clients should use. |
 | `WG_PRE_UP` | `...` | - | See [config.js](https://github.com/jasoryeh/wg-zero/blob/master/server/config.js#L19) for the default value. |
 | `WG_POST_UP` | `...` | `iptables ...` | See [config.js](https://github.com/jasoryeh/wg-zero/blob/master/server/config.js#L20) for the default value. |
@@ -114,9 +114,8 @@ These options can be configured by setting environment variables using `-e KEY="
 | - | - | - | - |
 | `WG_MTU` | `null` | `1420` | The MTU the clients will use. Server uses default WG MTU. |
 | `WG_PERSISTENT_KEEPALIVE` | `0` | `25` | Value in seconds to keep the "connection" open. If this value is 0, then connections won't be kept alive. |
-| `WG_DEFAULT_ADDRESS` | `10.8.0.x` | `10.6.0.x` | Clients IP address range. |
-| `WG_DEFAULT_DNS` | `1.1.1.1` | `8.8.8.8, 8.8.4.4` | DNS server clients will use. |
-| `WG_ALLOWED_IPS` | `0.0.0.0/0, ::/0` | `192.168.15.0/24, 10.0.1.0/24` | Allowed IPs clients will use. |
+| `WG_DEFAULT_DNS` | `1.1.1.1` | `8.8.8.8, 8.8.4.4` | (WIP) DNS server clients will use. |
+| `WG_ALLOWED_IPS` | `0.0.0.0/0, ::/0` | `192.168.15.0/24, 10.0.1.0/24` | (WIP) Allowed IPs clients will use. |
 
 > If you change `WG_PORT`, make sure to also change the exposed port.
 
