@@ -117,6 +117,11 @@ module.exports = class Server {
   })
   .get('/api/wireguard/server', async (req, res) => {
     let intf = this.wireguard.config.getInterface().iniSection.toJson();
+
+    if (intf.entries && intf.entries.PrivateKey) {
+      delete intf.entries['PrivateKey'];
+    }
+
     // append data
     intf._stats = {};
     intf._stats.up = await this.wireguard.isUp();
