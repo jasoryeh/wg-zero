@@ -51,6 +51,29 @@ class API {
     return json;
   }
 
+  async callRaw({ method, path, body }) {
+    let to = attachPassword(`${getEndpoint()}/api${path}`, this.password);
+    const res = await fetch(to, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: body ?? undefined,
+    });
+
+    if (res.status === 204) {
+      return undefined;
+    }
+
+    const data = await res.text();
+
+    if (!res.ok) {
+      throw new Error(res.statusText);
+    }
+
+    return data;
+  }
+
   async getRelease() {
     return this.call({
       method: 'get',
@@ -218,6 +241,13 @@ class API {
     return await this.call({
       method: 'post',
       path: '/wireguard/generate/key/preshared',
+    });
+  }
+
+  async getServerBackup() {
+    return await this.callRaw({
+      method: 'get',
+      path: '/wireguard/server/backup',
     });
   }
 

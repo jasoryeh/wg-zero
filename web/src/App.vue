@@ -81,6 +81,11 @@ import EditableText from './components/EditableText.vue'
             <p class="text-sm text-gray-500 dark:text-gray-300"><span class="text-[8px] bg-amber-300 p-1 rounded font-light mr-1" v-if="readonly">READ ONLY</span>Server details and controls.</p>
           </div>
           <div class="flex-shrink-0" v-if="isServerConfigured()">
+            <button @click="backupServer()"
+              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 dark:text-gray-300 border-2 border-gray-100 dark:border-neutral-700 py-2 px-4 rounded inline-flex items-center transition">
+              <Icon icon="material-symbols:download" class="w-4 mr-2" />
+              <span class="text-sm">Backup</span>
+            </button>
             <button @click="serverUp()" v-if="!isServerUp()" 
               :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
               class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 dark:text-gray-300 border-2 border-gray-100 dark:border-neutral-700 py-2 px-4 rounded inline-flex items-center transition">
@@ -789,6 +794,17 @@ export default {
       } catch(err) {
         this.alertError("An error occurred while saving the server changes", err);
       }
+    },
+    async backupServer() {
+      let server = this.server;
+      let blob = new Blob([await this.api.getServerBackup()], { type: 'text/plain' });
+      let dummy = document.createElement('a');
+      dummy.href = URL.createObjectURL(blob);
+      dummy.download = `${server.metadata.Host[0] || server.metadata.Interface[0]}.conf`;
+      document.body.appendChild(dummy);
+      dummy.click();
+      document.body.removeChild(dummy);
+      this.alert(`Downloaded configuration for server '<b>${server.metadata.Host[0] || server.metadata.Interface[0]}</b>'`, 15, null, 'purple-700');
     },
     async serverUp() {
       try {
