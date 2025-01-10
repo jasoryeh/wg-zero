@@ -20,6 +20,9 @@ import EditableText from './components/EditableText.vue'
 import HeaderButton from './components/HeaderButton.vue'
 import EntryButton from './components/EntryButton.vue'
 import Toggle from './components/Toggle.vue'
+import EntryDetail from './components/EntryDetail.vue'
+import TopButton from './components/TopButton.vue'
+import Card from './components/Card.vue'
 </script>
 
 <template>
@@ -52,18 +55,9 @@ import Toggle from './components/Toggle.vue'
 
     <div v-if="authenticated === true">
       <!-- Logout button -->
-      <span v-if="meta && meta.auth"
-        class="text-sm text-gray-400 dark:text-white mb-10 mr-2 mt-3 cursor-pointer float-right" @click="logout">
-        <span class="hover:underline">Logout</span>&nbsp;
-        <Icon icon="heroicons:arrow-right-on-rectangle-20-solid" class="h-3 inline" />
-      </span>
+      <TopButton v-if="meta && meta.auth" text="Logout" icon="heroicons:arrow-right-on-rectangle-20-solid" @click="logout" />
       <!-- Theme -->
-      <span
-        class="text-sm text-gray-400 dark:text-white mb-10 mr-2 mt-3 cursor-pointer float-right" @click="toggleTheme()">
-        <span class="hover:underline">Theme</span>&nbsp;
-        <Icon v-if="getTheme() == 'light'" icon="heroicons:sun" class="inline" />
-        <Icon v-else icon="heroicons:moon" class="inline" />
-      </span>
+      <TopButton text="Theme" :icon="getTheme() == 'light' ? 'heroicons:sun' : 'heroicons:moon'" @click="toggleTheme" />
       
       <!-- Title and Icon -->
       <h1 class="text-4xl font-medium mt-10 mb-2 dark:text-white">
@@ -76,23 +70,21 @@ import Toggle from './components/Toggle.vue'
       <Update v-if="latestRelease" :currentRelease="currentRelease" :latestRelease="latestRelease.version" :changelog="latestRelease.changelog" />
 
       <!-- Server -->
-      <div class="shadow-md rounded-lg bg-white dark:bg-neutral-800 dark:text-white overflow-hidden mb-8">
-        <!-- Server card header -->
-        <div class="flex flex-row flex-auto items-center p-3 px-5 border border-b-2 border-gray-100 dark:border-neutral-700">
-          <div class="flex-grow">
-            <p class="text-2xl font-medium">Server</p>
-            <p class="text-sm text-gray-500 dark:text-gray-300"><span class="text-[8px] bg-amber-300 p-1 rounded font-light mr-1" v-if="readonly">READ ONLY</span>Server details and controls.</p>
-          </div>
-          <div class="flex-shrink-0" v-if="isServerConfigured()">
+      <Card>
+        <template v-slot:title>
+          Server
+        </template>
+        <template v-slot:description>
+          <span class="text-[8px] bg-amber-300 p-1 rounded font-light mr-1" v-if="readonly">READ ONLY</span>
+          <span>Server details and controls.</span>
+        </template>
+        <template v-slot:buttons>
             <HeaderButton buttonText="Backup" buttonIcon="material-symbols:download" @click="backupServer()" />
             <HeaderButton buttonText="Start" buttonIcon="heroicons:play" :disabled="readonly" @click="serverUp()" v-if="!isServerUp()" />
             <HeaderButton buttonText="Stop" buttonIcon="heroicons:stop" :disabled="readonly" @click="serverDown()" v-else />
             <HeaderButton buttonText="Reload" buttonIcon="material-symbols:refresh-rounded" @click="reloadServer()" />
-          </div>
-        </div>
-
-        <!-- Server info -->
-        <div>
+        </template>
+        <template v-slot:body>
           <!-- Server -->
           <div v-if="server"
             class="relative overflow-hidden border-b border-gray-100 dark:border-neutral-700 border-solid">
@@ -129,44 +121,35 @@ import Toggle from './components/Toggle.vue'
                 <div class="text-gray-400 dark:text-gray-300 text-xs">
                   
                   <!-- Host -->
-                  <span :title="`Host: ${server.metadata.Host}`" style="cursor: default;">
-                    <Icon icon="heroicons-solid:globe-alt" class="align-middle h-3 inline mr-2" />
-                    <EditableText :fieldID="'host'" :fieldText="server.metadata.Host[0]" :readonly="readonly" @cancel="" @submit="({_, text}) => updateHost(text)" />
-                  </span>
+                  <EntryDetail :type="'host'" :id="'server'" 
+                    icon="heroicons-solid:globe-alt" :text="server.metadata.Host[0]"
+                    :editable="true" :readonly="readonly" 
+                    :title="`Host: ${server.metadata.Host}`"
+                    @modify="(text) => updateHost(text)" />
 
                   <!-- Port -->
-                  <span :title="`Port: ${server.entries.ListenPort[0]}`" style="cursor: default;">
-                    ·
-                    <Icon icon="heroicons-solid:map-pin" class="align-middle h-3 inline" />
-                    {{server.entries.ListenPort[0]}}
-                  </span>
+                  <EntryDetail :type="'port'" :id="'server'"
+                    icon="heroicons-solid:map-pin" :text="server.entries.ListenPort[0]" 
+                    :title="`Port: ${server.entries.ListenPort[0]}`"/>
 
                   <br />
 
                   <!-- Address -->
-                  <span class="group">
-                    <span 
-                      class="inline-block border-t-2 border-b-2 border-transparent"
-                      v-for="address in server.entries.Address">
-                      <Icon icon="heroicons-solid:funnel" class="align-middle h-3 inline" />
-                      {{`${address}`}}&nbsp;
-                    </span>
-                  </span>
+                  <EntryDetail :type="'address'" :id="'server'"
+                    icon="heroicons-solid:funnel" :text="server.entries.Address.join(',')" 
+                    :title="`Address of Interface: ${server.entries.Address.join(',')}`" />
 
                   <!-- Interface -->
-                  <span :title="`Interface: ${server.metadata.Interface[0]}`" style="cursor: default;">
-                    ·
-                    <Icon icon="heroicons-solid:arrow-right-circle" class="align-middle h-3 inline" />
-                    {{server.metadata.Interface[0]}}
-                  </span>
+                  <EntryDetail :type="'interface'" :id="'server'"
+                    icon="heroicons-solid:arrow-right-circle" :text="server.metadata.Interface[0]" 
+                    :title="`Interface: ${server.metadata.Interface[0]}`" />
 
                   <br />
                   
                   <!-- Public Key -->
-                  <span :title="`Public Key: ${server.metadata.PublicKey[0]}`" style="cursor: default;">
-                    <Icon icon="heroicons-solid:key" class="align-middle h-3 inline" />
-                    {{server.metadata.PublicKey[0]}}
-                  </span>
+                  <EntryDetail :type="'publickey'" :id="'server'"
+                    icon="heroicons-solid:key" :text="server.metadata.PublicKey[0]" 
+                    :title="`Server Public Key: ${server.metadata.PublicKey[0]}`" />
                 </div>
               </div>
 
@@ -205,25 +188,22 @@ import Toggle from './components/Toggle.vue'
               </button>
             </p>
           </div>
-        </div>
-      </div>
+        </template>
+      </Card>
 
       <!-- Clients -->
-      <div v-if="isServerConfigured()" class="shadow-md rounded-lg bg-white dark:bg-neutral-800 dark:text-white overflow-hidden">
-        <!-- Clients card header -->
-        <div class="flex flex-row flex-auto items-center p-3 px-5 border border-b-2 border-gray-100 dark:border-neutral-700">
-          <div class="flex-grow">
-            <p class="text-2xl font-medium">Clients</p>
-            <p class="text-sm text-gray-500 dark:text-gray-300">Changes made here do not persist until saved.</p>
-          </div>
-          <div class="flex-shrink-0">
+      <Card v-if="isServerConfigured()">
+        <template v-slot:title>
+          Clients
+        </template>
+        <template v-slot:description>
+          Changes made here do not persist until saved.
+        </template>
+        <template v-slot:buttons>
             <HeaderButton buttonText="Save" buttonIcon="material-symbols:save" :disabled="readonly" @click="reloadServer()" />
             <HeaderButton buttonText="New" buttonIcon="material-symbols:add" :disabled="readonly" @click="clientCreate = true; clientCreateName = '';" />
-          </div>
-        </div>
-
-        <!-- Clients list -->
-        <div class="clients-list">
+        </template>
+        <template v-slot:body>
           <!-- Client if there are any -->
           <div v-if="clients && clients.length > 0" v-for="client in clients" :key="client.entries.PublicKey[0]"
             class="relative overflow-hidden border-b border-gray-100 dark:border-neutral-700 border-solid" :id="['client-' + btoa(client.entries.PublicKey[0])]">
@@ -312,34 +292,33 @@ import Toggle from './components/Toggle.vue'
                 <div class="text-gray-400 dark:text-gray-300 text-xs">
 
                   <!-- Address -->
-                  <span class="group">
-                    <Icon icon="heroicons-solid:funnel" class="align-middle h-3 inline mr-1" />
-                    <EditableText :fieldID="'address-' + client.Reference" :fieldText="client.entries.AllowedIPs.join(',')" :readonly="readonly" @cancel="" @submit="({_, text}) => updateClientAddress(client, text)" />
-                  </span>
+                  <EntryDetail :type="address" :id="client.Reference" 
+                    icon="heroicons-solid:funnel" :text="client.entries.AllowedIPs.join(',')"
+                    :editable="true" :readonly="readonly" 
+                    :title="`Client Addresses: ${client.entries.AllowedIPs.join(',')}`"
+                    @modify="(text) => updateClientAddress(client, text)" />
 
                   <!-- Transfer TX -->
-                  <span v-if="isServerUp() && client.stats.tx" :title="'Total Download: ' + bytes(client.stats.tx)"
+                  <EntryDetail :type="statstx" :id="client.Reference" 
+                    icon="heroicons-solid:arrow-down" :text="bytes(client.transferTxCurrent) + '/s'"
                     @mouseover="client.hoverTx = clientsPersist[client.entries.PublicKey[0]].hoverTx = true;"
-                    @mouseleave="client.hoverTx = clientsPersist[client.entries.PublicKey[0]].hoverTx = false;" style="cursor: default;">
-                    ·
-                    <Icon icon="heroicons-solid:arrow-down" class="align-middle h-3 inline" />
-                    {{bytes(client.transferTxCurrent)}}/s
-                  </span>
+                    @mouseleave="client.hoverTx = clientsPersist[client.entries.PublicKey[0]].hoverTx = false;"
+                    :title="`Transfer TX: ${client.stats.tx}`"
+                    v-if="isServerUp() && client.stats.tx"/>
 
                   <!-- Transfer RX -->
-                  <span v-if="isServerUp() && client.stats.rx" :title="'Total Upload: ' + bytes(client.stats.rx)"
+                  <EntryDetail :type="statsrx" :id="client.Reference" 
+                    icon="heroicons-solid:arrow-up" :text="bytes(client.transferRxCurrent) + '/s'"
                     @mouseover="client.hoverRx = clientsPersist[client.entries.PublicKey[0]].hoverRx = true;"
-                    @mouseleave="client.hoverRx = clientsPersist[client.entries.PublicKey[0]].hoverRx = false;" style="cursor: default;">
-                    ·
-                    <Icon icon="heroicons-solid:arrow-up" class="align-middle h-3 inline" />
-                    {{bytes(client.transferRxCurrent)}}/s
-                  </span>
+                    @mouseleave="client.hoverRx = clientsPersist[client.entries.PublicKey[0]].hoverRx = false;"
+                    :title="`Transfer RX: ${client.stats.rx}`"
+                    v-if="isServerUp() && client.stats.rx"/>
 
                   <!-- Last seen -->
-                  <span v-if="isServerUp() && client.stats.lastHandshake"
-                    :title="'Last seen on ' + dateTime(new Date(client.stats.lastHandshake))">
-                    · {{timeFormat(new Date(client.stats.lastHandshake))}}
-                  </span>
+                  <EntryDetail :type="seen" :id="client.Reference" 
+                    icon="heroicons-solid:clock" :text="timeFormat(new Date(client.stats.lastHandshake))"
+                    :title="'Last seen on ' + dateTime(new Date(client.stats.lastHandshake))"
+                    v-if="isServerUp() && client.stats.lastHandshake"/>
 
                   <br />
 
@@ -395,8 +374,8 @@ import Toggle from './components/Toggle.vue'
           <div v-if="clients === null" class="text-gray-200 p-5">
             <Loading class="" />
           </div>
-        </div>
-      </div>
+        </template>
+      </Card>
 
       <!-- QR Code-->
       <ClientConfigModal v-if="qrcode" :qrSVG="qrcode" @close="qrcode = null" />
