@@ -2,13 +2,13 @@
   "release": 7,
   "version": "1.0.0",
   "scripts": {
-    "build": "DOCKER_BUILDKIT=1 docker build --tag wg-easy .",
-    "serve": "DEBUG=Server,WireGuard nodemon server.js",
-    "serve-with-password": "PASSWORD=wg npm run serve",
+    "build": "DOCKER_BUILDKIT=1 docker build --tag wg-zero .",
+    "serve": "DEBUG=wgeasy:* nodemon server.js",
+    "serve-with-password": "PASSWORD=wg vite",
     "lint": "eslint ."
   },
   "main": "server.js",
-  "author": "Emile Nijssen",
+  "author": "WireGuard Zero",
   "license": "GPL",
   "dependencies": {
     "command-exists": "^1.2.9",

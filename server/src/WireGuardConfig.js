@@ -595,7 +595,7 @@ class WireGuardPeer {
  * Configuration file parser and handler
  */
 class WireGuardConfig {
-    constructor(fileName = 'wg0.conf', folder = '/etc/wireguard', backups = 'wg-easy-backups') {
+    constructor(fileName = 'wg0.conf', folder = '/etc/wireguard', backups = 'wg-zero-backups') {
         this.fileName = fileName;
         this.folder = folder;
         this.backupsFolder = backups;

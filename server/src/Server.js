@@ -60,7 +60,7 @@ module.exports = class Server {
     this.routes();
     this.app.listen
     this.app.listen(PORT, HOST, () => {
-      debug(`wg-easy is listening on port ${HOST}:${PORT}`);
+      debug(`wg-zero is listening on port ${HOST}:${PORT}`);
     });
  }
 

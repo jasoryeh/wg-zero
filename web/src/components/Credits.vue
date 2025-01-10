@@ -4,9 +4,9 @@
 <template>
   <div class="m-10">
     <p v-cloak class="text-center text-gray-300 text-xs">
-      wg-easy
+      wg-zero
       &nbsp;·&nbsp;
-      <a class="hover:underline" href="https://github.com/jasoryeh/wg-easy" target="_blank">Fork Source Code</a>
+      <a class="hover:underline" href="https://github.com/jasoryeh/wg-zero" target="_blank">Fork Source Code</a>
       &nbsp;·&nbsp;
       <a class="hover:underline" href="https://github.com/WeeJeWel/wg-easy" target="_blank">Original Source Code</a>
     </p>
@@ -16,7 +16,7 @@
     </p>
     <p v-cloak class="text-center text-gray-300 text-xs">
       Forked by
-      <a target="_blank" class="hover:underline" href="https://hogt.me/?ref=wg-easy">Jason Ho</a>
+      <a target="_blank" class="hover:underline" href="https://hogt.me/?ref=wg-zero">Jason Ho</a>
       &nbsp;·&nbsp;
       <a class="hover:underline" href="https://github.com/jasoryeh" target="_blank">Profile</a>
     </p>

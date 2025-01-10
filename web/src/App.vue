@@ -585,7 +585,7 @@ export default {
     },
     async checkForUpdates() {
       const currentRelease = (await this.api.getRelease()).release;
-      const latestRelease = await fetch('https://raw.githubusercontent.com/jasoryeh/wg-easy/ca4f65287f15bbabce0bf7052d0ceedf401c6795/docs/changelog.json')
+      const latestRelease = await fetch('https://raw.githubusercontent.com/jasoryeh/wg-zero/ca4f65287f15bbabce0bf7052d0ceedf401c6795/docs/changelog.json')
         .then(res => res.json())
         .then(releases => {
           const releasesArray = Object.entries(releases).map(([version, changelog]) => ({

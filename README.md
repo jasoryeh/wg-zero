@@ -1,8 +1,8 @@
-# WireGuard Easy
+# WireGuard Zero
 
-![GitHub Stars](https://img.shields.io/github/stars/jasoryeh/wg-easy)
+![GitHub Stars](https://img.shields.io/github/stars/jasoryeh/wg-zero)
 
-You have found the easiest way to install & manage WireGuard on any Linux host!
+A WireGuard UI with zero extra configuration. Fork of "the easiest way to install & manage WireGuard" project `wg-easy`!
 
 <p align="center">
   <img src="./assets/screenshot.png" />
@@ -10,17 +10,15 @@ You have found the easiest way to install & manage WireGuard on any Linux host!
 
 ## Features
 
-* All-in-one: WireGuard + Web UI.
+* Zero-extra configuration. Clone it, install it, run it.
+  * Easy migration from an unmanaged configuration.
+  * Alternatively, Docker All-in-one: WireGuard + Web UI.
 * Easy installation, simple to use.
 * List, create, edit, delete clients.
-* Show a client's QR code.
-* Download a client's configuration file.
-* Statistics for which clients are connected.
-* Tx/Rx charts for each connected client.
-* Client private keys can be kept secret.
-* Easy migration from an unmanaged configuration.
+* Connection statistics for connected clients.
+* Configurable private key retention.
 * Read-only mode.
-* Simple manual configuration when editing `wg0.conf`.
+* Simple manual configuration when editing `wg0.conf` directly.
 
 ## Requirements
 
@@ -29,7 +27,9 @@ You have found the easiest way to install & manage WireGuard on any Linux host!
 
 ## Installation
 
-### 1. Install Docker
+### The Docker Way
+
+#### 1. Install Docker
 
 If you haven't installed Docker yet, install it by running:
 
@@ -41,13 +41,13 @@ $ exit
 
 And log in again.
 
-### 2. Run WireGuard Easy
+#### 2. Run WireGuard Zero
 
-To automatically install & run wg-easy, simply run:
+To automatically install & run wg-zero, simply run:
 
 <pre>
 $ docker run \
-    --name=wg-easy \
+    --name=wg-zero \
     -p 51820:51820/udp \
     -e WG_PORT=51820 \
     -p 51821:51821/tcp \
@@ -61,7 +61,7 @@ $ docker run \
     --sysctl=net.ipv4.conf.all.src_valid_mark=1 \
     --sysctl net.ipv6.conf.all.disable_ipv6=0 \
     --restart unless-stopped \
-    jasoryeh/wg-easy
+    jasoryeh/wg-zero
 </pre>
 
 > 💡 If your want to manually specify the server's public IP Address, replace `$(curl checkip.amazonaws.com) with a public facing IP address, a public domain pointing to the server, or a Dynamic Domain pointed at this server.
@@ -69,6 +69,26 @@ $ docker run \
 > 💡  Replace `your_secure_password_here!!` with a different password!
 
 The Web UI will now be available on `http://0.0.0.0:51821`.
+
+### For Existing Servers
+
+#### 1. Clone It
+Clone this repo!
+```bash
+git clone https://github.com/jasoryeh/wg-zero.git && cd wg-zero
+```
+
+#### 2. Install It
+```bash
+npm install
+```
+
+#### 3. Run It
+```bash
+bash ./start.sh
+```
+
+That's it! See below or `server/config.js` for configurable options you can use to run WireGuard Zero.
 
 ## Options
 
@@ -83,10 +103,10 @@ These options can be configured by setting environment variables using `-e KEY="
 | `WG_INTERFACE` | `wg0` | `wg0` | Manually specify the interface name for the Wireguard server. |
 | `WG_INTERNET_INTERFACE` | `wg0` | `wg0` | Manually specify the network interface that this application will attempt to configure for use with the Wireguard VPN server. |
 | `WG_ADDRESS_SPACE` | `10.1.3.1/24` | `10.1.1.1/24` | Specify the address space that clients should use. |
-| `WG_PRE_UP` | `...` | - | See [config.js](https://github.com/WeeJeWel/wg-easy/blob/master/src/config.js#L19) for the default value. |
-| `WG_POST_UP` | `...` | `iptables ...` | See [config.js](https://github.com/WeeJeWel/wg-easy/blob/master/src/config.js#L20) for the default value. |
-| `WG_PRE_DOWN` | `...` | - | See [config.js](https://github.com/WeeJeWel/wg-easy/blob/master/src/config.js#L27) for the default value. |
-| `WG_POST_DOWN` | `...` | `iptables ...` | See [config.js](https://github.com/WeeJeWel/wg-easy/blob/master/src/config.js#L28) for the default value. |
+| `WG_PRE_UP` | `...` | - | See [config.js](https://github.com/jasoryeh/wg-zero/blob/master/server/config.js#L19) for the default value. |
+| `WG_POST_UP` | `...` | `iptables ...` | See [config.js](https://github.com/jasoryeh/wg-zero/blob/master/server/config.js#L20) for the default value. |
+| `WG_PRE_DOWN` | `...` | - | See [config.js](https://github.com/WeeJeWel/wg-zero/blob/master/server/config.js#L27) for the default value. |
+| `WG_POST_DOWN` | `...` | `iptables ...` | See [config.js](https://github.com/jasoryeh/wg-zero/blob/master/server/config.js#L28) for the default value. |
 
 ... to be reimplemented:
 
@@ -102,26 +122,30 @@ These options can be configured by setting environment variables using `-e KEY="
 
 ## Updating
 
-To update to the latest version, simply run:
-
+To update to the latest version on Docker, simply run:
 ```bash
-docker stop wg-easy
-docker rm wg-easy
-docker pull jasoryeh/wg-easy
+docker stop wg-zero
+docker rm wg-zero
+docker pull jasoryeh/wg-zero
 ```
-
 And then run the `docker run -d \ ...` command above again.
 
+To update to the latest version without Docker:
+```bash
+git pull 
+```
+Then run your `start.sh` script again!
+
+
 ## Contributor Brief
-This section is intended as a briefing for contributors looking to contribute to this repository at `jasoryeh/wg-easy`.
+This section is intended as a briefing for contributors looking to contribute to this repository at `jasoryeh/wg-zero`.
 
 ### Notes
-This application is intended to be run in a Docker container. This is a primarily Javascript application.
+This is a primarily Javascript application. The goal of this project is to provide the easiest UI to add to a WireGuard server.
 
 ### Structure
-This repository contains two components of wg-easy, the web component and the server component. 
-There are no additional configuration files, any additional information is also stored inside of the Wireguard 
-configuration file as a comment.
+This repository contains two components of wg-zero, the web component and the server component. 
+There are no additional configuration files, any additional information is also stored inside of the WireGuard configuration file as a comment.
 
 To summarize without extensively elaborating: 
 * the **server** component will actually (HTTP Requests -> wg-quick, wg, file IO, etc) interface with the Wireguard server; 
@@ -139,14 +163,14 @@ To start up this application on the host (not recommended), the following must o
 2. The `web`'s web components are built and a `dist` folder exists (npx vite build)
 3. The `server` now starts up (npx nodemon)
 
-### Note on Development
-This application is intended to be run normally from within a Docker container, using `init.sh`.
+### Development
+The recommended environment for developing for this repository is to develop with the server running in Docker, and `vite` watching on the `web` directory on the host.
 
-The recommended environment for developing for this repository is to develop with the application running in Docker.
-There are two scripts in the root directory intended to assist with development: `enter_dev.sh` and `dev.sh`.
-* `enter_dev.sh`: builds the container associated with the `Dockerfile` and immediately launches it. Typically you will run it with `bash` so you can be dropped into the shell, where you'll then use the below script to start the services from inside the container.
-* `dev.sh`: To avoid changes on the host system from this app, do not run this on the host unless you would like to manage a server on the host, and instead run this in the container. It is intended to be run when you would like to simultaneously launch both the GUI server and the Wireguard VPN server.
+#### Vite & WireGuard in Docker
+1. In one terminal instance: `./enter_dev.sh bash` then run `cd server && npm i && npx nodemon`
+2. In another instance: `cd web && npm i && npx vite`
 
+### Full Container 
 To spin up a container with both the GUI and Wireguard VPN server running, and
   additionally, have `nodemon` and `vite` running:
 ```
@@ -154,7 +178,7 @@ To spin up a container with both the GUI and Wireguard VPN server running, and
 ```
 
 ### Contributions
-Welcome! This fork of `wg-easy-test` aims to be much more flexible, feature-rich, configurable than the original repository whilst retaining it's "easy" title. All contributions are welcome!
+Welcome! This fork of `wg-easy` aims to be much more flexible, feature-rich, configurable than the original repository whilst retaining it's "easy" title. All contributions are welcome!
 
 ### Fork Goals:
 - Minimize external non-WireGuard configuration (maintain one configuration file as much as possible: `/etc/wireguard/wg0.conf`)
