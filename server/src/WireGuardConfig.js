@@ -315,6 +315,7 @@ class WireGuardInterface {
     }
 
     enforceFields() {
+        this.setListenPort(WG_PORT);
         this.setInterface(WG_INTERFACE);
         if (!this.getHostAddress()) {
             this.setHostAddress(WG_HOST);
