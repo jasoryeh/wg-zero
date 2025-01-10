@@ -9,6 +9,8 @@ module.exports.PASSWORD = process.env.PASSWORD;
 module.exports.WG_WEBUI = process.env.WG_WEBUI || true;
 
 module.exports.WG_READONLY = process.env.WG_READONLY == "true";
+// make backups only allowed when r/w is available
+module.exports.WG_ALLOW_BACKUP = process.env.WG_ALLOW_BACKUP ? process.env.WG_ALLOW_BACKUP == "true" : (!module.exports.WG_READONLY);
 
 module.exports.WG_INTERFACE = process.env.WG_INTERFACE || "wg0";
 module.exports.WG_INTERNET_INTERFACE = process.env.WG_INTERNET_INTERFACE || "eth0"; //todo: autodetect from container

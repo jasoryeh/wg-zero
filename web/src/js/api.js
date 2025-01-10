@@ -68,7 +68,7 @@ class API {
     const data = await res.text();
 
     if (!res.ok) {
-      throw new Error(res.statusText);
+      throw new Error(data || res.statusText);
     }
 
     return data;

@@ -796,15 +796,19 @@ export default {
       }
     },
     async backupServer() {
-      let server = this.server;
-      let blob = new Blob([await this.api.getServerBackup()], { type: 'text/plain' });
-      let dummy = document.createElement('a');
-      dummy.href = URL.createObjectURL(blob);
-      dummy.download = `${server.metadata.Host[0] || server.metadata.Interface[0]}.conf`;
-      document.body.appendChild(dummy);
-      dummy.click();
-      document.body.removeChild(dummy);
-      this.alert(`Downloaded configuration for server '<b>${server.metadata.Host[0] || server.metadata.Interface[0]}</b>'`, 15, null, 'purple-700');
+      try {
+        let server = this.server;
+        let blob = new Blob([await this.api.getServerBackup()], { type: 'text/plain' });
+        let dummy = document.createElement('a');
+        dummy.href = URL.createObjectURL(blob);
+        dummy.download = `${server.metadata.Host[0] || server.metadata.Interface[0]}.conf`;
+        document.body.appendChild(dummy);
+        dummy.click();
+        document.body.removeChild(dummy);
+        this.alert(`Downloaded configuration for server '<b>${server.metadata.Host[0] || server.metadata.Interface[0]}</b>'`, 15, null, 'purple-700');
+      } catch(err) {
+        this.alertError("Cannot download a WireGuard backup!", err);
+      }
     },
     async serverUp() {
       try {

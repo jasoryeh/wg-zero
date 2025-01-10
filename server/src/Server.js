@@ -16,6 +16,7 @@ const {
   PASSWORD,
   WG_WEBUI,
   WG_READONLY,
+  WG_ALLOW_BACKUP,
 } = require('../config');
 
 const {
@@ -324,7 +325,10 @@ module.exports = class Server {
       res.status(400).send({ error: true });
     }
   })
-  .all('/api/wireguard/server/backup', async (req, res) => {
+  .get('/api/wireguard/server/backup', async (req, res) => {
+    if (!WG_ALLOW_BACKUP) {
+      throw new Error("Backups are not allowed! Please set WG_ALLOW_BACKUP or disable read-only mode (backups are disabled by default when read-only is enabled).");
+    }
     res.header('Content-Disposition', 'inline');
     res.header('Content-Type', 'text/plain');
     res.status(200).send(this.wireguard.config.toLines().join('\n'));
