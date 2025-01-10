@@ -17,6 +17,9 @@ import { format as timeagoFormat } from 'timeago.js';
 import { Buffer } from 'buffer/';
 import QRCode from 'qrcode';
 import EditableText from './components/EditableText.vue'
+import HeaderButton from './components/HeaderButton.vue'
+import EntryButton from './components/EntryButton.vue'
+import Toggle from './components/Toggle.vue'
 </script>
 
 <template>
@@ -81,28 +84,10 @@ import EditableText from './components/EditableText.vue'
             <p class="text-sm text-gray-500 dark:text-gray-300"><span class="text-[8px] bg-amber-300 p-1 rounded font-light mr-1" v-if="readonly">READ ONLY</span>Server details and controls.</p>
           </div>
           <div class="flex-shrink-0" v-if="isServerConfigured()">
-            <button @click="backupServer()"
-              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 dark:text-gray-300 border-2 border-gray-100 dark:border-neutral-700 py-2 px-4 rounded inline-flex items-center transition">
-              <Icon icon="material-symbols:download" class="w-4 mr-2" />
-              <span class="text-sm">Backup</span>
-            </button>
-            <button @click="serverUp()" v-if="!isServerUp()" 
-              :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
-              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 dark:text-gray-300 border-2 border-gray-100 dark:border-neutral-700 py-2 px-4 rounded inline-flex items-center transition">
-              <Icon icon="heroicons:play" class="w-4 mr-2" />
-              <span class="text-sm">Start</span>
-            </button>
-            <button @click="serverDown()" v-else
-              :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
-              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 dark:text-gray-300 border-2 border-gray-100 dark:border-neutral-700 py-2 px-4 rounded inline-flex items-center transition">
-              <Icon icon="heroicons:stop" class="w-4 mr-2" />
-              <span class="text-sm">Stop</span>
-            </button>
-            <button @click="reloadServer()"
-              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 dark:text-gray-300 border-2 border-gray-100 dark:border-neutral-700 py-2 px-4 rounded inline-flex items-center transition">
-              <Icon icon="material-symbols:refresh-rounded" class="w-4 mr-2" />
-              <span class="text-sm">Reload</span>
-            </button>
+            <HeaderButton buttonText="Backup" buttonIcon="material-symbols:download" @click="backupServer()" />
+            <HeaderButton buttonText="Start" buttonIcon="heroicons:play" :disabled="readonly" @click="serverUp()" v-if="!isServerUp()" />
+            <HeaderButton buttonText="Stop" buttonIcon="heroicons:stop" :disabled="readonly" @click="serverDown()" v-else />
+            <HeaderButton buttonText="Reload" buttonIcon="material-symbols:refresh-rounded" @click="reloadServer()" />
           </div>
         </div>
 
@@ -232,18 +217,8 @@ import EditableText from './components/EditableText.vue'
             <p class="text-sm text-gray-500 dark:text-gray-300">Changes made here do not persist until saved.</p>
           </div>
           <div class="flex-shrink-0">
-            <button @click="commitServer()"
-              :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
-              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 dark:text-gray-300 border-2 border-gray-100 dark:border-neutral-700 py-2 px-4 rounded inline-flex items-center transition">
-              <Icon icon="material-symbols:save" class="w-4 mr-2" />
-              <span class="text-sm">Save</span>
-            </button>
-            <button @click="clientCreate = true; clientCreateName = '';"
-              :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
-              class="hover:bg-red-800 hover:border-red-800 hover:text-white text-gray-700 dark:text-gray-300 border-2 border-gray-100 dark:border-neutral-700 py-2 px-4 rounded inline-flex items-center transition">
-              <Icon icon="material-symbols:add" class="w-4 mr-2" />
-              <span class="text-sm">New</span>
-            </button>
+            <HeaderButton buttonText="Save" buttonIcon="material-symbols:save" :disabled="readonly" @click="reloadServer()" />
+            <HeaderButton buttonText="New" buttonIcon="material-symbols:add" :disabled="readonly" @click="clientCreate = true; clientCreateName = '';" />
           </div>
         </div>
 
@@ -380,52 +355,24 @@ import EditableText from './components/EditableText.vue'
               <div class="flex-grow text-right min-w-fit">
                 <div class="text-gray-400">
                   <!-- Enable/Disable -->
-                  <div @click="disableClient(client)" v-if="client.metadata.enabled[0] == 'true'" title="Disable Client"
-                    :aclass="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
-                    class="inline-block align-middle rounded-full w-10 h-6 mr-1 bg-red-800 cursor-pointer hover:bg-red-700 transition-all mx-1">
-                    <div class="rounded-full w-4 h-4 m-1 ml-5 bg-white dark:bg-neutral-300"></div>
-                  </div>
-                  <div @click="enableClient(client)" v-if="client.metadata.enabled[0] == 'false'" title="Enable Client"
-                    :aclass="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
-                    class="inline-block align-middle rounded-full w-10 h-6 mr-1 bg-gray-200 dark:bg-gray-400 cursor-pointer hover:bg-gray-300 transition-all mx-1">
-                    <div class="rounded-full w-4 h-4 m-1 bg-white"></div>
-                  </div>
+                  <Toggle :switchStatus="client.metadata.enabled[0] == 'true'" switchName="Client" disabled="readonly" @toggle_off="disableClient(client)" @toggle_on="enableClient(client)" />
 
                   <!-- Delete -->
-                  <button 
-                    :class="readonly ? 'cursor-not-allowed pointer-events-none opacity-25' : null"
-                    class="align-middle bg-gray-100 dark:bg-neutral-600 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Delete Client" @click="clientDelete = client">
-                    <Icon icon="heroicons:trash" class="w-5 h-5" />
-                  </button>
-
+                  <EntryButton buttonText="Delete Client" buttonIcon="heroicons:trash" :disabled="readonly" @click="clientDelete = client" />
+                  
                   <div class="mb-1"></div>
-
+                  
                   <!-- Show QR -->
-                  <button class="align-middle bg-gray-100 dark:bg-neutral-600 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Show QR Code" @click="showQR(client)" v-show="clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey">
-                    <Icon icon="heroicons-outline:qrcode" class="w-5 h-5" />
-                  </button>
-
+                  <EntryButton buttonText="Show QR Code" buttonIcon="heroicons-outline:qrcode" :disabled="false" @click="showQR(client)" v-show="clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey" />
+                  
                   <!-- View Config -->
-                  <button class="align-middle bg-gray-100 dark:bg-neutral-600 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Show Client Config" @click="showClientConfig(client)" v-show="clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey">
-                    <Icon icon="heroicons-outline:code-bracket-square" class="w-5 h-5" />
-                  </button>
-
+                  <EntryButton buttonText="Show Client Configuration" buttonIcon="heroicons-outline:code-bracket-square" :disabled="false" @click="showClientConfig(client)" v-show="clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey" />
+                  
                   <!-- Download Config -->
-                  <button class="align-middle bg-gray-100 dark:bg-neutral-600 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Download Configuration" @click="downloadConfig(client)" v-show="clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey">
-                    <Icon icon="heroicons:arrow-down-tray" class="w-5 h-5" />
-                  </button>
-
+                  <EntryButton buttonText="Download Client Configuration" buttonIcon="heroicons:arrow-down-tray" :disabled="false" @click="downloadConfig(client)" v-show="clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey" />
+                  
                   <!-- Info for no configuration -->
-                  <button class="align-middle bg-gray-100 dark:bg-neutral-600 hover:bg-red-800 hover:text-white p-2 rounded transition mx-1"
-                    title="Configuration download/viewing is unavailable because the private key was not saved at creation."
-                    v-if="!(clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey)" 
-                    @click="alert('Configuration download/viewing is unavailable because the private key was not saved at creation.', 15, 'heroicons:information-circle', 'blue-500')">
-                    <Icon icon="heroicons:no-symbol" class="w-5 h-5" />
-                  </button>
+                  <EntryButton buttonText="Configuration download/viewing is unavailable because the private key was not saved at creation." buttonIcon="heroicons:no-symbol" :disabled="false" @click="alert('Configuration download/viewing is unavailable because the private key was not saved at creation.', 15, 'heroicons:information-circle', 'blue-500')" v-show="!(clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey)" />
                 </div>
               </div>
 
