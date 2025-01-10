@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const { WG_INTERFACE, WG_HOST } = require('../config');
+const { WG_INTERFACE, WG_HOST, WG_PORT } = require('../config');
 const { generatePublicKey } = require('./WireGuardUtils');
 const debug = require('debug')('wgeasy:Init');
 
