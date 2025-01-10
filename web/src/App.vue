@@ -140,8 +140,8 @@ import EditableText from './components/EditableText.vue'
                   
                   <!-- Host -->
                   <span :title="`Host: ${server.metadata.Host}`" style="cursor: default;">
-                    <Icon icon="heroicons-solid:globe-alt" class="align-middle h-3 inline" />
-                    {{server.metadata.Host.join(", ")}}
+                    <Icon icon="heroicons-solid:globe-alt" class="align-middle h-3 inline mr-2" />
+                    <EditableText :fieldID="'host'" :fieldText="server.metadata.Host[0]" :readonly="readonly" @cancel="" @submit="({_, text}) => updateHost(text)" />
                   </span>
 
                   <!-- Port -->
@@ -750,6 +750,15 @@ export default {
         this.alert(`Client '${name}'' at <b>${addresses}</b> was created, but <b>not</b> committed. <br />Click 'Save' to commit this client to the server.`, 15, null, 'orange-700');
       } catch(err) {
         this.alertError("An error occurred while creating the new client", err);
+      }
+    },
+    async updateHost(text) {
+      console.log('updatehost', text);
+      try {
+        await this.api.setHost(text);
+        this.alert('The server host was updated to \'' + text + '\'!', 5, null, 'green-600');
+      } catch(err) {
+        this.alertError("An error occurred while updating the server host", err);
       }
     },
     async updateClientAddress() {

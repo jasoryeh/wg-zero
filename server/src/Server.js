@@ -24,6 +24,7 @@ const {
   generatePreSharedKey
 } = require('./WireGuardUtils');
 const { IniSection } = require('./WireGuardConfig');
+const { assertNotReadOnly } = require('./WireGuard');
 
 module.exports = class Server {
   constructor(WireGuard) {
@@ -327,6 +328,14 @@ module.exports = class Server {
     res.header('Content-Disposition', 'inline');
     res.header('Content-Type', 'text/plain');
     res.status(200).send(this.wireguard.config.toLines().join('\n'));
+  })
+  .put('/api/wireguard/server/host', async (req, res) => {
+    const { host } = req.body;
+    assertNotReadOnly("Cannot update host when read-only");
+    this.wireguard.setServerHost(host);
+    res.status(200).send({
+      host: this.wireguard.getServerHost(),
+    });
   });
 
   // errors

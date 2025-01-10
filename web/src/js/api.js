@@ -173,6 +173,16 @@ class API {
     });
   }
 
+  async setHost(host) {
+    return this.call({
+      method: 'put',
+      path: '/wireguard/server/host',
+      body: {
+        host: host,
+      },
+    });
+  }
+
   async updateName(clientRef, name) {
     return this.call({
       method: 'put',
