@@ -315,7 +315,11 @@ class WireGuardInterface {
     }
 
     enforceFields() {
-        this.setListenPort(WG_PORT);
+        var existingPort = this.getListenPort();
+        if (WG_PORT != existingPort) {
+            debug(`Enforcing WireGuard port from ${existingPort} -> ${WG_PORT}`)
+            this.setListenPort(WG_PORT);
+        }
         this.setInterface(WG_INTERFACE);
         if (!this.getHostAddress()) {
             this.setHostAddress(WG_HOST);
