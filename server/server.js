@@ -1,5 +1,8 @@
 'use strict';
 
+// always enable logging (todo: replace this)
+process.env.DEBUG = process.env.DEBUG ?? "wgeasy:*";
+
 const Server = require('./src/Server');
 const WireGuard = require('./src/WireGuard');
 const debug = require('debug')('wgeasy:Init');

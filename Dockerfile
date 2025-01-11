@@ -25,9 +25,6 @@ RUN apk add -U --no-cache \
 EXPOSE 51820/udp
 EXPOSE 51821/tcp
 
-# Set Environment
-ENV DEBUG=wgeasy:*
-
 # Run Web UI
 WORKDIR /app
 CMD ["/usr/bin/dumb-init", "bash", "/init.sh"]
