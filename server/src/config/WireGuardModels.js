@@ -342,10 +342,11 @@ class WireGuardPeer {
         this.enforceEnabled();
     }
     enforceEnabled() {
+        let newEnabled = this.getEnabled();
         this.iniSection.get(PEER_ALLOWEDIPS).map((entry) => {
-            debug("Updating AllowedIPs in setEnabled to: " + enabled, entry);
+            debug("Updating AllowedIPs in setEnabled to: " + newEnabled, entry);
             let old = entry.enabled;
-            entry.enabled = this.getEnabled();
+            entry.enabled = newEnabled;
             return old == entry.enabled;
         });
     }
