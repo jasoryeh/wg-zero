@@ -24,10 +24,12 @@ debug('Starting...');
       debug("Loading existing...")
       wg.import();
     }
+
+    // start server
     const sv = new Server(wg);
     // server is up
   } catch(error) {
-    debug(`Error: Failure to import! The error follows:`);
+    debug(`Error: Failed to start WireGuard Zero!:`);
     debug(`    Error message:` + error.message);
     debug(error);
   }
