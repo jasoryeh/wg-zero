@@ -90,6 +90,11 @@ npm install
 bash ./start.sh
 ```
 
+To configure additional options below, prefix the command above with your option in `KEY1=VALUE1 KEY2=VALUE2` form, e.g.
+```
+WG_READONLY=true WG_PASSWORD=password123 WG_HOST=wireguard.yourdomain.example.com bash ./start.sh
+```
+
 ### More Information
 That's it! See below or `server/config.js` for configurable options you can use to run WireGuard Zero.
 
