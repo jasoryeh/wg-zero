@@ -1,6 +1,5 @@
 const debug = require('debug')('wgeasy:Migrations');
 const { WG_MIGRATION_SAVE } = require('../../config');
-const { WireGuardConfig } = require('../WireGuardConfig');
 const { WireGuardInterface, WireGuardPeer } = require('./WireGuardModels');
 const fs = require('fs');
 const path = require('path');
@@ -39,7 +38,6 @@ class WireGuardZeroConfigMigrations {
     }
     
     /**
-     * 
      * @param {WireGuardConfig} WireGuardConfig 
      */
     static async execute(WireGuardConfig) {
