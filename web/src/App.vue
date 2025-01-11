@@ -200,7 +200,7 @@ import Card from './components/Card.vue'
           Changes made here do not persist until saved.
         </template>
         <template v-slot:buttons>
-            <HeaderButton buttonText="Save" buttonIcon="material-symbols:save" :disabled="readonly" @click="reloadServer()" />
+            <HeaderButton buttonText="Save" buttonIcon="material-symbols:save" :disabled="readonly" @click="commitServer()" />
             <HeaderButton buttonText="New" buttonIcon="material-symbols:add" :disabled="readonly" @click="clientCreate = true; clientCreateName = '';" />
         </template>
         <template v-slot:body>
@@ -334,7 +334,7 @@ import Card from './components/Card.vue'
               <div class="flex-grow text-right min-w-fit">
                 <div class="text-gray-400">
                   <!-- Enable/Disable -->
-                  <Toggle :switchStatus="client.metadata.enabled[0] == 'true'" switchName="Client" disabled="readonly" @toggle_off="disableClient(client)" @toggle_on="enableClient(client)" />
+                  <Toggle :switchStatus="client.metadata.Enabled[0] == 'true'" switchName="Client" disabled="readonly" @toggle_off="disableClient(client)" @toggle_on="enableClient(client)" />
 
                   <!-- Delete -->
                   <EntryButton buttonText="Delete Client" buttonIcon="heroicons:trash" :disabled="readonly" @click="clientDelete = client" />
@@ -568,8 +568,8 @@ export default {
         var cpersist = this.clientsPersist[cid];
         
         // in case of saved private keys, repopulate the private key
-        if (client.metadata.privateKey) {
-          cpersist.PrivateKey = client.metadata.privateKey[0];
+        if (client.metadata.PrivateKey) {
+          cpersist.PrivateKey = client.metadata.PrivateKey[0];
         }
 
         if (this.isServerUp()) {
@@ -699,6 +699,7 @@ export default {
       try {
         console.log(client);
         console.log(JSON.stringify(client, null, 4));
+        client.metadata.Name = [name];
         await this.api.updateName(client.Reference, name);
         this.alert('The client name was updated to \'' + name + '\'!', 5, null, 'green-600');
       } catch(err) {
@@ -763,7 +764,7 @@ export default {
     async disableClient(client) {
       try {
         await this.api.disable(client.Reference);
-        client.metadata.enabled = ['false'];
+        client.metadata.Enabled = ['false'];
         this.alert("Disabled Peer '" + client.metadata.Name[0] + "''", 5, null, "blue-400");
       } catch(err) {
         this.alertError("An error occurred while disabling the client '" + client.entries.PublicKey[0] + "''", err);
@@ -772,7 +773,7 @@ export default {
     async enableClient(client) {
       try {
         await this.api.enable(client.Reference);
-        client.metadata.enabled = ['true'];
+        client.metadata.Enabled = ['true'];
         this.alert("Enabled Peer '" + client.metadata.Name[0] + "''", 5, null, "blue-400");
       } catch(err) {
         this.alertError("An error occurred while enabling the client '" + client.entries.PublicKey[0] + "''", err);

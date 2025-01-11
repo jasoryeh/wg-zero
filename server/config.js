@@ -9,8 +9,16 @@ module.exports.PASSWORD = process.env.PASSWORD;
 module.exports.WG_WEBUI = process.env.WG_WEBUI || true;
 
 module.exports.WG_READONLY = process.env.WG_READONLY == "true";
-// make backups only allowed when r/w is available
+// web: make backup downloads only allowed when r/w is available
 module.exports.WG_ALLOW_BACKUP = process.env.WG_ALLOW_BACKUP ? process.env.WG_ALLOW_BACKUP == "true" : (!module.exports.WG_READONLY);
+
+// backup settings
+module.exports.WG_BACKUP_TRIM = process.env.WG_BACKUP_TRIM ? process.env.WG_BACKUP_TRIM == "true" : true;
+module.exports.WG_BACKUP_TRIM_KEEP = process.env.WG_BACKUP_TRIM ? parseInt(process.env.WG_BACKUP_TRIM) : 15;
+
+// migration settings
+// Save configuration after migrations? Default: false
+module.exports.WG_MIGRATION_SAVE = process.env.WG_MIGRATION_SAVE ? process.env.WG_MIGRATION_SAVE == "true" : false;
 
 module.exports.WG_INTERFACE = process.env.WG_INTERFACE || "wg0";
 module.exports.WG_INTERNET_INTERFACE = process.env.WG_INTERNET_INTERFACE || "eth0"; //todo: autodetect from container

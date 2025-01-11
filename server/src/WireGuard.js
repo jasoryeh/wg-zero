@@ -116,6 +116,7 @@ class WireGuard {
   import() {
     debug("Importing...");
     this.config.loadExisting();
+    this.config.migrate();
     debug("Import complete.");
   }
   
