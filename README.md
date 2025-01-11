@@ -26,6 +26,8 @@ A WireGuard UI with zero extra configuration. Fork of "the easiest way to instal
 * A host with Docker installed.
 
 ## Installation
+There are two ways to run WireGuard zero, for new installations we recommend [`The Docker Way`](#the-docker-way) to keep your system simple, 
+for existing installations, we recommend the [`The Host Way`](#the-host-way)
 
 ### The Docker Way
 
@@ -70,7 +72,7 @@ $ docker run \
 
 The Web UI will now be available on `http://0.0.0.0:51821`.
 
-### For Existing Servers
+### The Host Way
 
 #### 1. Clone It
 Clone this repo!
@@ -88,6 +90,7 @@ npm install
 bash ./start.sh
 ```
 
+### More Information
 That's it! See below or `server/config.js` for configurable options you can use to run WireGuard Zero.
 
 ## Options
@@ -140,27 +143,21 @@ Then run your `start.sh` script again!
 This section is intended as a briefing for contributors looking to contribute to this repository at `jasoryeh/wg-zero`.
 
 ### Notes
-This is a primarily Javascript application. The goal of this project is to provide the easiest UI to add to a WireGuard server.
+This is a primarily Javascript application. The goal of this project is to provide the easiest UI to add to a WireGuard server and minimize configuration.
 
 ### Structure
-This repository contains two components of wg-zero, the web component and the server component. 
+This repository contains two components of wg-zero, a web component and a server component. 
 There are no additional configuration files, any additional information is also stored inside of the WireGuard configuration file as a comment.
 
 To summarize without extensively elaborating: 
 * the **server** component will actually (HTTP Requests -> wg-quick, wg, file IO, etc) interface with the Wireguard server; 
   * a `expressjs` node javascript application at its core
-* the **web** component is purely the user interface and will attempt to perform as many operations as securely (and developmentally) feasible on the client side (essentially acting as the user entering wg commands).
+* the **web** component is purely the user interface and will attempt to perform as many operations as securely (and developmentally) feasible on the client side (essentially acting as the user entering wg commands when possible (WIP)).
   * a `vite` javascript web application at its core
 * the **configuration** is solely read from `wg0.conf`
   * additional information is stored in a similar format to `Key = Value`s inside of the `.conf` file, but is prefixed with a `#!`
   * e.g. The name of peers are stored inside the `.conf` as `#!Name = Profile Name` under each peer
-  * configuration stored with `#!` is found in `_meta` (metadata)
-
-### Running
-To start up this application on the host (not recommended), the following must occur (in order):
-1. Both the `web` and `server` components are initialized (npm install)
-2. The `web`'s web components are built and a `dist` folder exists (npx vite build)
-3. The `server` now starts up (npx nodemon)
+  * disabled properties are prefixed with a `#$` but still read but marked not enabled
 
 ### Development
 The recommended environment for developing for this repository is to develop with the server running in Docker, and `vite` watching on the `web` directory on the host.
@@ -181,4 +178,3 @@ Welcome! This fork of `wg-easy` aims to be much more flexible, feature-rich, con
 
 ### Fork Goals:
 - Minimize external non-WireGuard configuration (maintain one configuration file as much as possible: `/etc/wireguard/wg0.conf`)
-
