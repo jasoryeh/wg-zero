@@ -155,15 +155,16 @@ This is a primarily Javascript application. The goal of this project is to provi
 This repository contains two components of wg-zero, a web component and a server component. 
 There are no additional configuration files, any additional information is also stored inside of the WireGuard configuration file as a comment.
 
-To summarize without extensively elaborating: 
-* the **server** component will actually (HTTP Requests -> wg-quick, wg, file IO, etc) interface with the Wireguard server; 
-  * a `expressjs` node javascript application at its core
-* the **web** component is purely the user interface and will attempt to perform as many operations as securely (and developmentally) feasible on the client side (essentially acting as the user entering wg commands when possible (WIP)).
-  * a `vite` javascript web application at its core
-* the **configuration** is solely read from `wg0.conf`
-  * additional information is stored in a similar format to `Key = Value`s inside of the `.conf` file, but is prefixed with a `#!`
-  * e.g. The name of peers are stored inside the `.conf` as `#!Name = Profile Name` under each peer
-  * disabled properties are prefixed with a `#$` but still read but marked not enabled
+To summarize briefly:
+* The **server* component interacts with the WireGuard server and configuration
+  * Exposes an `expressjs` application
+  * Handles parsing of configuration and actions performed on the server
+* The **web** component is the user interface only, and outside servers can be used via `?endpoint=https://wg.example.com`
+  * A `vite` web application at its core
+* The **configuration** is solely read from `wg0.conf`
+  * Additional information is stored prefixed with a `#!` in the format `Key = Value` format inside of the `.conf` file.
+    * e.g. The name of peers are stored inside the `.conf` as `#!Name = Profile Name` under each peer
+  * Disabled properties are prefixed with a `#$` but still read but marked not enabled
 
 ### Development
 The recommended environment for developing for this repository is to develop with the server running in Docker, and `vite` watching on the `web` directory on the host.
