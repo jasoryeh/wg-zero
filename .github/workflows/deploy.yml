@@ -29,7 +29,7 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
           
     # Set environment variables
-    - run: echo RELEASE=$(cat ./src/package.json | jq -r .release) >> $GITHUB_ENV
+    - run: echo RELEASE=$(cat ./server/package.json | jq -r .release) >> $GITHUB_ENV
     
     # Build & Publish
     - name: Build & Publish Docker Image

@@ -1,5 +1,5 @@
 {
-  "release": 7,
+  "release": 1,
   "version": "1.0.0",
   "scripts": {
     "build": "DOCKER_BUILDKIT=1 docker build --tag wg-zero .",
