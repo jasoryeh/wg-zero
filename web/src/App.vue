@@ -268,7 +268,7 @@ import ServerCommandViewer from './components/ServerCommandViewer.vue'
                     <!-- New (in server session) -->
                     <div class="text-[6px] translate-x-1 text-white px-1 rounded-full bg-yellow-300 absolute top-0 right-0">NEW</div>
                   </div>
-                  <div v-if="isServerUp() && client.stats.lastHandshake && ((new Date() - new Date(client.stats.lastHandshake) < 1000 * 60 * 10))">
+                  <div v-if="isServerUp() && client.stats && client.stats.lastHandshake && ((new Date() - new Date(client.stats.lastHandshake) < 1000 * 60 * 10))">
                     <!-- Ping radar animation -->
                     <div class="animate-ping w-4 h-4 p-1 bg-green-100 rounded-full absolute -bottom-1 -right-1"></div>
                     <!-- Active dot -->
@@ -305,7 +305,7 @@ import ServerCommandViewer from './components/ServerCommandViewer.vue'
                     @mouseover="client.hoverTx = clientsPersist[client.entries.PublicKey[0]].hoverTx = true;"
                     @mouseleave="client.hoverTx = clientsPersist[client.entries.PublicKey[0]].hoverTx = false;"
                     :title="`Transfer TX: ${client.stats.tx}`"
-                    v-if="isServerUp() && client.stats.tx"/>
+                    v-if="isServerUp() && client.stats && client.stats.tx"/>
 
                   <!-- Transfer RX -->
                   <EntryDetail type="statsrx" :id="client.Reference" 
@@ -313,13 +313,13 @@ import ServerCommandViewer from './components/ServerCommandViewer.vue'
                     @mouseover="client.hoverRx = clientsPersist[client.entries.PublicKey[0]].hoverRx = true;"
                     @mouseleave="client.hoverRx = clientsPersist[client.entries.PublicKey[0]].hoverRx = false;"
                     :title="`Transfer RX: ${client.stats.rx}`"
-                    v-if="isServerUp() && client.stats.rx"/>
+                    v-if="isServerUp() && client.stats && client.stats.rx"/>
 
                   <!-- Last Handshake -->
                   <EntryDetail type="seen" :id="client.Reference" 
                     icon="heroicons-solid:clock" :text="timeFormat(new Date(client.stats.lastHandshake))"
                     :title="'Last Handshake ' + dateTime(new Date(client.stats.lastHandshake))"
-                    v-if="isServerUp() && client.stats.lastHandshake"/>
+                    v-if="isServerUp() && client.stats && client.stats.lastHandshake"/>
 
                   <br />
 
@@ -547,7 +547,7 @@ export default {
 
         this.clientDefaults = await this.api.getDefaults();
 
-        this.server = await this.api.getServer();
+        let server = await this.api.getServer();
         let clients = await this.api.getClients();
         for (let client of clients) {
           let cid = client.entries.PublicKey[0];
@@ -576,6 +576,7 @@ export default {
           }
         }
         this.clients = clients;
+        this.server = server;
       } catch(err) {
         this.alertError("An error occurred while refreshing metadata", err, 1);
       }
