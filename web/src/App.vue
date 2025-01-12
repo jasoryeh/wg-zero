@@ -315,10 +315,10 @@ import ServerCommandViewer from './components/ServerCommandViewer.vue'
                     :title="`Transfer RX: ${client.stats.rx}`"
                     v-if="isServerUp() && client.stats.rx"/>
 
-                  <!-- Last seen -->
+                  <!-- Last Handshake -->
                   <EntryDetail type="seen" :id="client.Reference" 
                     icon="heroicons-solid:clock" :text="timeFormat(new Date(client.stats.lastHandshake))"
-                    :title="'Last seen on ' + dateTime(new Date(client.stats.lastHandshake))"
+                    :title="'Last Handshake ' + dateTime(new Date(client.stats.lastHandshake))"
                     v-if="isServerUp() && client.stats.lastHandshake"/>
 
                   <br />
