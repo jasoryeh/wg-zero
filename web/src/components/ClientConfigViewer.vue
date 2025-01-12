@@ -3,6 +3,7 @@ import { Icon } from '@iconify/vue';
 import QRCode from 'qrcode';
 import Toggle from './Toggle.vue';
 import Modal from './Modal.vue';
+import EntryButton from './EntryButton.vue';
 </script>
 
 <template>
@@ -58,7 +59,12 @@ import Modal from './Modal.vue';
                                 <p class="text-sm">The IPs that will be tunneled through the VPN.</p>
                                 <div class="text-neutral-600 font-extralight text-xs"><span>Default: </span><pre class="inline">{{ defaults.AllowedIPs }}</pre></div>
                                 <div class="text-neutral-600 font-extralight text-xs"><span>All Traffic: </span><pre class="inline">0.0.0.0/0, ::/0</pre></div>
-                                <input type="text" class="mt-2 text-black dark:text-white bg-white dark:bg-black w-fit px-4 py-2" v-model="allowedIPs"/>
+                                <div>
+                                    <input type="text" class="mt-2 text-black dark:text-white bg-white dark:bg-black w-fit px-4 py-2" v-model="allowedIPs"/>
+                                    <EntryButton buttonText="Default" buttonIcon="heroicons:clipboard-document-list" :showText="true" class="px-4 !align-baseline dark:bg-neutral-700" @press="allowedIPs = defaults.AllowedIPs" />
+                                    <EntryButton buttonText="VPN Only" buttonIcon="heroicons:funnel" :showText="true" class="px-4 !align-baseline !bg-red-800 " @press="allowedIPs = server.entries.Address.join(', ')"/>
+                                    <EntryButton buttonText="All Traffic" buttonIcon="heroicons:globe-alt" :showText="true" class="px-4 !align-baseline !bg-blue-400 " @press="allowedIPs = '0.0.0.0/0, ::/0'"/>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -71,7 +77,13 @@ import Modal from './Modal.vue';
                                 <p class="font-bold text-md">DNS</p>
                                 <p class="text-sm">The DNS resolution servers this client should use.</p>
                                 <div class="text-neutral-600 font-extralight text-xs"><span>Default: </span><pre class="inline">{{ defaults.DNS }}</pre></div>
-                                <input v-if="dns[0]" type="text" class="mt-2 text-black dark:text-white bg-white dark:bg-black w-fit px-4 py-2" v-model="dns[1]"/>
+                                <div v-if="dns[0]" >
+                                    <input type="text" class="mt-2 text-black dark:text-white bg-white dark:bg-black w-fit px-4 py-2" v-model="dns[1]"/>
+                                    <EntryButton buttonText="Default" buttonIcon="heroicons:clipboard-document-list" :showText="true" class="px-4 !align-baseline" @press="dns[1] = defaults.DNS" />
+                                    <EntryButton buttonText="WireGuard Gateway" buttonIcon="heroicons:lock-closed" :showText="true" class="px-4 !align-baseline !bg-red-800 " @press="dns[1] = server.entries.Address[0].split('/')[0]"/>
+                                    <EntryButton buttonText="Cloudflare" buttonIcon="heroicons:cloud" :showText="true" class="px-4 !align-baseline !bg-orange-400 " @press="dns[1] = '1.1.1.1, 1.0.0.1'"/>
+                                    <EntryButton buttonText="Google" buttonIcon="heroicons:magnifying-glass" :showText="true" class="px-4 !align-baseline !bg-neutral-200 text-blue-500 hover:text-neutral-800" @press="dns[1] = '8.8.8.8, 8.8.4.4'"/>
+                                </div>
                             </div>
                         </div>
                     </div>
