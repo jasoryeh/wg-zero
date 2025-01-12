@@ -10,7 +10,7 @@ import Modal from './Modal.vue';
         <div class="dark:text-neutral-200 p-8">
             <div>
                 <h3 class="text-lg font-bold">Client Configuration</h3>
-                <p>Download or configure additional settings for the client <pre class="inline">{{ client.metadata.Name[0] }}</pre>.</p>
+                <div><span>Download or configure additional settings for the client </span><pre class="inline">{{ client.metadata.Name[0] }}</pre>.</div>
             </div>
             <div>
                 <div class="w-full">
@@ -55,8 +55,8 @@ import Modal from './Modal.vue';
                             <div>
                                 <p class="font-bold text-md">Allowed IPs</p>
                                 <p class="text-sm">The IPs that will be tunneled through the VPN.</p>
-                                <p class="text-neutral-600 font-extralight text-xs">Default: <pre class="inline">{{ defaults.AllowedIPs }}</pre></p>
-                                <p class="text-neutral-600 font-extralight text-xs">All Traffic: <pre class="inline">0.0.0.0/0, ::/0</pre></p>
+                                <div class="text-neutral-600 font-extralight text-xs"><span>Default: </span><pre class="inline">{{ defaults.AllowedIPs }}</pre></div>
+                                <div class="text-neutral-600 font-extralight text-xs"><span>All Traffic: </span><pre class="inline">0.0.0.0/0, ::/0</pre></div>
                                 <input type="text" class="mt-2 text-black dark:text-white bg-white dark:bg-black w-fit px-4 py-2" v-model="allowedIPs"/>
                             </div>
                         </div>
@@ -69,7 +69,7 @@ import Modal from './Modal.vue';
                             <div>
                                 <p class="font-bold text-md">DNS</p>
                                 <p class="text-sm">The DNS resolution servers this client should use.</p>
-                                <p class="text-neutral-600 font-extralight text-xs">Default: <pre class="inline">{{ defaults.DNS }}</pre></p>
+                                <div class="text-neutral-600 font-extralight text-xs"><span>Default: </span><pre class="inline">{{ defaults.DNS }}</pre></div>
                                 <input v-if="dns[0]" type="text" class="mt-2 text-black dark:text-white bg-white dark:bg-black w-fit px-4 py-2" v-model="dns[1]"/>
                             </div>
                         </div>
@@ -82,7 +82,7 @@ import Modal from './Modal.vue';
                             <div>
                                 <p class="font-bold text-md">Persistent Keepalive</p>
                                 <p class="text-sm">Should the client ping the server every <b>n</b> seconds? Useful for clients that must be accessible.</p>
-                                <p class="text-neutral-600 font-extralight text-xs">Default: <pre class="inline">{{ defaults.PersistentKeepalive }}</pre></p>
+                                <div class="text-neutral-600 font-extralight text-xs"><span>Default: </span><pre class="inline">{{ defaults.PersistentKeepalive }}</pre></div>
                                 <input v-if="persistentKeepalive[0]" type="text" class="mt-2 text-black dark:text-white bg-white dark:bg-black w-fit px-4 py-2" v-model="persistentKeepalive[1]"/>
                             </div>
                         </div>
@@ -95,7 +95,7 @@ import Modal from './Modal.vue';
                             <div>
                                 <p class="font-bold text-md">MTU</p>
                                 <p class="text-sm">The maximum transmission unit.</p>
-                                <p class="text-neutral-600 font-extralight text-xs">Default: <pre class="inline">{{ defaults.MTU }}</pre></p>
+                                <div class="text-neutral-600 font-extralight text-xs"><span>Default: </span><pre class="inline">{{ defaults.MTU }}</pre></div>
                                 <input v-if="mtu[0]" type="text" class="mt-2 text-black dark:text-white bg-white dark:bg-black w-fit px-4 py-2" v-model="mtu[1]"/>
                             </div>
                         </div>
