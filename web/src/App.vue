@@ -212,7 +212,7 @@ import ServerCommandViewer from './components/ServerCommandViewer.vue'
             <div v-if="isServerUp()" class="absolute z-0 top-0 left-0 right-0" style="width: 100%; height: 20%;">
               <!-- TX -->
                <div v-for="(_, index) in client.transferTxHistory" class="relative h-full inline-block" :style="{
-                  width: 'calc(2% - 4px)',
+                  width: 'calc(1% - 4px)',
                   marginRight: '2px',
                   marginLeft: '2px',
                }">
@@ -234,7 +234,7 @@ import ServerCommandViewer from './components/ServerCommandViewer.vue'
             <div v-if="isServerUp()" class="absolute z-0 bottom-0 left-0 right-0" style="width: 100%; height: 20%;">
               <!-- RX -->
                <div v-for="(_, index) in client.transferRxHistory" class="relative h-full inline-block" :style="{
-                  width: 'calc(2% - 4px)',
+                  width: 'calc(1% - 4px)',
                   marginRight: '2px',
                   marginLeft: '2px',
                }">
@@ -585,8 +585,8 @@ export default {
           }
 
           // ensure history trackers exist
-          cpersist.transferRxHistory = cpersist.transferRxHistory ?? Array(50).fill(0);
-          cpersist.transferTxHistory = cpersist.transferTxHistory ?? Array(50).fill(0);
+          cpersist.transferRxHistory = cpersist.transferRxHistory ?? Array(100).fill(0);
+          cpersist.transferTxHistory = cpersist.transferTxHistory ?? Array(100).fill(0);
           // last measurement (to find how much changed)
           cpersist.transferRxPrevious = cpersist.transferRxPrevious ?? cstats.rx;
           cpersist.transferTxPrevious = cpersist.transferTxPrevious ?? cstats.tx;
