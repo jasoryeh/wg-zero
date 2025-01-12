@@ -5,26 +5,22 @@
   <div class="m-10">
     <p v-cloak class="text-center text-gray-300 text-xs">
       wg-zero
-      &nbsp;·&nbsp;
+      &nbsp;&bullet;&nbsp;
+      <span v-if="detectedEndpoint" key="refresher">Endpoint: {{ detectedEndpoint }}</span>
+      <span v-else>Not connected yet.</span>
+      &nbsp;&bullet;&nbsp;
       <a class="hover:underline" href="https://github.com/jasoryeh/wg-zero" target="_blank">Fork Source Code</a>
       &nbsp;·&nbsp;
       <a class="hover:underline" href="https://github.com/WeeJeWel/wg-easy" target="_blank">Original Source Code</a>
-    </p>
-    <p v-cloak class="text-center text-gray-300 text-xs">
-      <span v-if="detectedEndpoint" key="refresher">Endpoint: {{ detectedEndpoint }}</span>
-      <span v-else>Not connected yet.</span>
     </p>
     <p v-cloak class="text-center text-gray-300 text-xs">
       Forked by
       <a target="_blank" class="hover:underline" href="https://hogt.me/?ref=wg-zero">Jason Ho</a>
       &nbsp;·&nbsp;
       <a class="hover:underline" href="https://github.com/jasoryeh" target="_blank">Profile</a>
-    </p>
-    <p v-cloak class="text-center text-gray-300 text-xs">
+      &nbsp;&bullet;&nbsp;
       Originally by
       <a target="_blank" class="hover:underline" href="https://emilenijssen.nl/?ref=wg-easy">Emile Nijssen</a>
-      &nbsp;·&nbsp;
-      <a class="hover:underline" href="https://github.com/sponsors/WeeJeWel" target="_blank">Donate</a>
       &nbsp;·&nbsp;
       <a class="hover:underline" href="https://github.com/WeeJeWel" target="_blank">Profile</a>
     </p>

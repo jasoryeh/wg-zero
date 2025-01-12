@@ -3,9 +3,9 @@ import { Icon } from '@iconify/vue';
 </script>
 
 <template>
-    <div class="shadow-md rounded-lg bg-white dark:bg-neutral-800 dark:text-white overflow-hidden mb-8">
+    <div class="shadow-md rounded-lg bg-white dark:bg-neutral-800 dark:text-white overflow-hidden mt-4 lg:mt-8">
       <!-- Card Header -->
-      <div class="flex flex-row flex-auto items-center p-3 px-5 border border-b-2 border-gray-100 dark:border-neutral-700">
+      <div class="flex flex-row flex-auto items-center flex-wrap p-3 px-5 border border-b-2 border-gray-100 dark:border-neutral-700">
         <div class="flex-grow">
           <p class="text-2xl font-medium">
             <slot name="title"></slot>

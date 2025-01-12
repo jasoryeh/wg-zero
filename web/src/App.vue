@@ -27,7 +27,7 @@ import ServerCommandViewer from './components/ServerCommandViewer.vue'
 <template>
   <div v-cloak class="container mx-auto max-w-3xl overflow-hidden">
     <!-- Alerts -->
-    <div class="alerts rounded-lg mb-8 mt-8">
+    <div class="alerts rounded-lg mt-8">
       <!-- Server card header -->
       <div :class="['flex flex-row flex-auto items-center p-3 px-5 mb-1 rounded-lg shadow-xl', 
                     (alert.color ? 'border-'+alert.color : 'border-red-500'), 
@@ -53,17 +53,19 @@ import ServerCommandViewer from './components/ServerCommandViewer.vue'
     <!--end-->
 
     <div v-if="authenticated === true">
-      <!-- Logout button -->
-      <TopButton v-if="meta && meta.auth" text="Logout" icon="heroicons:arrow-right-on-rectangle-20-solid" @click="logout" />
-      <!-- Theme -->
-      <TopButton text="Theme" :icon="getTheme() == 'light' ? 'heroicons:sun' : 'heroicons:moon'" @click="toggleTheme" />
-      
-      <!-- Title and Icon -->
-      <h1 class="text-4xl font-medium mt-10 mb-2 dark:text-white">
-        <img src="/img/logo.png" width="32" class="inline align-middle" />
-        <span class="align-middle">WireGuard</span>
-      </h1>
-      <h2 class="text-sm text-gray-400 mb-10"><!-- Subtitle --></h2>
+      <!-- Header -->
+      <div class="flex mt-10 mb-2">
+        <!-- Title and Icon -->
+        <h1 class="flex-grow text-4xl font-medium dark:text-white">
+          <img src="/img/logo.png" width="32" class="inline align-middle" />
+          <span class="align-middle">WireGuard</span>
+        </h1>
+
+        <!-- Theme -->
+        <TopButton text="Theme" :icon="getTheme() == 'light' ? 'heroicons:sun' : 'heroicons:moon'" @click="toggleTheme" />
+        <!-- Logout button -->
+        <TopButton v-if="meta && meta.auth" text="Logout" icon="heroicons:arrow-right-on-rectangle-20-solid" @click="logout" />
+      </div>
 
       <!-- Update notification -->
       <Update v-if="latestRelease" :currentRelease="currentRelease" :latestRelease="latestRelease.version" :changelog="latestRelease.changelog" />
@@ -253,7 +255,7 @@ import ServerCommandViewer from './components/ServerCommandViewer.vue'
             </div>
 
             <!-- Information -->
-            <div class="relative p-5 z-10 flex flex-row">
+            <div class="relative p-5 z-10 flex flex-row flex-wrap">
               <!-- Icon -->
               <div class="flex-shrink h-10 w-10 mr-5 mt-0 rounded-full bg-gray-50 dark:bg-gray-950 relative">
                 <img class="w-full h-full rounded-full absolute top-0 left-0" v-if="client.metadata.Name[0] && client.metadata.Name[0].includes('@')" :src="`https://www.gravatar.com/avatar/${sha256(client.metadata.Name[0])}`" />
