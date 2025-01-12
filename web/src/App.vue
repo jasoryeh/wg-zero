@@ -74,7 +74,7 @@ import ServerCommandViewer from './components/ServerCommandViewer.vue'
           Server
         </template>
         <template v-slot:description>
-          <span class="text-[8px] bg-amber-300 p-1 rounded font-light mr-1" v-if="readonly">READ ONLY</span>
+          <span class="text-[8px] bg-amber-300 p-1 rounded font-light mr-1 dark:text-neutral-950" v-if="readonly">READ ONLY</span>
           <span>Server details and controls.</span>
         </template>
         <template v-slot:buttons>
