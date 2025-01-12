@@ -81,7 +81,7 @@ import ServerCommandViewer from './components/ServerCommandViewer.vue'
             <HeaderButton buttonText="Backup" buttonIcon="material-symbols:download" @click="backupServer()" />
             <HeaderButton buttonText="Start" buttonIcon="heroicons:play" :disabled="readonly" @click="serverUp()" v-if="!isServerUp()" />
             <HeaderButton buttonText="Stop" buttonIcon="heroicons:stop" :disabled="readonly" @click="serverDown()" v-else />
-            <HeaderButton buttonText="Reload" buttonIcon="material-symbols:refresh-rounded" @click="reloadServer()" />
+            <HeaderButton buttonText="Reload" buttonIcon="material-symbols:refresh-rounded" @click="reloadServer(); refresh_total();" />
         </template>
         <template v-slot:body>
           <!-- Server -->
@@ -113,7 +113,7 @@ import ServerCommandViewer from './components/ServerCommandViewer.vue'
               <div class="flex-grow">
                 <!-- Name -->
                 <div class="text-gray-700 dark:text-gray-200 group" :title="`Interface ${server.metadata.Interface}`">
-                  <span class="inline-block border-t-0 border-b-2 border-transparent">Server</span>
+                  <EditableText :fieldID="'server-name'" :fieldText="server.metadata.Name[0]" :readonly="readonly" @cancel="" @submit="({_, text}) => updateServerName(text)" />
                 </div>
 
                 <!-- Info -->
@@ -724,13 +724,20 @@ export default {
     },
     async updateClientName(client, name) {
       try {
-        console.log(client);
-        console.log(JSON.stringify(client, null, 4));
         client.metadata.Name = [name];
         await this.api.updateName(client.Reference, name);
         this.alert('The client name was updated to \'' + name + '\'!', 5, null, 'green-600');
       } catch(err) {
         this.alertError("An error occurred while updating the client name", err);
+      }
+    },
+    async updateServerName(name) {
+      try {
+        this.server.metadata.Name = [name];
+        await this.api.updateServerName(name);
+        this.alert('The server name was updated to \'' + name + '\'!', 5, null, 'green-600');
+      } catch(err) {
+        this.alertError("An error occurred while updating the server name", err);
       }
     },
     async reloadServer() {

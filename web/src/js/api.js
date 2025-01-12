@@ -215,10 +215,18 @@ class API {
     });
   }
 
+  async updateServerName(name) {
+    return this.call({
+      method: 'put',
+      path: `/wireguard/server/name`,
+      body: { name: name },
+    });
+  }
+
   async updateName(clientRef, name) {
     return this.call({
       method: 'put',
-      path: `/wireguard/clients/${clientRef}/name/`,
+      path: `/wireguard/clients/${clientRef}/name`,
       body: { name: name },
     });
   }

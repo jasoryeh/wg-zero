@@ -67,6 +67,13 @@ class WireGuardInterface {
             this.setHostAddress(WG_HOST);
         }
         this.setPublicKey(generatePublicKey(this.getPrivateKey()));
+        let name = this.getName();
+        if (!this.iniSection.hasMetadata('Name')) {
+            debug("Enforcing name property to public key on server.");
+            this.setName("Server");
+            name = this.getName();
+            debug("\t name set to: '" + name + "'")
+        }
     }
 
     /**
@@ -215,6 +222,13 @@ class WireGuardInterface {
     }
     setConfigVersion(ver) {
         this.iniSection.setMetadata('WGZERO_Version', ver);
+    }
+
+    getName() {
+        return this.iniSection.hasMetadata('Name') ? this.iniSection.getOneMetadata('Name').value : null;
+    }
+    setName(name) {
+        this.iniSection.setMetadata('Name', name);
     }
 }
 WireGuardInterface.SECTION_NAME = INTERFACE_SECTION;

@@ -211,6 +211,16 @@ module.exports = class Server {
     debug("wireguard/server/new: Done creating WireGuard configuration.");
     res.status(200).send({});
   })
+  .put('/api/wireguard/server/name', async (req, res) => {
+    const { name } = req.body;
+    
+    let wgInterface = this.wireguard.config.getInterface();
+    debug(`wireguard/server/name: Updating name for server - ${wgInterface.getName()} -> ${name}`);
+    this.wireguard.assertNotReadOnly('Cannot update name in read-only mode!');
+    wgInterface.setName(name);
+
+    res.status(200).send({});
+  })
   .put('/api/wireguard/clients/new', async (req, res) => {
     const { privateKey, publicKey, addresses, presharedKey, persistPrivateKey } = req.body;
     res.status(200).send(await this.wireguard.addClient(publicKey, addresses, presharedKey, privateKey, persistPrivateKey).iniSection.toJson());
