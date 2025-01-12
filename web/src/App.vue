@@ -206,47 +206,48 @@ import ClientConfigViewer from './components/ClientConfigViewer.vue'
           <div v-if="clients && clients.length > 0" v-for="client in clients" :key="client.entries.PublicKey[0]"
             class="relative overflow-hidden border-b border-gray-100 dark:border-neutral-700 border-solid" :id="['client-' + btoa(client.entries.PublicKey[0])]">
 
-            <!-- Chart -->
+            <!-- Chart TX -->
+            <div v-if="isServerUp()" class="absolute z-0 top-0 left-0 right-0" style="width: 100%; height: 20%;">
+              <!-- TX -->
+               <div v-for="(_, index) in client.transferTxHistory" class="relative h-full inline-block" :style="{
+                  width: 'calc(2% - 4px)',
+                  marginRight: '2px',
+                  marginLeft: '2px',
+               }">
+                <div class="absolute top-0 w-full rounded-b-full"
+                    :style="{
+                      minHeight: '0px',
+                      minWidth: '2px',
+                      height: Math.round((client.transferTxHistory[index]/client.transferMaxTx)*100) + '%',
+                      background: client.hoverTx
+                        ? '#992922'
+                        : '#F3F4F6',
+                      transition: 'all 0.2s',
+                      //borderRadius: '2px 2px 0 0',
+                  }"></div>
+                </div>
+            </div>
+            
+            <!-- Chart RX -->
             <div v-if="isServerUp()" class="absolute z-0 bottom-0 left-0 right-0" style="width: 100%; height: 20%;">
-              <!-- Bar -->
-              <div v-for="(_, index) in client.transferTxHistory" :style="{
-                    display: 'inline-flex',
-                    alignItems: 'flex-end',
-                    width: '2%', // 1/100th of client.transferTxHistory.length
-                    height: '100%',
-                    boxSizing: 'border-box',
-                    fontSize: 0,
-                  }">
-
-                <!-- TX -->
-                <div :style="{
-                    minHeight: '0px',
-                    minWidth: '2px',
-                    maxWidth: '4px',
-                    width: '50%',
-                    marginRight: '1px',
-                    height: Math.round((client.transferTxHistory[index]/client.transferMax)*100) + '%',
-                    background: client.hoverTx
-                      ? '#992922'
-                      : '#F3F4F6',
-                    transition: 'all 0.2s',
-                    borderRadius: '2px 2px 0 0',
+              <!-- RX -->
+               <div v-for="(_, index) in client.transferRxHistory" class="relative h-full inline-block" :style="{
+                  width: 'calc(2% - 4px)',
+                  marginRight: '2px',
+                  marginLeft: '2px',
+               }">
+                <div class="absolute bottom-0 w-full rounded-t-full"
+                    :style="{
+                      minHeight: '0px',
+                      minWidth: '2px',
+                      height: Math.round((client.transferRxHistory[index]/client.transferMaxRx)*100) + '%',
+                      background: client.hoverRx
+                        ? '#992922'
+                        : '#F3F4F6',
+                      transition: 'all 0.2s',
+                      //borderRadius: '2px 2px 0 0',
                   }"></div>
-
-                <!-- RX -->
-                <div :style="{
-                    minHeight: '0px',
-                    minWidth: '2px',
-                    maxWidth: '4px',
-                    width: '50%',
-                    height: Math.round((client.transferRxHistory[index]/client.transferMax)*100) + '%',
-                    background: client.hoverRx
-                    ? '#992922'
-                    : '#F0F1F3',
-                    transition: 'all 0.2s',
-                    borderRadius: '2px 2px 0 0',
-                  }"></div>
-              </div>
+                </div>
             </div>
 
             <!-- Information -->
@@ -607,7 +608,8 @@ export default {
           client.transferTxHistory = cpersist.transferTxHistory;
           client.transferRxHistory = cpersist.transferRxHistory;
           // max transfer on client object
-          client.transferMax = Math.max(...client.transferTxHistory, ...client.transferRxHistory);
+          client.transferMaxTx = Math.max(...client.transferTxHistory);
+          client.transferMaxRx = Math.max(...client.transferRxHistory);
           // hover on client object
           client.hoverTx = cpersist.hoverTx;
           client.hoverRx = cpersist.hoverRx;

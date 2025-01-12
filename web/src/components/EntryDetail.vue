@@ -4,7 +4,7 @@ import EditableText from './EditableText.vue';
 </script>
 
 <template>
-    <span class="group" :title="title">
+    <span class="group mr-2" :title="title">
         <Icon :icon="icon" class="align-middle h-3 inline mr-1" />
         <EditableText v-if="editable === true" :fieldID="type + '-' + id" :fieldText="text" :disabled="readonly" @cancel="" @submit="({_, text}) => $emit('modify', text)" />
         <span v-else>{{ text }}</span>    
