@@ -381,17 +381,17 @@ import ServerCommandViewer from './components/ServerCommandViewer.vue'
       <ServerCommandViewer v-if="showServerCommands" @cancel="showServerCommands = false" :PreUp="server.entries.PreUp" :PostUp="server.entries.PostUp" :PreDown="server.entries.PreDown" :PostDown="server.entries.PostDown" />
 
       <!-- Create Dialog -->
-      <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="({name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey }) => { newClient(name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey); clientCreate = null; scrollToClient(publicKey); }" />
+      <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="({name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey }) => { newClient(name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey); clientCreate = null; scrollToClient(publicKey); refresh_total() }" />
 
       <!-- Delete Dialog -->
-      <DeleteClient v-if="clientDelete" :name="clientDelete.metadata.Name[0]" @cancel="clientDelete = null" @confirm="console.log(clientDelete); deleteClient(clientDelete.entries.PublicKey); clientDelete = null" />
+      <DeleteClient v-if="clientDelete" :name="clientDelete.metadata.Name[0]" @cancel="clientDelete = null" @confirm="console.log(clientDelete); deleteClient(clientDelete.entries.PublicKey); clientDelete = null; refresh_total()" />
 
       <!-- Client Configuration Editor and Viewer -->
       <ClientConfigViewer v-if="clientToConfig" @close="clientToConfig = null;" :client="clientToConfig" :server="server" :alert="alert" :tab="clientToConfigTab" :defaults="clientDefaults" />
     </div>
 
     <!-- Authentication -->
-    <Login v-if="authenticated === false" @try="(pass) => { password = pass; login() }" />
+    <Login v-if="authenticated === false" @try="(pass) => { password = pass; login(); }" />
 
     <Loading v-if="authenticated === null" class="pt-24 pb-12" />
 
@@ -563,6 +563,9 @@ export default {
           if (client.metadata.PrivateKey) {
             cpersist.PrivateKey = client.metadata.PrivateKey[0];
           }
+          if (cpersist.PrivateKey) {
+            client.metadata.PrivateKey = [cpersist.PrivateKey];
+          }
 
           // until replaced
           client._meta = client._meta ?? {}; // for ui metadata
@@ -683,7 +686,7 @@ export default {
       this.alert(this.authenticated ? 'Login Succeeded.' : 'Login Failed.', 5, null, this.authenticated ? 'green-500' : 'red-500', 'white');
       this.authenticating = false;
       this.password = null;
-      return this.refresh();
+      return this.refresh_total();
     },
     logout(e) {
       e.preventDefault();
