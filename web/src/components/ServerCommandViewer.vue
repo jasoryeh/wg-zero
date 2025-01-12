@@ -43,7 +43,6 @@ export default {
         PostDown: Array,
     },
     mounted() {
-        console.log(this.PreUp, this.PostUp, this.PreDown, this.PostDown);
     }
 };
 </script>
