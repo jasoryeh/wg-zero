@@ -36,6 +36,7 @@ class API {
       body: body
         ? JSON.stringify(body)
         : undefined,
+      keepalive: true
     });
 
     if (res.status === 204) {
@@ -59,6 +60,7 @@ class API {
         'Content-Type': 'application/json',
       },
       body: body ?? undefined,
+      keepalive: true
     });
 
     if (res.status === 204) {
