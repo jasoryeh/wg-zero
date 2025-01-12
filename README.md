@@ -116,14 +116,14 @@ These options can be configured by setting environment variables using `-e KEY="
 | `WG_PRE_DOWN` | `...` | - | See [config.js](https://github.com/WeeJeWel/wg-zero/blob/master/server/config.js#L27) for the default value. |
 | `WG_POST_DOWN` | `...` | `iptables ...` | See [config.js](https://github.com/jasoryeh/wg-zero/blob/master/server/config.js#L28) for the default value. |
 
-... to be reimplemented:
+Defaults:
 
 | Env | Default | Example | Description |
 | - | - | - | - |
-| `WG_MTU` | `null` | `1420` | The MTU the clients will use. Server uses default WG MTU. |
-| `WG_PERSISTENT_KEEPALIVE` | `0` | `25` | Value in seconds to keep the "connection" open. If this value is 0, then connections won't be kept alive. |
-| `WG_DEFAULT_DNS` | `1.1.1.1` | `8.8.8.8, 8.8.4.4` | (WIP) DNS server clients will use. |
-| `WG_ALLOWED_IPS` | `0.0.0.0/0, ::/0` | `192.168.15.0/24, 10.0.1.0/24` | (WIP) Allowed IPs clients will use. |
+| `WG_DEFAULT_MTU` | `null` | `1420` | The default MTU the clients will use. |
+| `WG_DEFAULT_PERSISTENT_KEEPALIVE` | `0` | `25` | The default keep-alive value for clients.Value in seconds to keep the "connection" open. If this value is 0, then connections won't be kept alive. |
+| `WG_DEFAULT_DNS` | `1.1.1.1` | `8.8.8.8, 8.8.4.4` | The default DNS server clients will use. |
+| `WG_DEFAULT_ALLOWED_IPS` | `0.0.0.0/0, ::/0` | `192.168.15.0/24, 10.0.1.0/24` | The default Allowed IPs clients will use. |
 
 > If you change `WG_PORT`, make sure to also change the exposed port.
 
