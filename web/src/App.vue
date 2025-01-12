@@ -1,12 +1,10 @@
 <script setup>
 import Loading from './components/Loading.vue'
 import Credits from './components/Credits.vue'
-import ClientConfigModal from './components/QRCode.vue'
 import CreateClient from './components/CreateClient.vue'
 import DeleteClient from './components/DeleteClient.vue'
 import Update from './components/Update.vue'
 import Login from './components/Login.vue'
-import ViewClientConfig from './components/ViewClientConfig.vue'
 
 import API from './js/api.js';
 import { IP6, IP4, IPPool, ofIPString } from './js/ip.js';
@@ -15,7 +13,6 @@ import { Icon } from '@iconify/vue';
 import CryptoJS from 'crypto-js';
 import { format as timeagoFormat } from 'timeago.js';
 import { Buffer } from 'buffer/';
-import QRCode from 'qrcode';
 import EditableText from './components/EditableText.vue'
 import HeaderButton from './components/HeaderButton.vue'
 import EntryButton from './components/EntryButton.vue'
@@ -23,6 +20,7 @@ import Toggle from './components/Toggle.vue'
 import EntryDetail from './components/EntryDetail.vue'
 import TopButton from './components/TopButton.vue'
 import Card from './components/Card.vue'
+import ClientConfigViewer from './components/ClientConfigViewer.vue'
 </script>
 
 <template>
@@ -292,14 +290,14 @@ import Card from './components/Card.vue'
                 <div class="text-gray-400 dark:text-gray-300 text-xs">
 
                   <!-- Address -->
-                  <EntryDetail :type="address" :id="client.Reference" 
+                  <EntryDetail type="address" :id="client.Reference" 
                     icon="heroicons-solid:funnel" :text="client.entries.AllowedIPs.join(',')"
                     :editable="true" :readonly="readonly" 
                     :title="`Client Addresses: ${client.entries.AllowedIPs.join(',')}`"
                     @modify="(text) => updateClientAddress(client, text)" />
 
                   <!-- Transfer TX -->
-                  <EntryDetail :type="statstx" :id="client.Reference" 
+                  <EntryDetail type="statstx" :id="client.Reference" 
                     icon="heroicons-solid:arrow-down" :text="bytes(client.transferTxCurrent) + '/s'"
                     @mouseover="client.hoverTx = clientsPersist[client.entries.PublicKey[0]].hoverTx = true;"
                     @mouseleave="client.hoverTx = clientsPersist[client.entries.PublicKey[0]].hoverTx = false;"
@@ -307,7 +305,7 @@ import Card from './components/Card.vue'
                     v-if="isServerUp() && client.stats.tx"/>
 
                   <!-- Transfer RX -->
-                  <EntryDetail :type="statsrx" :id="client.Reference" 
+                  <EntryDetail type="statsrx" :id="client.Reference" 
                     icon="heroicons-solid:arrow-up" :text="bytes(client.transferRxCurrent) + '/s'"
                     @mouseover="client.hoverRx = clientsPersist[client.entries.PublicKey[0]].hoverRx = true;"
                     @mouseleave="client.hoverRx = clientsPersist[client.entries.PublicKey[0]].hoverRx = false;"
@@ -315,18 +313,17 @@ import Card from './components/Card.vue'
                     v-if="isServerUp() && client.stats.rx"/>
 
                   <!-- Last seen -->
-                  <EntryDetail :type="seen" :id="client.Reference" 
+                  <EntryDetail type="seen" :id="client.Reference" 
                     icon="heroicons-solid:clock" :text="timeFormat(new Date(client.stats.lastHandshake))"
                     :title="'Last seen on ' + dateTime(new Date(client.stats.lastHandshake))"
                     v-if="isServerUp() && client.stats.lastHandshake"/>
 
                   <br />
 
-                  <span
-                      class="inline-block border-t-2 border-b-2 border-transparent">
-                      <Icon icon="heroicons-solid:key" class="align-middle h-3 inline" />
-                      {{ client.entries.PublicKey[0] }}&nbsp;
-                    </span>
+                  <span class="inline-block border-t-2 border-b-2 border-transparent">
+                    <Icon icon="heroicons-solid:key" class="align-middle h-3 inline" />
+                    {{ client.entries.PublicKey[0] }}&nbsp;
+                  </span>
                 </div>
               </div>
 
@@ -334,7 +331,7 @@ import Card from './components/Card.vue'
               <div class="flex-grow text-right min-w-fit">
                 <div class="text-gray-400">
                   <!-- Enable/Disable -->
-                  <Toggle :switchStatus="client.metadata.Enabled[0] == 'true'" switchName="Client" disabled="readonly" @toggle_off="disableClient(client)" @toggle_on="enableClient(client)" />
+                  <Toggle :switchStatus="client.metadata.Enabled[0] == 'true'" switchName="Client" :disabled="readonly" @toggle_off="disableClient(client)" @toggle_on="enableClient(client)" />
 
                   <!-- Delete -->
                   <EntryButton buttonText="Delete Client" buttonIcon="heroicons:trash" :disabled="readonly" @click="clientDelete = client" />
@@ -342,16 +339,16 @@ import Card from './components/Card.vue'
                   <div class="mb-1"></div>
                   
                   <!-- Show QR -->
-                  <EntryButton buttonText="Show QR Code" buttonIcon="heroicons-outline:qrcode" :disabled="false" @click="showQR(client)" v-show="clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey" />
+                  <EntryButton buttonText="Show QR Code" buttonIcon="heroicons-outline:qrcode" :disabled="false" @click="clientToConfigTab = 1; clientToConfig = client;" v-show="clientHasPrivateKey(client)" />
                   
                   <!-- View Config -->
-                  <EntryButton buttonText="Show Client Configuration" buttonIcon="heroicons-outline:code-bracket-square" :disabled="false" @click="showClientConfig(client)" v-show="clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey" />
+                  <EntryButton buttonText="Show Client Configuration" buttonIcon="heroicons-outline:code-bracket-square" :disabled="false" @click="clientToConfigTab = 0; clientToConfig = client;" v-show="clientHasPrivateKey(client)" />
                   
                   <!-- Download Config -->
-                  <EntryButton buttonText="Download Client Configuration" buttonIcon="heroicons:arrow-down-tray" :disabled="false" @click="downloadConfig(client)" v-show="clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey" />
+                  <EntryButton buttonText="Download Client Configuration" buttonIcon="heroicons:arrow-down-tray" :disabled="false" @click="clientToConfigTab = 2; clientToConfig = client;" v-show="clientHasPrivateKey(client)" />
                   
                   <!-- Info for no configuration -->
-                  <EntryButton buttonText="Configuration download/viewing is unavailable because the private key was not saved at creation." buttonIcon="heroicons:no-symbol" :disabled="false" @click="alert('Configuration download/viewing is unavailable because the private key was not saved at creation.', 15, 'heroicons:information-circle', 'blue-500')" v-show="!(clientsPersist[client.entries.PublicKey[0]] && clientsPersist[client.entries.PublicKey[0]].PrivateKey)" />
+                  <EntryButton buttonText="Configuration download/viewing is unavailable because the private key was not saved at creation." buttonIcon="heroicons:no-symbol" :disabled="false" @click="alert('Configuration download/viewing is unavailable because the private key was not saved at creation.', 15, 'heroicons:information-circle', 'blue-500')" v-show="!clientHasPrivateKey(client)" />
                 </div>
               </div>
 
@@ -377,17 +374,14 @@ import Card from './components/Card.vue'
         </template>
       </Card>
 
-      <!-- QR Code-->
-      <ClientConfigModal v-if="qrcode" :qrSVG="qrcode" @close="qrcode = null" />
-
-      <!-- Client Configuration Viewer -->
-      <ViewClientConfig v-if="viewClientConfig" :config="viewClientConfig" @close="viewClientConfig = null" />
-
       <!-- Create Dialog -->
       <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="({name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey }) => { newClient(name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey); clientCreate = null; scrollToClient(publicKey); }" />
 
       <!-- Delete Dialog -->
       <DeleteClient v-if="clientDelete" :name="clientDelete.metadata.Name[0]" @cancel="clientDelete = null" @confirm="console.log(clientDelete); deleteClient(clientDelete.entries.PublicKey); clientDelete = null" />
+
+      <!-- Client Configuration Editor and Viewer -->
+      <ClientConfigViewer v-if="clientToConfig" @close="clientToConfig = null;" :client="clientToConfig" :server="server" :alert="alert" :tab="clientToConfigTab" :defaults="clientDefaults" />
     </div>
 
     <!-- Authentication -->
@@ -446,8 +440,10 @@ export default {
       clientDelete: null,
       clientCreate: null,
       clientCreateName: '',
-      qrcode: null,
       viewClientConfig: null,
+      clientToConfig: null,
+      clientToConfigTab: null,
+      clientDefaults: null,
 
       currentRelease: null,
       latestRelease: null,
@@ -484,9 +480,6 @@ export default {
       };
       this.alerts.push(build);
       return build;
-    },
-    log(stuff) {
-      console.log(stuff);
     },
     getEndpoint() {
       return this.api.getEndpoint();
@@ -545,6 +538,7 @@ export default {
 
       // readonly?
       await this.checkStatus();
+      this.clientDefaults = await this.api.getDefaults();
 
       // request, and format data
       this.meta = await this.api.getMeta();
@@ -790,49 +784,6 @@ export default {
         setTimeout(() => { this.state_settingUp = false; }, 1000);
       }
     },
-    generateClientConfig(privateKey, addresses, server, presharedKey = null) {
-      let config = [
-        `[Interface]`,
-        `PrivateKey = ${privateKey}`,
-        `Address = ${addresses.join(',')}`,
-        '',
-        `[Peer]`,
-        `PublicKey = ${server.metadata.PublicKey}`,
-        `AllowedIPs = 0.0.0.0/0, ::/0`,
-        `Endpoint = ${server.metadata.Host}:${server.entries.ListenPort}`,
-      ];
-      if (presharedKey) {
-        config.push(`PresharedKey = ${presharedKey}`);
-      }
-      return config.join('\n');
-    },
-    clientConfig(client) {
-      if (!this.clientsPersist[client.entries.PublicKey[0]]) {
-        throw Error("Client config can only be created when the client was created recently!");
-      }
-      return this.generateClientConfig(
-        this.clientsPersist[client.entries.PublicKey[0]].PrivateKey, 
-        client.entries.AllowedIPs, 
-        this.server, 
-        client.entries.PresharedKey ? client.entries.PresharedKey[0] : null);
-    },
-    async showQR(client) {
-      let config = this.clientConfig(client);
-      this.qrcode = await QRCode.toString(config, {type: 'svg', width: 512});
-    },
-    async showClientConfig(client) {
-      this.viewClientConfig = this.clientConfig(client);
-    },
-    async downloadConfig(client) {
-      let blob = new Blob([this.clientConfig(client)], { type: 'text/plain' });
-      let dummy = document.createElement('a');
-      dummy.href = URL.createObjectURL(blob);
-      dummy.download = `${client.metadata.Name[0] || client.entries.PublicKey[0]}.conf`;
-      document.body.appendChild(dummy);
-      dummy.click();
-      document.body.removeChild(dummy);
-      this.alert(`Downloaded configuration for client '<b>${client.metadata.Name[0] || client.entries.PublicKey[0]}</b>'`, 15, null, 'purple-700');
-    },
     getNextIPs() {
       let taken = [];
       for (let client of this.clients) {
@@ -885,6 +836,9 @@ export default {
     },
     toggleTheme() {
       return window.toggleTheme();
+    },
+    clientHasPrivateKey(c) {
+      return this.clientsPersist[c.entries.PublicKey[0]] && this.clientsPersist[c.entries.PublicKey[0]].PrivateKey;
     }
   },
   filters: {

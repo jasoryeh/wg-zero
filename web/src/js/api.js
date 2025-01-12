@@ -109,6 +109,13 @@ class API {
     });
   }
 
+  async getDefaults() {
+    return this.call({
+      method: 'get',
+      path: '/wireguard/clients/defaults',
+    });
+  }
+
   async getClients() {
     return this.call({
       method: 'get',

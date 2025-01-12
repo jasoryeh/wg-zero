@@ -17,6 +17,10 @@ const {
   WG_WEBUI,
   WG_READONLY,
   WG_ALLOW_BACKUP,
+  WG_DEFAULT_DNS,
+  WG_DEFAULT_PERSISTENT_KEEPALIVE,
+  WG_DEFAULT_MTU,
+  WG_DEFAULT_ALLOWED_IPS,
 } = require('../config');
 
 const {
@@ -127,6 +131,14 @@ module.exports = class Server {
     intf._stats.up = await this.wireguard.isUp();
     
     res.status(200).send(intf);
+  })
+  .get('/api/wireguard/clients/defaults', (req, res) => {
+    res.status(200).send({
+      DNS: WG_DEFAULT_DNS,
+      PersistentKeepalive: WG_DEFAULT_PERSISTENT_KEEPALIVE,
+      MTU: WG_DEFAULT_MTU,
+      AllowedIPs: WG_DEFAULT_ALLOWED_IPS,
+    });
   })
   .get('/api/wireguard/save', async (req, res) => {
     try {
