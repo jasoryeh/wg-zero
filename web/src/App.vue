@@ -533,6 +533,53 @@ export default {
       this.currentRelease = currentRelease;
       this.latestRelease = latestRelease;
     },
+    async refresh_total() {
+      await this.refresh_infrequent();
+      await this._refresh();
+    },
+    async refresh_infrequent() {
+      if (!this.authenticated) return;
+      try {
+        this.meta = await this.api.getMeta();
+
+        // readonly?
+        await this.checkStatus();
+
+        this.clientDefaults = await this.api.getDefaults();
+
+        this.server = await this.api.getServer();
+        let clients = await this.api.getClients();
+        for (let client of clients) {
+          let cid = client.entries.PublicKey[0];
+
+          // persistent data
+          /// initialize client data persistence if we dont have any historical data yet
+          if (!this.clientsPersist[cid]) {
+            this.clientsPersist[cid] = {};
+          }
+          var cpersist = this.clientsPersist[cid];
+          
+          // in case of saved private keys, repopulate the private key
+          if (client.metadata.PrivateKey) {
+            cpersist.PrivateKey = client.metadata.PrivateKey[0];
+          }
+
+          // until replaced
+          client._meta = client._meta ?? {}; // for ui metadata
+          client.Reference = Buffer.from(cid).toString('hex');
+          client.name = client.metadata.Name[0] || cid;
+          client.addresses = client.entries.AllowedIPs;
+          
+          // if private key is saved
+          if (client.metadata.PrivateKey) {
+            client.PrivateKey = client.metadata.PrivateKey[0];
+          }
+        }
+        this.clients = clients;
+      } catch(err) {
+        this.alertError("An error occurred while refreshing metadata", err, 1);
+      }
+    },
     async refresh(...args) {
       try {
         return await this._refresh(...args);
@@ -543,22 +590,18 @@ export default {
     async _refresh({ updateCharts = false } = {}) {
       if (!this.authenticated) return;
 
-      // readonly?
-      await this.checkStatus();
-      this.clientDefaults = await this.api.getDefaults();
-
       // request, and format data
-      this.meta = await this.api.getMeta();
       if (!this.isServerConfigured()) {
         return;
       }
-      this.server = await this.api.getServer();
-      let clients = await this.api.getClients();
+      if (!this.clients) {
+        return;
+      }
       let stats = await this.api.getStats();
 
       // handle data history
       // stats are only available when the interface is up
-      for (let client of clients) {
+      for (let client of this.clients) {
         let cid = client.entries.PublicKey[0];
 
         // persistent data
@@ -567,11 +610,6 @@ export default {
           this.clientsPersist[cid] = {};
         }
         var cpersist = this.clientsPersist[cid];
-        
-        // in case of saved private keys, repopulate the private key
-        if (client.metadata.PrivateKey) {
-          cpersist.PrivateKey = client.metadata.PrivateKey[0];
-        }
 
         if (this.isServerUp()) {
           let cstats = stats[cid];
@@ -622,21 +660,7 @@ export default {
 
           client.stats = cstats;
         }
-
-        // until replaced
-        client._meta = client._meta ?? {}; // for ui metadata
-        client.Reference = Buffer.from(cid).toString('hex');
-        client.name = client.metadata.Name[0] || cid;
-        client.addresses = client.entries.AllowedIPs;
-        
-        // if private key is saved
-        if (client.metadata.PrivateKey) {
-          client.PrivateKey = client.metadata.PrivateKey[0];
-        }
       }
-
-      // make it available at the end.
-      this.clients = clients;
     },
     async login(e) {
       if (e) {
@@ -883,7 +907,11 @@ export default {
 
 
     // start refreshing
-    (async function _refresh_task() {
+    await (async function _refresh_task_infrequent() {
+      await this.refresh_infrequent();
+      setTimeout(_refresh_task_infrequent.bind(this), 30 * 1000);
+    }.bind(this))();
+    await (async function _refresh_task() {
       await this.refresh({
         updateCharts: true,
       });
