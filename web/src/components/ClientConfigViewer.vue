@@ -72,7 +72,7 @@ import Toggle from './Toggle.vue';
                                 <div>
                                     <p class="font-bold text-md">DNS</p>
                                     <p class="text-sm">The DNS resolution servers this client should use.</p>
-                                    <p class="text-neutral-600 font-extralight text-xs">Default: None</p>
+                                    <p class="text-neutral-600 font-extralight text-xs">Default: <pre class="inline">{{ defaults.DNS }}</pre></p>
                                     <input v-if="dns[0]" type="text" class="mt-2 text-black dark:text-white bg-white dark:bg-black w-fit px-4 py-2" v-model="dns[1]"/>
                                 </div>
                             </div>
@@ -85,7 +85,7 @@ import Toggle from './Toggle.vue';
                                 <div>
                                     <p class="font-bold text-md">Persistent Keepalive</p>
                                     <p class="text-sm">Should the client ping the server every <b>n</b> seconds? Useful for clients that must be accessible.</p>
-                                    <p class="text-neutral-600 font-extralight text-xs">Default: None</p>
+                                    <p class="text-neutral-600 font-extralight text-xs">Default: <pre class="inline">{{ defaults.PersistentKeepalive }}</pre></p>
                                     <input v-if="persistentKeepalive[0]" type="text" class="mt-2 text-black dark:text-white bg-white dark:bg-black w-fit px-4 py-2" v-model="persistentKeepalive[1]"/>
                                 </div>
                             </div>
@@ -98,7 +98,7 @@ import Toggle from './Toggle.vue';
                                 <div>
                                     <p class="font-bold text-md">MTU</p>
                                     <p class="text-sm">The maximum transmission unit.</p>
-                                    <p class="text-neutral-600 font-extralight text-xs">Default: None</p>
+                                    <p class="text-neutral-600 font-extralight text-xs">Default: <pre class="inline">{{ defaults.MTU }}</pre></p>
                                     <input v-if="mtu[0]" type="text" class="mt-2 text-black dark:text-white bg-white dark:bg-black w-fit px-4 py-2" v-model="mtu[1]"/>
                                 </div>
                             </div>
