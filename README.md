@@ -5,7 +5,8 @@
 A WireGuard UI with zero extra configuration. Fork of "the easiest way to install & manage WireGuard" project `wg-easy`!
 
 <p align="center">
-  <img src="./assets/screenshot.png" />
+  <img src="./assets/screenshot.png" style="display: inline-block; width:50%;" />
+  <img src="./assets/client-config.png" style="display: inline-block; width:50%;" />
 </p>
 
 ## Features
