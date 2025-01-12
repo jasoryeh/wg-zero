@@ -13,10 +13,10 @@ import { Icon } from '@iconify/vue';
           <Icon icon="heroicons-solid:user" class="w-10 h-10 m-5 text-white dark:text-neutral-200" />
         </div>
 
-        <input type="password" name="password" placeholder="Password" v-model="password"
+        <input type="password" name="password" placeholder="Password" autocomplete="current-password" v-model="password"
           class="px-3 py-2 text-sm dark:bg-neutral-800 text-gray-500 dark:text-neutral-50 mb-5 border-2 border-gray-100 dark:border-neutral-600 rounded-lg w-full focus:border-red-800 outline-none" />
         
-        <Login v-if="authenticating" />
+        <Loading v-if="$parent.authenticating" />
         <input v-if="!$parent.authenticating && password" type="submit" @click="(e) => {e.preventDefault(); $emit('try', password);}" 
           class="bg-red-800 w-full rounded shadow py-2 text-sm text-white hover:bg-red-700 transition cursor-pointer"
           value="Sign In">
