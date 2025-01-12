@@ -21,6 +21,7 @@ import Modal from './Modal.vue';
                             <button @click="copy()" class="absolute right-4 bottom-4 text-gray-600 hover:text-gray-800">
                                 <Icon icon="heroicons:clipboard" class="w-8 h-8" />
                             </button>
+                            <!--Hidden textarea for copying-->
                             <textarea id="wg-file-text" v-html="config" style="display: none;" class="background-color: black; color: white;"></textarea>
                         </div>
                         <!-- QR Code -->
