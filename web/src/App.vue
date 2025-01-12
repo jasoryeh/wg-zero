@@ -21,6 +21,7 @@ import EntryDetail from './components/EntryDetail.vue'
 import TopButton from './components/TopButton.vue'
 import Card from './components/Card.vue'
 import ClientConfigViewer from './components/ClientConfigViewer.vue'
+import ServerCommandViewer from './components/ServerCommandViewer.vue'
 </script>
 
 <template>
@@ -154,6 +155,7 @@ import ClientConfigViewer from './components/ClientConfigViewer.vue'
               <!-- Right side -->
               <div class="text-right">
                 <div class="text-gray-400 dark:text-gray-200">
+                  <EntryButton buttonText="Show Commands" buttonIcon="heroicons:command-line" :disabled="false" @click="showServerCommands = true" />
                 </div>
               </div>
 
@@ -376,6 +378,9 @@ import ClientConfigViewer from './components/ClientConfigViewer.vue'
       </Card>
 
       <!-- Create Dialog -->
+      <ServerCommandViewer v-if="showServerCommands" @cancel="showServerCommands = false" :PreUp="server.entries.PreUp" :PostUp="server.entries.PostUp" :PreDown="server.entries.PreDown" :PostDown="server.entries.PostDown" />
+
+      <!-- Create Dialog -->
       <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="({name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey }) => { newClient(name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey); clientCreate = null; scrollToClient(publicKey); }" />
 
       <!-- Delete Dialog -->
@@ -445,6 +450,7 @@ export default {
       clientToConfig: null,
       clientToConfigTab: null,
       clientDefaults: null,
+      showServerCommands: false,
 
       currentRelease: null,
       latestRelease: null,
