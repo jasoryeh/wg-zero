@@ -120,6 +120,9 @@ module.exports = class Server {
     }
   })
   .get('/api/wireguard/server', async (req, res) => {
+    if (!this.wireguard.config || !this.wireguard.config.getInterface()) {
+      throw new Error("The server is not initialized yet!");
+    }
     let intf = this.wireguard.config.getInterface().iniSection.toJson();
 
     if (intf.entries && intf.entries.PrivateKey) {

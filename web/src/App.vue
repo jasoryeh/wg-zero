@@ -537,7 +537,7 @@ export default {
     },
     async refresh_total() {
       await this.refresh_infrequent();
-      await this._refresh();
+      await this.refresh_stats();
     },
     async refresh_infrequent() {
       if (!this.authenticated) return;
@@ -548,6 +548,10 @@ export default {
         await this.checkStatus();
 
         this.clientDefaults = await this.api.getDefaults();
+
+        if (!this.isServerConfigured()) {
+          return;
+        }
 
         let server = await this.api.getServer();
         let clients = await this.api.getClients();
@@ -586,14 +590,14 @@ export default {
         this.alertError("An error occurred while refreshing metadata", err, 1);
       }
     },
-    async refresh(...args) {
+    async refresh_stats(...args) {
       try {
-        return await this._refresh(...args);
+        return await this._refresh_stats(...args);
       } catch(err) {
         this.alertError("An error occurred while refreshing", err, 1);
       }
     },
-    async _refresh({ updateCharts = false } = {}) {
+    async _refresh_stats({ updateCharts = false } = {}) {
       if (!this.authenticated) return;
 
       // request, and format data
@@ -823,6 +827,7 @@ export default {
       try {
         await this.api.setup();
         this.alert("Server is set up! Please verify your settings and press 'Start' to start it!", 5, null, "green-500");
+        await this.refresh_total();
       } catch(err) {
         this.alertError("An error occurred while setting up the server!", err, 15);
       } finally {
@@ -925,7 +930,7 @@ export default {
       setTimeout(_refresh_task_infrequent.bind(this), 30 * 1000);
     }.bind(this))();
     await (async function _refresh_task() {
-      await this.refresh({
+      await this.refresh_stats({
         updateCharts: true,
       });
       setTimeout(_refresh_task.bind(this), 1000);
