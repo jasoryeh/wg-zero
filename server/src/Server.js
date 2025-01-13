@@ -180,7 +180,6 @@ module.exports = class Server {
     res.status(200).send({});
   })
   .post('/api/wireguard/server/regenerate', async (req, res) => {
-    this.wireguard.
     this.wireguard.config.getInterface().setPrivateKey(await generatePrivateKey());
     res.status(200).send({});
   })

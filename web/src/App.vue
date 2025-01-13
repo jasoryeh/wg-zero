@@ -688,7 +688,7 @@ export default {
       this.alert(this.authenticated ? 'Login Succeeded.' : 'Login Failed.', 5, null, this.authenticated ? 'green-500' : 'red-500', 'white');
       this.authenticating = false;
       this.password = null;
-      return this.refresh_total();
+      return await this.refresh_total();
     },
     logout(e) {
       e.preventDefault();
