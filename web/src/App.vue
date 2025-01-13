@@ -83,7 +83,7 @@ import ServerCommandViewer from './components/ServerCommandViewer.vue'
             <HeaderButton buttonText="Backup" buttonIcon="material-symbols:download" @click="backupServer()" />
             <HeaderButton buttonText="Start" buttonIcon="heroicons:play" :disabled="readonly" @click="serverUp()" v-if="!isServerUp()" />
             <HeaderButton buttonText="Stop" buttonIcon="heroicons:stop" :disabled="readonly" @click="serverDown()" v-else />
-            <HeaderButton buttonText="Reload" buttonIcon="material-symbols:refresh-rounded" @click="reloadServer(); refresh_total();" />
+            <HeaderButton buttonText="Reload" buttonIcon="material-symbols:refresh-rounded" @click="reloadServer();" />
         </template>
         <template v-slot:body>
           <!-- Server -->
@@ -383,10 +383,10 @@ import ServerCommandViewer from './components/ServerCommandViewer.vue'
       <ServerCommandViewer v-if="showServerCommands" @cancel="showServerCommands = false" :PreUp="server.entries.PreUp" :PostUp="server.entries.PostUp" :PreDown="server.entries.PreDown" :PostDown="server.entries.PostDown" />
 
       <!-- Create Dialog -->
-      <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="({name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey }) => { newClient(name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey); clientCreate = null; scrollToClient(publicKey); refresh_total() }" />
+      <CreateClient v-if="clientCreate" @cancel="clientCreate = null" @submitted="({name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey }) => { newClient(name, addresses, privateKey, publicKey, presharedKey, persistPrivateKey); clientCreate = null; scrollToClient(publicKey); }" />
 
       <!-- Delete Dialog -->
-      <DeleteClient v-if="clientDelete" :name="clientDelete.metadata.Name[0]" @cancel="clientDelete = null" @confirm="console.log(clientDelete); deleteClient(clientDelete.entries.PublicKey); clientDelete = null; refresh_total()" />
+      <DeleteClient v-if="clientDelete" :name="clientDelete.metadata.Name[0]" @cancel="clientDelete = null" @confirm="console.log(clientDelete); deleteClient(clientDelete.entries.PublicKey); clientDelete = null;" />
 
       <!-- Client Configuration Editor and Viewer -->
       <ClientConfigViewer v-if="clientToConfig" @close="clientToConfig = null;" :client="clientToConfig" :server="server" :alert="alert" :tab="clientToConfigTab" :defaults="clientDefaults" />
@@ -715,6 +715,7 @@ export default {
         this.clientsPersist[publicKey].isNew = true;
         this.clientsPersist[publicKey].PrivateKey = privateKey;
         this.alert(`Client '${name}'' at <b>${addresses}</b> was created, but <b>not</b> committed. <br />Click 'Save' to commit this client to the server.`, 15, null, 'orange-700');
+        await refresh_total();
       } catch(err) {
         this.alertError("An error occurred while creating the new client", err);
       }
@@ -724,18 +725,21 @@ export default {
       try {
         await this.api.setHost(text);
         this.alert('The server host was updated to \'' + text + '\'!', 5, null, 'green-600');
+        await refresh_total();
       } catch(err) {
         this.alertError("An error occurred while updating the server host", err);
       }
     },
     async updateClientAddress() {
       this.alert("Address updates are not yet supported.", 5, null, "yellow-400");
+      await refresh_total();
     },
     async updateClientName(client, name) {
       try {
         client.metadata.Name = [name];
         await this.api.updateName(client.Reference, name);
         this.alert('The client name was updated to \'' + name + '\'!', 5, null, 'green-600');
+        await refresh_total();
       } catch(err) {
         this.alertError("An error occurred while updating the client name", err);
       }
@@ -745,6 +749,7 @@ export default {
         this.server.metadata.Name = [name];
         await this.api.updateServerName(name);
         this.alert('The server name was updated to \'' + name + '\'!', 5, null, 'green-600');
+        await refresh_total();
       } catch(err) {
         this.alertError("An error occurred while updating the server name", err);
       }
@@ -753,6 +758,7 @@ export default {
       try {
         await this.api.reload();
         this.alert('The server configuration has been reloaded.', 5, null, 'blue-700');
+        await refresh_total();
       } catch(err) {
         this.alertError("An error occurred while reloading settings", err);
       }
@@ -761,6 +767,7 @@ export default {
       try {
         await this.api.save();
         this.alert('The settings were saved to the server.', 5, null, 'green-600');
+        await refresh_total();
       } catch(err) {
         this.alertError("An error occurred while saving the server changes", err);
       }
@@ -784,6 +791,7 @@ export default {
       try {
         await this.api.up();
         this.alert('The server was started.', 5, null, 'green-700');
+        await refresh_total();
       } catch(err) {
         this.alertError("An error occurred while creating starting the server", err);
       }
@@ -792,6 +800,7 @@ export default {
       try {
         await this.api.down();
         this.alert('The server was stopped.', 5, null, 'orange-700');
+        await refresh_total();
       } catch(err) {
         this.alertError("An error occurred while stopping the server", err);
       }
@@ -800,6 +809,7 @@ export default {
       try {
         await this.api.deleteClient(publicKey);
         this.alert(`The client with public key '${publicKey}' was deleted.`, 15, null, 'red-600');
+        await refresh_total();
       } catch(err) {
         this.alertError("An error occurred while deleting the client '" + publicKey + "''", err);
       }
@@ -809,6 +819,7 @@ export default {
         await this.api.disable(client.Reference);
         client.metadata.Enabled = ['false'];
         this.alert("Disabled Peer '" + client.metadata.Name[0] + "''", 5, null, "blue-400");
+        await refresh_total();
       } catch(err) {
         this.alertError("An error occurred while disabling the client '" + client.entries.PublicKey[0] + "''", err);
       }
@@ -818,6 +829,7 @@ export default {
         await this.api.enable(client.Reference);
         client.metadata.Enabled = ['true'];
         this.alert("Enabled Peer '" + client.metadata.Name[0] + "''", 5, null, "blue-400");
+        await refresh_total();
       } catch(err) {
         this.alertError("An error occurred while enabling the client '" + client.entries.PublicKey[0] + "''", err);
       }
