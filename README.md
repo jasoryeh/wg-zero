@@ -26,15 +26,18 @@ A WireGuard UI with zero extra configuration. Fork of "the easiest way to instal
 * A host with a kernel that supports WireGuard (all modern kernels).
 * A host with Docker installed.
 
+## TL;DR
+See [`docker-compose.yml`](https://github.com/jasoryeh/wg-zero/blob/master/docker-compose.yml) for a full ready-to-use setup, or use the `docker run` command if you'd only like to test wg-zero out!
+
 ## Installation
-There are two ways to run WireGuard zero, for new installations we recommend [`The Docker Way`](#the-docker-way) to keep your system simple, 
+There are three ways to run WireGuard zero, for new installations we recommend [`The Docker Way`](#the-docker-way) to keep your system simple, 
 for existing installations, we recommend the [`The Host Way`](#the-host-way)
 
 ### The Docker Way
 
 #### 1. Install Docker
 
-If you haven't installed Docker yet, install it by running:
+If you haven't installed Docker yet, install it by running (this is the quick-and-dirty way, please see documentation for your specific OS for the proper way to install it):
 
 ```bash
 $ curl -sSL https://get.docker.com | sh
@@ -70,6 +73,8 @@ $ docker run \
 > 💡 If your want to manually specify the server's public IP Address, replace `$(curl checkip.amazonaws.com) with a public facing IP address, a public domain pointing to the server, or a Dynamic Domain pointed at this server.
 >
 > 💡  Replace `your_secure_password_here!!` with a different password!
+>
+> Looking for a bit more? A `docker-compose.yml` file is available in this repository that provides a full working setup with wg-zero and PiHole!
 
 The Web UI will now be available on `http://0.0.0.0:51821`.
 
