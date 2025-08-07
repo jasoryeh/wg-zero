@@ -18,6 +18,7 @@ services:
       - WG_DEFAULT_DNS=10.2.0.3
       #- WG_DEFAULT_ALLOWED_IPS=10.2.0.0/24 # for VPN-only networking (if you just want a virtual network and not internet)
       - WG_DEFAULT_ALLOWED_IPS=0.0.0.0/0 # for all internet
+    volumes:
       - ./mount/etc-wireguard:/etc/wireguard
     cap_add:
       - NET_ADMIN
