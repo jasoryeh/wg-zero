@@ -20,6 +20,7 @@ services:
       - WG_DEFAULT_ALLOWED_IPS=0.0.0.0/0 # for all internet
     volumes:
       - ./mount/etc-wireguard:/etc/wireguard
+      #- /etc/wireguard:/etc/wireguard # if you already have a wireguard server you want to add this UI to!
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
