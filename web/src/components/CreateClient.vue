@@ -19,6 +19,8 @@ import Modal from './Modal.vue';
                         <p class="text-md text-gray-500 dark:text-neutral-300 mb-1">Client Name</p>
                         <p class="text-sm text-gray-500">
                             <input
+                                v-on:keydown="gen_public = '';"
+                                v-on:blur="genPublic();"
                                 class="rounded p-2 border-2 dark:bg-neutral-600 dark:border-neutral-700 dark:text-neutral-100 border-gray-100 focus:border-gray-200 outline-none w-full"
                                 type="text" v-model.trim="clientName" placeholder="Name" />
                         </p>
@@ -28,6 +30,7 @@ import Modal from './Modal.vue';
                         <p class="text-md text-gray-500 dark:text-neutral-300 mb-1">Addresses</p>
                         <p class="text-sm text-gray-500">
                             <input
+                                v-on:keydown="console.log($event); gen_private = '';"
                                 class="rounded p-2 border-2 dark:bg-neutral-600 dark:border-neutral-700 dark:text-neutral-100 border-gray-100 focus:border-gray-200 outline-none w-full"
                                 type="text" v-model.trim="clientAddress" placeholder="Addresses" />
                         </p>
@@ -40,20 +43,22 @@ import Modal from './Modal.vue';
                                 <p class="text-sm text-gray-500 dark:text-neutral-300 mb-1">Private Key</p>
                                 <p class="text-sm text-gray-500 dark:text-neutral-300">
                                     <input
+                                        v-on:keydown="gen_public = ''"
                                         v-on:blur="genPublic()"
                                         class="rounded p-2 border-2 dark:bg-neutral-600 dark:border-neutral-700 dark:text-neutral-100 border-gray-100 focus:border-gray-200 outline-none w-full"
                                         type="text" v-model.trim="gen_private" placeholder="Private Key" />
                                 </p>
-                                <p class="text-xs text-gray-500 dark:text-neutral-400 mb-1">Provide a private key or <a class="text-blue-500" href="#" @click="regenerate()">let us generate you one</a>.</p>
+                                <p class="text-xs text-gray-500 dark:text-neutral-400 mb-1">Optional. You can provide a private key and we can determine your public key, or, <a class="text-blue-500" href="#" @click="regenerate()">you can let us generate you one</a>.</p>
                             </div>
                             <div class="mt-2">
                                 <p class="text-sm text-gray-500 dark:text-neutral-300 mb-1">Public Key</p>
                                 <p class="text-sm text-gray-500">
-                                    <input disabled 
+                                    <input
+                                        v-on:keydown="gen_private = ''" 
                                         class="rounded p-2 border-2 dark:bg-neutral-600 dark:border-neutral-700 dark:text-neutral-100 border-gray-100 focus:border-gray-200 outline-none w-full"
                                         type="text" v-model.trim="gen_public" placeholder="Public Key" />
                                 </p>
-                                <p class="text-xs text-gray-500 dark:text-neutral-400 mb-1">Automatically generated from your private key.</p>
+                                <p class="text-xs text-gray-500 dark:text-neutral-400 mb-1">Required. Automatically derived from your private key, or you can input your public key here without providing the private key.</p>
                             </div>
                             <div class="mt-2">
                                 <p class="text-sm text-gray-500 dark:text-neutral-300 mb-1">Pre-shared Key</p>
@@ -82,7 +87,7 @@ import Modal from './Modal.vue';
             </div>
         </div>
         <div class="px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button v-if="clientName.length && gen_private.length && gen_public.length" type="button" @click="submitted()"
+            <button v-if="clientName.length && (form_persist_privatekey ? gen_private.length : true) && gen_public.length" type="button" @click="submitted()"
                 class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-800 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">
                 Create
             </button>
@@ -114,12 +119,12 @@ export default {
     methods: {
         async genPrivate() {
             this.gen_private = (await window.wg_api.generatePrivateKey()).result;
-            this.gen_original = this.gen_private;
         },
         async genPublic() {
             try {
                 this.gen_public = (await window.wg_api.generatePublicKey(this.gen_private)).result;
             } catch(err) {
+                console.debug(`Failed to generate public key for private ${this.gen_private}`, err);
                 this.gen_public = "";
             }
         },
@@ -152,13 +157,6 @@ export default {
     },
     mounted() {
         this.genAddress();
-        setInterval(() => {
-            if (this.gen_original && this.gen_private != this.gen_original) {
-                this.gen_original = null;
-                this.gen_private = "";
-                this.gen_public = "";
-            }
-        }, 100);
     },
 };
 </script>
