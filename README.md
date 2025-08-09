@@ -182,7 +182,7 @@ The recommended environment for developing for this repository is to develop wit
 To spin up a container with both the GUI and Wireguard VPN server running, and
   additionally, have `nodemon` and `vite` running:
 ```
-./enter_dev.sh ./dev.sh
+./enter_dev.sh
 ```
 
 ### Contributions

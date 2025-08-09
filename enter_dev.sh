@@ -5,7 +5,7 @@ CWD=$PWD
 # Workspace reset flag 
 #    (deletes ./mount in the current directory 
 #      which is the default mount in this directory)
-if [ ! -z $RESETWS ]; then
+if [ -n $RESETWS ]; then
     rm -rf ./mount
 fi
 
@@ -31,6 +31,8 @@ docker run --rm -it \
     -e WG_PORT=51822 \
     -p 51821:51821/tcp \
     -e PORT=51821 \
+    -e INSTALL_ALL=true \
+    -e DEV_MODE=true \
     -p 5173:5173 \
     -v $PWD:/app \
     -v $PWD/mount/wireguard:/etc/wireguard \

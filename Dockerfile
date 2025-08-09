@@ -11,7 +11,7 @@ RUN cd /app/web && npm i --omit=dev && npx vite build
 FROM node:19-alpine
 COPY --from=build_node_modules /app /app
 
-COPY ./init.sh /
+COPY ./docker/init.sh /
 
 # Enable this to run `npm run serve`
 RUN npm i -g nodemon
