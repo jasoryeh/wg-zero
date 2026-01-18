@@ -29,6 +29,9 @@ module.exports.WG_HOST = process.env.WG_HOST || "change-me-thx-ps-wgeasy.project
 module.exports.WG_PORT = process.env.WG_PORT || 51820; // wireguard server port, see `PORT` for the UI's port
 module.exports.WG_ADDRESS_SPACE = process.env.WG_ADDRESS_SPACE || '10.1.3.1/24'; // address space for server and clients in CIDR notation
 
+// customization
+module.exports.WG_AUTO_START = process.env.WG_AUTO_START ? process.env.WG_AUTO_START == "true" : false;
+
 // server pre/post up/down commands
 module.exports.WG_PRE_UP = process.env.WG_PRE_UP || '';
 module.exports.WG_POST_UP = process.env.WG_POST_UP || `

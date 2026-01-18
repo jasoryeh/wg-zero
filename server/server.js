@@ -28,6 +28,12 @@ debug('Starting...');
       wg.import();
     }
 
+    if (wg.config.shouldStartAtBoot()) {
+      debug("Auto-start is enabled, starting WireGuard interface...");
+      await wg.up();
+      debug("WireGuard interface started.");
+    }
+
     // start server
     const sv = new Server(wg);
     // server is up

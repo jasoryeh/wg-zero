@@ -4,7 +4,7 @@ const debug = require('debug')('wgeasy:Config');
 const {IniSection, IniEntry} = require('./config/Ini');
 const {WireGuardInterface, WireGuardPeer} = require('./config/WireGuardModels');
 const {WireGuardZeroConfigMigrations} = require('./config/WireGuardZeroConfigMigrations');
-const { WG_BACKUP_TRIM_KEEP, WG_BACKUP_TRIM } = require('../config');
+const { WG_BACKUP_TRIM_KEEP, WG_BACKUP_TRIM, WG_AUTO_START } = require('../config');
 
 /**
  * Configuration file parser and handler
@@ -263,6 +263,10 @@ class WireGuardConfig {
     enforceFields() {
         this.wgInterface.enforceFields();
         this.peers.forEach((peer) => peer.enforceFields());
+    }
+
+    shouldStartAtBoot() {
+        return WG_AUTO_START;
     }
 }
 
